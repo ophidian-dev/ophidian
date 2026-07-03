@@ -73,6 +73,7 @@ impl<'a> Iterator for Lexer<'a> {
             if let Some(c) = self.peek() {
                 let b = c as usize;
                 if WHITESPACE_LOOPUP[b] {
+                    self.advance();
                     continue;
                 }
 
