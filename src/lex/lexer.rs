@@ -28,6 +28,14 @@ impl<'a> Lexer<'a> {
 
     fn advance(&mut self) -> Option<u8> {
         let c: Option<u8> = self.peek();
+        if let Some(d) = c {
+            if d == b'\n' {
+                self.line += 1;
+                self.column = 0;
+            } else {
+                self.column += 1;
+            }
+        }
         self.current += 1;
         c
     }
