@@ -1,6 +1,6 @@
 use crate::parse::span::Span;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum TokenType {
     IntegerLiteral,
     Plus, 
@@ -12,7 +12,7 @@ pub enum TokenType {
     Error(u8),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Token {
     pub kind: TokenType,
     pub span: Span,

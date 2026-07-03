@@ -1,5 +1,6 @@
 use owo_colors::OwoColorize;
 use op::lex::lexer::Lexer;
+use op::parse::parser::Parser;
 
 fn main() {
 
@@ -13,12 +14,10 @@ fn main() {
 
     println!("{} Behaviour is undefined if file contains non-ASCII characters", "N.B.".yellow());
 
-    // DEBUG THE LEXER
     let lexer = Lexer::new(&file);
-    for token in lexer {
-        println!("{:?}", token);
-    }
-
+    let mut parser = Parser::new(lexer);
+    let ast = parser.generate_ast();
+    println!("{:?}", ast);
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {

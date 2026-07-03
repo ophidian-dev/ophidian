@@ -7,7 +7,7 @@ pub struct Lexer<'a> {
     column: usize,
     start_column: usize,
 
-    source: &'a [u8],
+    pub source: &'a [u8],
 }
 
 impl<'a> Lexer<'a> {
