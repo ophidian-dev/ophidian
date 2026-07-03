@@ -9,11 +9,24 @@ fn main() {
         std::process::exit(1);
     }
 
-    let bytes: Result<Vec<u8>, std::io::Error> = std::fs::read(&argv[1]);
-    let res: Vec<u8>;
+    let file = read_file_as_bytes(&argv[0], &argv[1]);
+
+    println!("{} Behaviour is undefined if file contains non-ASCII characters", "N.B.".yellow());
+
+    // DEBUG THE LEXER
+    let lexer = Lexer::new(&file);
+    for token in lexer {
+        println!("{:?}", token);
+    }
+
+}
+
+fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {
+    let bytes: Result<Vec<u8>, std::io::Error> = std::fs::read(file_name);
+
     match bytes {
         Ok(v) => {
-            res = v; 
+            return v;
         }
         Err(e) => {
             let msg = match e.kind() {
@@ -22,20 +35,10 @@ fn main() {
                 std::io::ErrorKind::IsADirectory => String::from("Is a directory"),
                 _ => format!("{}", e)
             };
-            eprintln!("{}: {} {}{}{}{}", argv[0], 
+            eprintln!("{}: {} {}{}{}{}", invocation, 
                         "error:".bright_red().bold(), msg.bold(), 
-                        ": '".bold(), argv[1].bold(), "'".bold());     
+                        ": '".bold(), file_name.bold(), "'".bold());     
             std::process::exit(1);
         }
     }
-
-    
-    println!("{} Behaviour is undefined if file contains non-ASCII characters", "N.B.".yellow());
-
-    // DEBUG THE LEXER
-    let lexer = Lexer::new(&res);
-    for token in lexer {
-        println!("{:?}", token);
-    }
-
 }
