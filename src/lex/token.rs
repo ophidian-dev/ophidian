@@ -1,4 +1,4 @@
-
+use crate::parse::span::Span;
 
 #[derive(Debug)]
 pub enum TokenType {
@@ -15,8 +15,7 @@ pub enum TokenType {
 #[derive(Debug)]
 pub struct Token {
     pub kind: TokenType,
-    pub offset: usize,
-    pub len: usize,
+    pub span: Span,
     pub line: usize,
     pub column: usize,
 }

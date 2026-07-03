@@ -1,4 +1,4 @@
-use crate::lex::token::{Token, TokenType};
+use crate::{lex::token::{Token, TokenType}, parse::span::Span};
 
 pub struct Lexer<'a> {
     current: usize,
@@ -43,18 +43,16 @@ impl<'a> Lexer<'a> {
     fn create_token(&self, kind: TokenType) -> Token {
         Token { 
             kind: kind, 
-            offset: self.start, 
-            len: self.current - self.start, 
+            span: Span::new(self.start, self.current - self.start),
             line: self.line, 
-            column: self.start_column
+            column: self.start_column,
         }
     }
 
     fn create_error(&self, unexpected: u8) -> Token {
         Token {
             kind: TokenType::Error(unexpected),
-            offset: self.start,
-            len: self.current - self.start,
+            span: Span::new(self.start, self.current - self.start),
             line: self.line,
             column: self.start_column
         }
