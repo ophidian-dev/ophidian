@@ -5,14 +5,16 @@ edition = "2024"
 build = "build.rs"
 
 [workspace]
-members = ["frontend",
+members = [
+    "bytecode-compiler",
+    "frontend",
     "tools/opcode_gen"
 ]
-
-[dependencies]
-owo-colors = "4.3.0"
 
 [build-dependencies]
 bindgen = "0.72.1"
 cc = "1.2.65"
 walkdir = "2.5.0"
+
+[workspace.dependencies] 
+owo-colors = "4.3.0"

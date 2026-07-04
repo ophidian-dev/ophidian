@@ -38,6 +38,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8"
 
 [[package]]
+name = "bytecode-compiler"
+version = "0.1.0"
+
+[[package]]
 name = "cc"
 version = "1.2.65"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -88,6 +92,9 @@ checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
 [[package]]
 name = "frontend"
 version = "0.1.0"
+dependencies = [
+ "owo-colors",
+]
 
 [[package]]
 name = "glob"
@@ -154,7 +161,6 @@ version = "0.1.0"
 dependencies = [
  "bindgen",
  "cc",
- "owo-colors",
  "walkdir",
 ]
 
