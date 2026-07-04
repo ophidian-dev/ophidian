@@ -10,3 +10,8 @@ members = [
 owo-colors = "4.3.0"
 frontend = { path = "frontend" }
 bytecode-compiler = { path = "bytecode-compiler" }
+bindgen = "0.72.1"
+cc = "1.2.65"
+walkdir = "2.5.0"
+
+

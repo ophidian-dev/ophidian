@@ -9,8 +9,8 @@ owo-colors = { workspace = true }
 frontend = { workspace = true }
 
 [build-dependencies]
-bindgen = "0.72.1"
-cc = "1.2.65"
-walkdir = "2.5.0"
+bindgen = { workspace = true }
+cc = { workspace = true }
+walkdir = { workspace = true }
 
 
