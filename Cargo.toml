@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2024"
 build = "build.rs"
 
+[workspace]
+members = [
+    "tools/opcode_gen"
+]
+
 [dependencies]
 owo-colors = "4.3.0"
 
