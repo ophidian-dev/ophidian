@@ -1,0 +1,15 @@
+[opcodes]
+# halts execution of the virtual machine
+halt = 0
+# pop 2 ints off the stack and adds them then pushes the result
+iadd = 1
+# pops 2 ints off the stack and subtracts them then pushes the result
+isub = 2
+# pops 2 ints off the stack and multiplys them then pushes the result
+imul = 3
+# pops 2 ints off the stack and divides them then pushes the result
+idiv = 4
+# takes a 3 byte operand and indexes into constant pool and pushes the value at index operand
+loadconst = 5
+# pops 1 int off the stack and prints it
+iprint = 6

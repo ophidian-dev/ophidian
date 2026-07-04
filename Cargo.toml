@@ -3,7 +3,7 @@ resolver = "3"
 members = [
     "bytecode-compiler",
     "frontend", "op",
-    "tools/opcode_gen"
+    "tools/opcode-gen"
 ]
 
 [workspace.dependencies] 

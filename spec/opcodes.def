@@ -1,7 +1,0 @@
-HALT = 0
-IADD = 1
-ISUB = 2
-IMUL = 3
-IDIV = 4
-LOADCONST = 5
-IPRINT = 6
