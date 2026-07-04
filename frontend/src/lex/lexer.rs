@@ -1,4 +1,7 @@
-use crate::{lex::token::{Token, TokenType}, parse::span::Span};
+use crate::{
+    lex::token::{Token, TokenType},
+    parse::span::Span,
+};
 
 pub struct Lexer<'a> {
     current: usize,
@@ -18,7 +21,7 @@ impl<'a> Lexer<'a> {
             line: 0,
             column: 0,
             start_column: 0,
-            source
+            source,
         }
     }
 
@@ -41,10 +44,10 @@ impl<'a> Lexer<'a> {
     }
 
     fn create_token(&self, kind: TokenType) -> Token {
-        Token { 
-            kind: kind, 
+        Token {
+            kind: kind,
             span: Span::new(self.start, self.current - self.start),
-            line: self.line, 
+            line: self.line,
             column: self.start_column,
         }
     }
@@ -54,18 +57,18 @@ impl<'a> Lexer<'a> {
             kind: TokenType::Error(unexpected),
             span: Span::new(self.start, self.current - self.start),
             line: self.line,
-            column: self.start_column
+            column: self.start_column,
         }
     }
 }
 
 const WHITESPACE_LOOPUP: [bool; 256] = {
-    let mut arr= [false; 256];
+    let mut arr = [false; 256];
     let mut i: usize = 0;
     while i < 256 {
         if i >= 9 && i <= 13 || i == 32 {
             arr[i] = true;
-        } 
+        }
         i += 1;
     }
     arr
@@ -129,6 +132,5 @@ impl<'a> Iterator for Lexer<'a> {
             }
             return None;
         }
-
     }
 }

@@ -8,7 +8,7 @@ use owo_colors::OwoColorize;
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
     current: Option<Token>,
-    errors: Vec<ParseError>
+    errors: Vec<ParseError>,
 }
 
 #[derive(Debug)]
@@ -25,7 +25,7 @@ impl<'a> Parser<'a> {
         Self {
             lexer,
             current,
-            errors: Vec::new()
+            errors: Vec::new(),
         }
     }
 
@@ -33,10 +33,10 @@ impl<'a> Parser<'a> {
         self.current.as_ref()
     }
 
-    fn advance(&mut self) { 
+    fn advance(&mut self) {
         self.current = self.lexer.next();
     }
-    
+
     fn get_slice(&self, span: Span) -> &[u8] {
         &self.lexer.source[span.offset()..span.end()]
     }
@@ -48,23 +48,21 @@ impl<'a> Parser<'a> {
                 self.advance();
                 Ok(tok)
             }
-            Some(tok) => {
-                Err(ParseError::UnexpectedToken(*tok))
-            }
-            None => {
-                Err(ParseError::UnexpectedEof)
-            }
+            Some(tok) => Err(ParseError::UnexpectedToken(*tok)),
+            None => Err(ParseError::UnexpectedEof),
         }
     }
 
     fn error(&self, tok: Token, span: Span, msg: &str) {
-        eprintln!("{}{}{}{} {} {}", 
-                    (tok.line + 1).bold(), 
-                    ":".bold(), (tok.column + 1).bold(), 
-                    ": ".bold(), 
-                    "error:".bright_red().bold(), 
-                    msg.bold()
-        );    
+        eprintln!(
+            "{}{}{}{} {} {}",
+            (tok.line + 1).bold(),
+            ":".bold(),
+            (tok.column + 1).bold(),
+            ": ".bold(),
+            "error:".bright_red().bold(),
+            msg.bold()
+        );
 
         let count: usize = tok.line.to_string().len();
         for _ in 1..count {
@@ -77,7 +75,7 @@ impl<'a> Parser<'a> {
         // we unwrap here because we trust the caller to pass in a file containing only valid ascii
         let s = std::str::from_utf8(bytes).unwrap();
         eprintln!("{}", s);
-        
+
         for _ in 1..count {
             eprint!(" ");
         }
@@ -88,7 +86,6 @@ impl<'a> Parser<'a> {
             }
         }
         eprint!("\n");
-
     }
 
     fn parse_primary(&mut self) -> Expr {
@@ -116,7 +113,7 @@ impl<'a> Parser<'a> {
                     return expr;
                 }
                 _ => {
-                    todo!("handle error") ;
+                    todo!("handle error");
                 }
             }
         } else {
@@ -132,9 +129,11 @@ impl<'a> Parser<'a> {
                 let right: Expr = self.parse_unary();
                 let right_span: Span = right.span();
 
-                return ctors::create_unary_op(UnaryOp::new(UnaryopType::Negate, tok.span), 
-                                        right, tok.span.join(right_span));
-
+                return ctors::create_unary_op(
+                    UnaryOp::new(UnaryopType::Negate, tok.span),
+                    right,
+                    tok.span.join(right_span),
+                );
             }
             Some(_) => {
                 return self.parse_primary();
@@ -155,17 +154,24 @@ impl<'a> Parser<'a> {
                     self.advance();
                     let right: Expr = self.parse_unary();
                     let right_span: Span = right.span();
-                    left = ctors::create_binary_op(BinaryOp::new(BinopType::Mul, op_span), 
-                                                    left, right, start_span.join(right_span));
-
+                    left = ctors::create_binary_op(
+                        BinaryOp::new(BinopType::Mul, op_span),
+                        left,
+                        right,
+                        start_span.join(right_span),
+                    );
                 }
                 TokenType::Slash => {
                     let op_span: Span = self.peek().unwrap().span;
                     self.advance();
                     let right: Expr = self.parse_unary();
                     let right_span: Span = right.span();
-                    left = ctors::create_binary_op(BinaryOp::new(BinopType::Div, op_span),
-                                                    left, right, start_span.join(right_span));
+                    left = ctors::create_binary_op(
+                        BinaryOp::new(BinopType::Div, op_span),
+                        left,
+                        right,
+                        start_span.join(right_span),
+                    );
                 }
                 _ => {
                     break;
@@ -185,24 +191,31 @@ impl<'a> Parser<'a> {
                     self.advance();
                     let right: Expr = self.parse_factor();
                     let right_span: Span = right.span();
-                    left = ctors::create_binary_op(BinaryOp::new(BinopType::Add, op_span), 
-                                                    left, right, start_span.join(right_span));
-
+                    left = ctors::create_binary_op(
+                        BinaryOp::new(BinopType::Add, op_span),
+                        left,
+                        right,
+                        start_span.join(right_span),
+                    );
                 }
                 TokenType::Minus => {
                     let op_span: Span = self.peek().unwrap().span;
                     self.advance();
                     let right: Expr = self.parse_factor();
                     let right_span: Span = right.span();
-                    left = ctors::create_binary_op(BinaryOp::new(BinopType::Sub, op_span),
-                                                    left, right, start_span.join(right_span));
+                    left = ctors::create_binary_op(
+                        BinaryOp::new(BinopType::Sub, op_span),
+                        left,
+                        right,
+                        start_span.join(right_span),
+                    );
                 }
                 _ => {
                     break;
                 }
             }
         }
-        left       
+        left
     }
 
     fn parse_expression(&mut self) -> Expr {

@@ -1,5 +1,5 @@
-use walkdir::WalkDir;
 use std::path::PathBuf;
+use walkdir::WalkDir;
 
 fn main() {
     let mut build = cc::Build::new();
@@ -8,7 +8,7 @@ fn main() {
 
     for entry in WalkDir::new("../c/src")
         .into_iter()
-        .filter_map(Result::ok) 
+        .filter_map(Result::ok)
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "c"))
     {
         build.file(entry.path());

@@ -5,21 +5,18 @@ pub enum BinopType {
     Add,
     Sub,
     Mul,
-    Div
+    Div,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct BinaryOp {
     kind: BinopType,
-    span: Span
+    span: Span,
 }
 
 impl BinaryOp {
     pub fn new(kind: BinopType, span: Span) -> Self {
-        Self {
-            kind,
-            span
-        }
+        Self { kind, span }
     }
 }
 
@@ -31,23 +28,32 @@ pub enum UnaryopType {
 #[derive(Debug, Clone, Copy)]
 pub struct UnaryOp {
     kind: UnaryopType,
-    span: Span
+    span: Span,
 }
 
 impl UnaryOp {
     pub fn new(kind: UnaryopType, span: Span) -> Self {
-        Self {
-            kind,
-            span
-        }
+        Self { kind, span }
     }
 }
 
 #[derive(Debug, Clone)]
 pub enum Expr {
-    IntegerLiteral{ span: Span, value: i64 },
-    BinaryOp{ span: Span, op: BinaryOp, left: Box<Expr>, right: Box<Expr> },
-    UnaryOp{ span: Span, op: UnaryOp, expr: Box<Expr> },
+    IntegerLiteral {
+        span: Span,
+        value: i64,
+    },
+    BinaryOp {
+        span: Span,
+        op: BinaryOp,
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    UnaryOp {
+        span: Span,
+        op: UnaryOp,
+        expr: Box<Expr>,
+    },
 }
 
 impl Expr {
@@ -55,7 +61,7 @@ impl Expr {
         match self {
             Expr::IntegerLiteral { span, .. } => *span,
             Expr::BinaryOp { span, .. } => *span,
-            Expr::UnaryOp { span,.. } => *span,
+            Expr::UnaryOp { span, .. } => *span,
         }
     }
 }

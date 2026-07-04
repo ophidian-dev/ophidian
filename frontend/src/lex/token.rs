@@ -3,7 +3,7 @@ use crate::parse::span::Span;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum TokenType {
     IntegerLiteral,
-    Plus, 
+    Plus,
     Minus,
     Star,
     Slash,

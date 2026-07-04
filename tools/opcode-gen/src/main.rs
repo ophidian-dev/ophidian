@@ -15,9 +15,7 @@ fn main() {
 
     let file: Result<String, std::io::Error> = std::fs::read_to_string(&args[1]);
     let text: String = match file {
-        Ok(s) => {
-            s
-        }
+        Ok(s) => s,
         Err(e) => {
             eprintln!("error: {}", e);
             std::process::exit(1);
@@ -26,5 +24,7 @@ fn main() {
 
     let spec: Spec = toml::from_str(&text).unwrap();
 
-    println!("{:?}", spec.opcodes);
+    for (key, value) in spec.opcodes {
+        println!("key: {}, value: {}", key, value);
+    }
 }

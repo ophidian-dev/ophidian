@@ -1,16 +1,12 @@
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct Span {
     offset: usize,
-    len: usize
+    len: usize,
 }
 
 impl Span {
     pub fn new(offset: usize, len: usize) -> Self {
-        Self {
-            offset,
-            len
-        }
+        Self { offset, len }
     }
 
     pub fn offset(&self) -> usize {
@@ -30,7 +26,7 @@ impl Span {
         let end: usize = self.end().max(other.end());
         Self {
             offset: start,
-            len: end - start
+            len: end - start,
         }
     }
 }
