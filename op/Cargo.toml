@@ -1,0 +1,16 @@
+[package]
+name = "op"
+version = "0.1.0"
+edition = "2024"
+build = "build.rs"
+
+[dependencies]
+owo-colors = { workspace = true }
+frontend = { workspace = true }
+
+[build-dependencies]
+bindgen = "0.72.1"
+cc = "1.2.65"
+walkdir = "2.5.0"
+
+

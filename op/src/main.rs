@@ -1,6 +1,6 @@
 use owo_colors::OwoColorize;
-use op::lex::lexer::Lexer;
-use op::parse::parser::Parser;
+use frontend::lex::lexer::Lexer;
+use frontend::parse::parser::Parser;
 
 fn main() {
 
