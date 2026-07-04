@@ -52,14 +52,14 @@ fn main() {
         }
     };
 
-    write(&mut c_file, "// AUTO_GENERATED USING spec/opcodes.toml\n");
-    write(&mut c_file, "// DO NOT MANUALLY EDIT\n\n");
+    write(&mut c_file, "// This file was auto-generated from spec/opcodes.toml\n");
+    write(&mut c_file, "// It is not intended for manual editing\n\n");
 
     write(
         &mut rust_file,
-        "// AUTO GENERATED USING spec/opcodes.toml\n",
+        "// This file was auto-generated from spec/opcodes.toml\n",
     );
-    write(&mut rust_file, "// DO NOT MANUALLY EDIT\n\n");
+    write(&mut rust_file, "// It is not intended for manual editing\n\n");
     write(&mut rust_file, "#[repr(i32)]\n");
     write(&mut rust_file, "pub enum Opcode {\n\n");
 

@@ -1,8 +1,9 @@
-// AUTO GENERATED USING spec/opcodes.toml
-// DO NOT MANUALLY EDIT
+// This file was auto-generated from spec/opcodes.toml
+// It is not intended for manual editing
 
 #[repr(i32)]
 pub enum Opcode {
+
     // halts execution of the virtual machine
     Halt = 0,
     // pops 2 ints off the stack and adds them then pushes the result

@@ -1,5 +1,5 @@
-// AUTO_GENERATED USING spec/opcodes.toml
-// DO NOT MANUALLY EDIT
+// This file was auto-generated from spec/opcodes.toml
+// It is not intended for manual editing
 
 // halts execution of the virtual machine
 #define OP_HALT 0
