@@ -5,7 +5,7 @@ edition = "2024"
 build = "build.rs"
 
 [workspace]
-members = [
+members = ["frontend",
     "tools/opcode_gen"
 ]
 
