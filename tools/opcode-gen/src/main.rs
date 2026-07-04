@@ -28,7 +28,7 @@ fn main() {
 
     let spec: Spec = toml::from_str(&text).unwrap();
 
-    let mut file: Result<fs::File, std::io::Error> = fs::File::create(&argv[2]);
+    let file: Result<fs::File, std::io::Error> = fs::File::create(&argv[2]);
     let mut c_file: fs::File = match file {
         Ok(f) => {
             f
@@ -50,17 +50,55 @@ fn main() {
         }
     };
 
-    write(&mut c_file, "// AUTO_GENERATED FROM spec/opcodes.toml\n");
+    write(&mut c_file, "// AUTO_GENERATED USING spec/opcodes.toml\n");
     write(&mut c_file, "// DO NOT MANUALLY EDIT\n");
 
+
+    write(&mut rust_file, "// AUTO GENERATED USING spec/opcodes.toml\n");
+    write(&mut rust_file, "// DO NOT MANUALLY EDIT\n\n");
+    write(&mut rust_file, "#[repr(i32)]\n");
+    write(&mut rust_file, "pub enum Opcode {\n");
+
+    let tab: &str = "    ";
+
     for (key, value) in spec.opcodes {
+        // c file
         write(&mut c_file, "#define OP_");
         write(&mut c_file, &key.to_uppercase());
         write(&mut c_file, " ");
         write(&mut c_file, &format!("{}\n", value));
 
-        
+        // rust file
+        write(&mut rust_file, tab); 
+        write(&mut rust_file, &to_camel_case(&key));
+        write(&mut rust_file, " = ");
+        write(&mut rust_file, &format!("{}", value));
+        write(&mut rust_file, ",\n");
     }
+
+    write(&mut rust_file, "}\n");
+
+}
+
+fn to_camel_case(input: &str) -> String {
+    let mut result = String::new();
+    let mut capitalize_next = true;
+
+    for c in input.chars() {
+        if c == '_' || c == '-' || c == ' ' {
+            capitalize_next = true;
+            continue;
+        }
+
+        if capitalize_next {
+            result.extend(c.to_uppercase());
+            capitalize_next = false;
+        } else {
+            result.extend(c.to_lowercase());
+        }
+    }
+
+    result
 }
 
 fn write(file: &mut fs::File, text: &str) {
