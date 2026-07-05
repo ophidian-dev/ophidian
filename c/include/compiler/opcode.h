@@ -25,3 +25,6 @@
 // pops 1 int off the stack, negates and pushes result
 #define OP_INEGATE 7
 
+// pops top value off the stack
+#define OP_POP 8
+

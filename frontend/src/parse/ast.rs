@@ -93,13 +93,13 @@ impl Stmt {
 
 #[derive(Debug, Clone)]
 pub struct Program {
-    stmts: Vec<Stmt>    
+    pub stmts: Vec<Stmt>,
 }
 
 impl Program {
     pub fn new() -> Self {
         Self {
-            stmts: Vec::new()
+            stmts: Vec::new(),
         }
     }
 
@@ -107,3 +107,5 @@ impl Program {
         self.stmts.push(stmt); 
     }
 }
+
+

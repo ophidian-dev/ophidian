@@ -21,4 +21,6 @@ pub enum Opcode {
     Iprint = 6,
     // pops 1 int off the stack, negates and pushes result
     Inegate = 7,
+    // pops top value off the stack
+    Pop = 8,
 }

@@ -13,14 +13,30 @@ impl Compiler {
         }
     }    
 
-    pub fn compile(&mut self, ast: &ast::Expr) -> Chunk {
+    pub fn compile(&mut self, ast: &ast::Program) -> Chunk {
         let mut chunk: Chunk = Chunk::new();
 
-        compile_expr(ast, &mut chunk);
+        for stmt in &ast.stmts {
+            compile_stmt(stmt, &mut chunk);
+        }
+
         chunk.write(Opcode::Halt as u8);
         chunk
     }
 
+}
+
+fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
+    match stmt {
+        ast::Stmt::Print { expr, span } => {
+            compile_expr(expr, chunk);
+            chunk.write(Opcode::Iprint as u8);
+        }
+        ast::Stmt::StmtExpr { expr, span } => {
+            compile_expr(expr, chunk);
+            chunk.write(Opcode::Pop as u8);
+        }
+    }
 }
 
 fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {

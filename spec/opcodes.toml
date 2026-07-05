@@ -37,3 +37,8 @@ description = "pops 1 int off the stack and prints it"
 name = "inegate"
 value = 7
 description = "pops 1 int off the stack, negates and pushes result"
+
+[[opcodes]]
+name = "pop"
+value = 8
+description = "pops top value off the stack"
