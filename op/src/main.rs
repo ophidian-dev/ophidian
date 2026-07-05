@@ -28,9 +28,6 @@ fn main() {
 
     println!("DEBUG AST: {:?}", ast);
 
-    let mut compiler: Compiler = Compiler::new();
-    let chunk = compiler.compile(&ast);
-    println!("{:?}", chunk.bytecode());
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {

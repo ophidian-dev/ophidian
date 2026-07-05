@@ -77,3 +77,33 @@ pub enum Stmt {
         span: Span
     }
 }
+
+impl Stmt {
+    pub fn span(&self) -> Span {
+        match self {
+            Stmt::Print { span, .. } => {
+                *span
+            }
+            Stmt::StmtExpr { span, .. } => {
+                *span
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Program {
+    stmts: Vec<Stmt>    
+}
+
+impl Program {
+    pub fn new() -> Self {
+        Self {
+            stmts: Vec::new()
+        }
+    }
+
+    pub fn add(&mut self, stmt: Stmt) {
+        self.stmts.push(stmt); 
+    }
+}

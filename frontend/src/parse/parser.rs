@@ -1,6 +1,6 @@
 use crate::lex::lexer::Lexer;
 use crate::lex::token::{Token, TokenType};
-use crate::parse::ast::{BinaryOp, BinopType, Expr, UnaryOp, UnaryopType};
+use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, UnaryOp, UnaryopType};
 use crate::parse::ctors;
 use crate::parse::span::Span;
 use owo_colors::OwoColorize;
@@ -113,6 +113,7 @@ impl<'a> Parser<'a> {
                     return expr;
                 }
                 _ => {
+                    eprintln!("offending token: {:?}", t);
                     todo!("handle error");
                 }
             }
@@ -222,7 +223,65 @@ impl<'a> Parser<'a> {
         self.parse_term()
     }
 
-    pub fn generate_ast(&mut self) -> Expr {
-        self.parse_expression()
+    fn parse_print(&mut self) -> Stmt {
+        let start = self.peek().unwrap().clone();
+        self.advance();
+        let expr = self.parse_expression();
+        let span = expr.span();
+        let stmt = ctors::create_print_stmt(expr, start.span.join(span));
+        if let Err(e) = self.expect(TokenType::Semicolon) {
+            self.errors.push(e);
+            let tok = self.peek().unwrap();
+            self.error(*tok, tok.span, "expected ';'");
+        }
+
+        stmt
+    }
+
+    fn parse_stmtexpr(&mut self) -> Stmt {
+        let expr = self.parse_expression();
+        let span = expr.span();
+        let stmt = ctors::create_exprstmt(expr, span);
+        if let Err(e) = self.expect(TokenType::Semicolon) {
+            self.errors.push(e);
+            let tok = self.peek();
+            match tok {
+                Some(t) => {
+                    self.error(*t, t.span, "expected ';'");
+                }
+                None => {
+                    panic!("unexpected eof")
+                }
+            }
+        }
+        stmt
+    }
+
+    fn parse_stmt(&mut self) -> Stmt {
+        // we unwrap because caller guarentees that peek returns Some
+        let tok = self.peek().unwrap();
+        match tok.kind {
+            TokenType::Print => {
+                self.parse_print()
+            }
+            TokenType::IntegerLiteral | TokenType::OpenParen => {
+                self.parse_stmtexpr()
+            }
+            _ => {
+                self.error(*tok, tok.span, "Unexpected token at statement start");
+                panic!("idk how to handle this error");
+
+            }
+        }
+    }
+
+    pub fn generate_ast(&mut self) -> Program {
+        let mut program = Program::new();
+        while let Some(_) = self.peek() {
+            let stmt = self.parse_stmt();
+            program.add(stmt);
+        }
+
+        program
     }
 }
