@@ -60,6 +60,17 @@ impl<'a> Lexer<'a> {
             column: self.start_column,
         }
     }
+
+    fn get_keyword(&self, s: &[u8]) -> TokenType {
+        match s {
+            b"print" => {
+                TokenType::Print
+            }
+            _ => {
+                todo!("implement identifiers");
+            }
+        }
+    }
 }
 
 const WHITESPACE_LOOPUP: [bool; 256] = {
@@ -124,7 +135,21 @@ impl<'a> Iterator for Lexer<'a> {
                                 self.advance();
                             }
                             return Some(self.create_token(TokenType::IntegerLiteral));
+                        } else if c.is_ascii_alphabetic() {
+                            let mut s: Vec<u8> = Vec::new();
+                            // we unwrap because c is already guarenteed to be Some
+                            s.push(self.advance().unwrap());
+                            while let Some(a) = self.peek() {
+                                if !a.is_ascii_alphabetic() {
+                                    break;
+                                }
+                                // we unwrap here because a is guarenteed to be Some
+                                s.push(self.advance().unwrap());
+                            }
+                            let token = self.get_keyword(&s);
+                            return Some(self.create_token(token));
                         } else {
+                            self.advance();
                             return Some(self.create_error(c));
                         }
                     }

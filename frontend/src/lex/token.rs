@@ -10,6 +10,8 @@ pub enum TokenType {
     OpenParen,
     CloseParen,
     Error(u8),
+
+    Print,
 }
 
 #[derive(Debug, Clone, Copy)]
