@@ -2,6 +2,7 @@
 // It is not intended for manual editing
 
 #[repr(i32)]
+#[derive(Debug)]
 pub enum Opcode {
 
     // halts execution of the virtual machine

@@ -38,11 +38,20 @@ fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
             compile_expr(&*left, chunk);
             compile_expr(&*right, chunk);
             let opcode = match op.kind {
-                ast::BinopType::Add => Opcode::Iadd,
-                ast::BinopType::Sub => Opcode::Isub,
-                ast::BinopType::Mul => Opcode::Imul,
-                ast::BinopType::Div => Opcode::Idiv
+                ast::BinopType::Add => { 
+                    Opcode::Iadd
+                },
+                ast::BinopType::Sub => {
+                    Opcode::Isub
+                },
+                ast::BinopType::Mul => {
+                    Opcode::Imul
+                },
+                ast::BinopType::Div => {
+                    Opcode::Idiv
+                }
             };
+
 
             chunk.write(opcode as u8); 
         }
@@ -54,16 +63,4 @@ fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
             chunk.write(opcode as u8);
         }
     }
-}
-
-fn encode_u24_le(value: usize) -> [u8; 3] {
-    assert!(value <= 0xFF_FF_FF, "u24 overflow");
-
-    let v = value as u32; // safe after check
-
-    [
-        v as u8,
-        (v >> 8) as u8,
-        (v >> 16) as u8,
-    ]
 }

@@ -26,6 +26,8 @@ fn main() {
     let mut parser = Parser::new(lexer);
     let ast = parser.generate_ast(); 
 
+    println!("DEBUG AST: {:?}", ast);
+
     let mut compiler: Compiler = Compiler::new();
     let chunk = compiler.compile(&ast);
     println!("{:?}", chunk.bytecode());
