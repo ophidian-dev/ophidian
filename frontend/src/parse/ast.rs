@@ -65,3 +65,15 @@ impl Expr {
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub enum Stmt {
+    Print {
+        expr: Box<Expr>,
+        span: Span
+    },
+    StmtExpr {
+        expr: Box<Expr>,
+        span: Span
+    }
+}
