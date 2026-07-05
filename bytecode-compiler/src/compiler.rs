@@ -1,28 +1,23 @@
 use crate::opcodes::Opcode;
 use crate::bindings;
 use crate::chunk::Chunk;
-use frontend::lex::lexer::Lexer;
-use frontend::parse::parser::Parser;
 use frontend::parse::ast;
 
 pub struct Compiler {
-    ast: ast::Expr,
 }
 
 impl Compiler {
-    pub fn new(source: &[u8]) -> Compiler {
-        let lexer: Lexer<'_> = Lexer::new(source);
-        let mut parser: Parser<'_> = Parser::new(lexer);
-        let ast: ast::Expr = parser.generate_ast();
+    pub fn new() -> Compiler {
         Self {
-            ast,
+
         }
     }    
 
-    pub fn compile(&mut self) -> Chunk {
+    pub fn compile(&mut self, ast: &ast::Expr) -> Chunk {
         let mut chunk: Chunk = Chunk::new();
 
-        compile_expr(&self.ast, &mut chunk);
+        compile_expr(ast, &mut chunk);
+        chunk.write(Opcode::Halt as u8);
         chunk
     }
 
@@ -34,10 +29,10 @@ fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
             let v: bindings::Value = unsafe { 
                 bindings::create_int_value(*value)
             };
+            chunk.write(Opcode::Loadconst as u8);
             let idx = chunk.write_constant(v);
-            for b in encode_u24_le(idx) {
-                chunk.write(b);
-            }
+            assert!(idx <= 0xFF_FF_FF);
+            chunk.write_u24(idx as u32);
         }
         ast::Expr::BinaryOp { span, op, left, right } => {
             compile_expr(&*left, chunk);

@@ -29,4 +29,12 @@ impl Chunk {
         self.constants.push(value);
         self.constants.len() - 1
     }
+
+    pub fn write_u24(&mut self, value: u32) {
+        assert!(value <= 0xFF_FF_FF);
+        
+        self.write(value as u8);
+        self.write((value >> 8) as u8);
+        self.write((value >> 16) as u8);
+    }
 }

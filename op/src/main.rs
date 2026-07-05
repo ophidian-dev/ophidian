@@ -1,5 +1,7 @@
 use owo_colors::OwoColorize;
 use bytecode_compiler::compiler::Compiler;
+use frontend::lex::lexer::Lexer;
+use frontend::parse::parser::Parser;
 
 fn main() {
     let argv: Vec<String> = std::env::args().collect();
@@ -20,8 +22,12 @@ fn main() {
         "N.B.".yellow()
     );
 
-    let mut compiler: Compiler = Compiler::new(&file);
-    let chunk = compiler.compile();
+    let lexer = Lexer::new(&file);
+    let mut parser = Parser::new(lexer);
+    let ast = parser.generate_ast(); 
+
+    let mut compiler: Compiler = Compiler::new();
+    let chunk = compiler.compile(&ast);
     println!("{:?}", chunk.bytecode());
 }
 
