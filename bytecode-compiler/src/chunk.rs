@@ -2,7 +2,7 @@ use crate::bindings;
 
 pub struct Chunk {
     bytecode: Vec<u8>,
-    constants: Vec<bindings::Value>,
+    constants: Vec<bindings::vm_Value>,
 }
 
 impl Chunk {
@@ -17,7 +17,7 @@ impl Chunk {
         &self.bytecode
     }
 
-    pub fn constants(&self) -> &Vec<bindings::Value> {
+    pub fn constants(&self) -> &Vec<bindings::vm_Value> {
         &self.constants
     }
 
@@ -27,7 +27,7 @@ impl Chunk {
 
         for constant in &self.constants {
             match constant.type_ {
-                bindings::ValueType_VT_INT => {
+                bindings::vm_ValueType_VT_INT => {
                     let i: i32 = unsafe { constant.as_.i };
                     s.push_str(&i.to_string());
                     s.push_str(", ");
@@ -52,7 +52,7 @@ impl Chunk {
         self.bytecode.push(byte);
     }
 
-    pub fn write_constant(&mut self, value: bindings::Value) -> usize {
+    pub fn write_constant(&mut self, value: bindings::vm_Value) -> usize {
         self.constants.push(value);
         self.constants.len() - 1
     }

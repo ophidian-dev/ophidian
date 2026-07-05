@@ -1,17 +1,17 @@
 #ifndef RUNTIME_H
 #define RUNTIME_H
 
-enum ValueType {
+enum vm_ValueType {
     VT_INT   
 };
 
-typedef struct Value {
-    enum ValueType type;
+typedef struct vm_Value {
+    enum vm_ValueType type;
     union {
         int i;
     } as;
-} Value;
+} vm_Value;
 
-Value create_int_value(int i);
+vm_Value vm_create_int_value(int i);
 
 #endif // RUNTIME_H

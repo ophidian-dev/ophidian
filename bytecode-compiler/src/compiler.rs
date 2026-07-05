@@ -38,7 +38,7 @@ fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
 fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
     match expr {
         ast::Expr::IntegerLiteral { span: _, value } => {
-            let v: bindings::Value = unsafe { bindings::create_int_value(*value) };
+            let v: bindings::vm_Value = unsafe { bindings::vm_create_int_value(*value) };
             chunk.write(Opcode::Loadconst as u8);
             let idx = chunk.write_constant(v);
             assert!(idx <= 0xFF_FF_FF);

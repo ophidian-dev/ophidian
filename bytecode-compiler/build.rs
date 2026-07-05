@@ -24,6 +24,7 @@ fn main() {
     let bindings = bindgen::Builder::default()
         .header("../c/include/compiler/runtime.h")
         .clang_arg("-I../c/include")
+        .allowlist_item("vm.*")
         .generate()
         .expect("Failed to generate bindings");
 
