@@ -2,6 +2,7 @@
 #define VM_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "runtime.h"
 
@@ -23,5 +24,9 @@ void stack_free(struct Stack *stack);
 struct VM {
     struct Stack stack;
 };
+
+void vm_init(struct VM *vm);
+void vm_run(uint8_t *bytecode, size_t bytecode_len, Value *constants, size_t constant_len);
+void vm_free(struct VM *vm);
 
 #endif // VM_H

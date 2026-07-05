@@ -42,3 +42,17 @@ void stack_free(struct Stack *stack) {
     stack->capacity = 0;
     stack->size = 0;
 }
+
+void vm_init(struct VM *vm) {
+    struct Stack stack;
+    stack_init(&stack);
+    vm->stack = stack;
+}
+
+void vm_run(uint8_t *bytecode, size_t bytecode_len, Value *constants, size_t constant_len) {
+
+} 
+
+void vm_free(struct VM *vm) {
+    stack_free(&vm->stack);
+}
