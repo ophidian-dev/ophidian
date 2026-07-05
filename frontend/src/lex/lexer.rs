@@ -125,6 +125,10 @@ impl<'a> Iterator for Lexer<'a> {
                         self.advance();
                         return Some(self.create_token(TokenType::CloseParen));
                     }
+                    b';' => {
+                        self.advance();
+                        return Some(self.create_token(TokenType::Semicolon));
+                    }
                     _ => {
                         if c.is_ascii_digit() {
                             self.advance();

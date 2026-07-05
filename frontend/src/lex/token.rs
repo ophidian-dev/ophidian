@@ -12,6 +12,8 @@ pub enum TokenType {
     Error(u8),
 
     Print,
+
+    Semicolon,
 }
 
 #[derive(Debug, Clone, Copy)]
