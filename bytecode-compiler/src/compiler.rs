@@ -28,11 +28,11 @@ impl Compiler {
 
 fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
     match stmt {
-        ast::Stmt::Print { expr, span } => {
+        ast::Stmt::Print { expr, .. } => {
             compile_expr(expr, chunk);
             chunk.write(Opcode::Iprint as u8);
         }
-        ast::Stmt::StmtExpr { expr, span } => {
+        ast::Stmt::StmtExpr { expr, .. } => {
             compile_expr(expr, chunk);
             chunk.write(Opcode::Pop as u8);
         }
@@ -41,7 +41,7 @@ fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
 
 fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
     match expr {
-        ast::Expr::IntegerLiteral { span, value } => {
+        ast::Expr::IntegerLiteral { span: _, value } => {
             let v: bindings::Value = unsafe { 
                 bindings::create_int_value(*value)
             };
@@ -50,7 +50,7 @@ fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
             assert!(idx <= 0xFF_FF_FF);
             chunk.write_u24(idx as u32);
         }
-        ast::Expr::BinaryOp { span, op, left, right } => {
+        ast::Expr::BinaryOp { span: _, op, left, right } => {
             compile_expr(&*left, chunk);
             compile_expr(&*right, chunk);
             let opcode = match op.kind {
@@ -71,7 +71,7 @@ fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
 
             chunk.write(opcode as u8); 
         }
-        ast::Expr::UnaryOp { span, op, expr } => {
+        ast::Expr::UnaryOp { span: _, op, expr } => {
             compile_expr(&*expr, chunk);
             let opcode: Opcode = match op.kind {
                 ast::UnaryopType::Negate => Opcode::Inegate,

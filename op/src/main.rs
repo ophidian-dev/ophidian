@@ -28,8 +28,7 @@ fn main() {
 
     let mut compiler = Compiler::new();
     let chunk = compiler.compile(&ast);
-    println!("chunk: {:?}", chunk.bytecode());
-
+    println!("{:#?}", chunk);
     // println!("DEBUG AST: {:?}", ast);
 
 }
