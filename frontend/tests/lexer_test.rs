@@ -1,10 +1,8 @@
 use frontend::lex::lexer::Lexer;
-use frontend::lex::token::{TokenType, Token};
+use frontend::lex::token::{Token, TokenType};
 
 fn lex(input: &str) -> Vec<TokenType> {
-    Lexer::new(input.as_bytes())
-        .map(|t| t.kind)
-        .collect()
+    Lexer::new(input.as_bytes()).map(|t| t.kind).collect()
 }
 
 #[test]

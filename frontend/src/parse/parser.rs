@@ -261,16 +261,11 @@ impl<'a> Parser<'a> {
         // we unwrap because caller guarentees that peek returns Some
         let tok = self.peek().unwrap();
         match tok.kind {
-            TokenType::Print => {
-                self.parse_print()
-            }
-            TokenType::IntegerLiteral | TokenType::OpenParen => {
-                self.parse_stmtexpr()
-            }
+            TokenType::Print => self.parse_print(),
+            TokenType::IntegerLiteral | TokenType::OpenParen => self.parse_stmtexpr(),
             _ => {
                 self.error(*tok, tok.span, "Unexpected token at statement start");
                 panic!("idk how to handle this error");
-
             }
         }
     }

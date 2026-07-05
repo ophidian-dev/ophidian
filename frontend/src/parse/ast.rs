@@ -68,25 +68,15 @@ impl Expr {
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
-    Print {
-        expr: Box<Expr>,
-        span: Span
-    },
-    StmtExpr {
-        expr: Box<Expr>,
-        span: Span
-    }
+    Print { expr: Box<Expr>, span: Span },
+    StmtExpr { expr: Box<Expr>, span: Span },
 }
 
 impl Stmt {
     pub fn span(&self) -> Span {
         match self {
-            Stmt::Print { span, .. } => {
-                *span
-            }
-            Stmt::StmtExpr { span, .. } => {
-                *span
-            }
+            Stmt::Print { span, .. } => *span,
+            Stmt::StmtExpr { span, .. } => *span,
         }
     }
 }
@@ -98,14 +88,10 @@ pub struct Program {
 
 impl Program {
     pub fn new() -> Self {
-        Self {
-            stmts: Vec::new(),
-        }
+        Self { stmts: Vec::new() }
     }
 
     pub fn add(&mut self, stmt: Stmt) {
-        self.stmts.push(stmt); 
+        self.stmts.push(stmt);
     }
 }
-
-

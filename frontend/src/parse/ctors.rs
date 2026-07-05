@@ -1,4 +1,4 @@
-use crate::parse::ast::{BinaryOp, Expr, UnaryOp, Stmt};
+use crate::parse::ast::{BinaryOp, Expr, Stmt, UnaryOp};
 use crate::parse::span::Span;
 
 pub fn create_integer_literal(value: i32, span: Span) -> Expr {
@@ -23,9 +23,15 @@ pub fn create_unary_op(op: UnaryOp, expr: Expr, span: Span) -> Expr {
 }
 
 pub fn create_exprstmt(expr: Expr, span: Span) -> Stmt {
-    Stmt::StmtExpr { expr: Box::new(expr), span }
+    Stmt::StmtExpr {
+        expr: Box::new(expr),
+        span,
+    }
 }
 
 pub fn create_print_stmt(expr: Expr, span: Span) -> Stmt {
-    Stmt::Print { expr: Box::new(expr), span }
+    Stmt::Print {
+        expr: Box::new(expr),
+        span,
+    }
 }

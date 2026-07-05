@@ -1,17 +1,14 @@
-use crate::opcodes::Opcode;
 use crate::bindings;
 use crate::chunk::Chunk;
+use crate::opcodes::Opcode;
 use frontend::parse::ast;
 
-pub struct Compiler {
-}
+pub struct Compiler {}
 
 impl Compiler {
     pub fn new() -> Compiler {
-        Self {
-
-        }
-    }    
+        Self {}
+    }
 
     pub fn compile(&mut self, ast: &ast::Program) -> Chunk {
         let mut chunk: Chunk = Chunk::new();
@@ -23,7 +20,6 @@ impl Compiler {
         chunk.write(Opcode::Halt as u8);
         chunk
     }
-
 }
 
 fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
@@ -42,34 +38,28 @@ fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
 fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
     match expr {
         ast::Expr::IntegerLiteral { span: _, value } => {
-            let v: bindings::Value = unsafe { 
-                bindings::create_int_value(*value)
-            };
+            let v: bindings::Value = unsafe { bindings::create_int_value(*value) };
             chunk.write(Opcode::Loadconst as u8);
             let idx = chunk.write_constant(v);
             assert!(idx <= 0xFF_FF_FF);
             chunk.write_u24(idx as u32);
         }
-        ast::Expr::BinaryOp { span: _, op, left, right } => {
+        ast::Expr::BinaryOp {
+            span: _,
+            op,
+            left,
+            right,
+        } => {
             compile_expr(&*left, chunk);
             compile_expr(&*right, chunk);
             let opcode = match op.kind {
-                ast::BinopType::Add => { 
-                    Opcode::Iadd
-                },
-                ast::BinopType::Sub => {
-                    Opcode::Isub
-                },
-                ast::BinopType::Mul => {
-                    Opcode::Imul
-                },
-                ast::BinopType::Div => {
-                    Opcode::Idiv
-                }
+                ast::BinopType::Add => Opcode::Iadd,
+                ast::BinopType::Sub => Opcode::Isub,
+                ast::BinopType::Mul => Opcode::Imul,
+                ast::BinopType::Div => Opcode::Idiv,
             };
 
-
-            chunk.write(opcode as u8); 
+            chunk.write(opcode as u8);
         }
         ast::Expr::UnaryOp { span: _, op, expr } => {
             compile_expr(&*expr, chunk);

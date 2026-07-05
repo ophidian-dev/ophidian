@@ -4,7 +4,6 @@
 #[repr(i32)]
 #[derive(Debug)]
 pub enum Opcode {
-
     // halts execution of the virtual machine
     Halt = 0,
     // pops 2 ints off the stack and adds them then pushes the result
