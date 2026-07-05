@@ -43,6 +43,7 @@ version = "0.1.0"
 dependencies = [
  "bindgen",
  "cc",
+ "frontend",
  "walkdir",
 ]
 
@@ -187,8 +188,8 @@ name = "op"
 version = "0.1.0"
 dependencies = [
  "bindgen",
+ "bytecode-compiler",
  "cc",
- "frontend",
  "owo-colors",
  "walkdir",
 ]

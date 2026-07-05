@@ -10,8 +10,8 @@ pub enum BinopType {
 
 #[derive(Debug, Clone, Copy)]
 pub struct BinaryOp {
-    kind: BinopType,
-    span: Span,
+    pub kind: BinopType,
+    pub span: Span,
 }
 
 impl BinaryOp {
@@ -27,8 +27,8 @@ pub enum UnaryopType {
 
 #[derive(Debug, Clone, Copy)]
 pub struct UnaryOp {
-    kind: UnaryopType,
-    span: Span,
+    pub kind: UnaryopType,
+    pub span: Span,
 }
 
 impl UnaryOp {
@@ -41,7 +41,7 @@ impl UnaryOp {
 pub enum Expr {
     IntegerLiteral {
         span: Span,
-        value: i64,
+        value: i32,
     },
     BinaryOp {
         span: Span,

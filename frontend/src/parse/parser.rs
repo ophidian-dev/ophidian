@@ -99,7 +99,7 @@ impl<'a> Parser<'a> {
                     let s: &str = std::str::from_utf8(value).unwrap();
                     // we unwrap the value here because the string is guarenteed to be a valid number
                     // since the lexer lexes numeric literals
-                    let n: i64 = s.parse().unwrap();
+                    let n: i32 = s.parse().unwrap();
                     return ctors::create_integer_literal(n, tok.span);
                 }
                 TokenType::OpenParen => {

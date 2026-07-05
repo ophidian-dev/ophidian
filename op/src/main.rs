@@ -1,6 +1,5 @@
-use frontend::lex::lexer::Lexer;
-use frontend::parse::parser::Parser;
 use owo_colors::OwoColorize;
+use bytecode_compiler::compiler::Compiler;
 
 fn main() {
     let argv: Vec<String> = std::env::args().collect();
@@ -21,10 +20,9 @@ fn main() {
         "N.B.".yellow()
     );
 
-    let lexer = Lexer::new(&file);
-    let mut parser = Parser::new(lexer);
-    let ast = parser.generate_ast();
-    println!("{:?}", ast);
+    let mut compiler: Compiler = Compiler::new(&file);
+    let chunk = compiler.compile();
+    println!("{:?}", chunk.bytecode());
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {

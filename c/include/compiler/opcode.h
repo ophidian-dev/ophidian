@@ -22,3 +22,6 @@
 // pops 1 int off the stack and prints it
 #define OP_IPRINT 6
 
+// pops 1 int off the stack, negates and pushes result
+#define OP_INEGATE 7
+

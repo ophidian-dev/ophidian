@@ -12,4 +12,6 @@ typedef struct Value {
     } as;
 } Value;
 
+Value create_int_value(int i);
+
 #endif // RUNTIME_H

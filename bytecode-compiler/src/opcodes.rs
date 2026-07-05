@@ -18,4 +18,6 @@ pub enum Opcode {
     Loadconst = 5,
     // pops 1 int off the stack and prints it
     Iprint = 6,
+    // pops 1 int off the stack, negates and pushes result
+    Inegate = 7,
 }

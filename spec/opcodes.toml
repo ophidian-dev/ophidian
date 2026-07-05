@@ -32,3 +32,8 @@ description = "takes a 3 byte operand and indexes into constant pool and pushes 
 name = "iprint"
 value = 6
 description = "pops 1 int off the stack and prints it"
+
+[[opcodes]]
+name = "inegate"
+value = 7
+description = "pops 1 int off the stack, negates and pushes result"
