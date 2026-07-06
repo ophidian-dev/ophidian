@@ -1,6 +1,7 @@
 use bytecode_compiler::compiler::Compiler;
 use frontend::lex::lexer::Lexer;
 use frontend::parse::parser::Parser;
+use bytecode_compiler::bindings;
 use owo_colors::OwoColorize;
 
 fn main() {
@@ -28,8 +29,17 @@ fn main() {
 
     let mut compiler = Compiler::new();
     let chunk = compiler.compile(&ast);
-    println!("{:#?}", chunk);
+    // println!("{:#?}", chunk);
     // println!("DEBUG AST: {:?}", ast);
+
+    unsafe {
+        bindings::vm_execute(
+            chunk.bytecode().as_mut_ptr(),
+            chunk.bytecode().len(),
+            chunk.constants().as_mut_ptr(),
+            chunk.constants().len(),
+        );
+    }
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {

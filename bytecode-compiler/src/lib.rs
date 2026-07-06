@@ -1,6 +1,8 @@
 pub mod compiler;
 
 // private modules
-mod bindings;
+pub mod bindings;
 mod chunk;
 mod opcodes;
+
+
