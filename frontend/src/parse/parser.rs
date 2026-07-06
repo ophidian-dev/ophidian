@@ -209,7 +209,7 @@ impl<'a> Parser<'a> {
                 }
             }
         } else {
-            // Safe recovery point if expression context hits EOF prematurely
+            // safe recovery point if expression context hits EOF prematurely
             let fallback_span = self
                 .previous
                 .as_ref()
@@ -242,7 +242,7 @@ impl<'a> Parser<'a> {
             }
             Some(_) => self.parse_primary(),
             None => {
-                // Safe recovery point instead of panic
+                // safe recovery point instead of panic
                 let fallback_span = self
                     .previous
                     .as_ref()
