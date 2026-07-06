@@ -13,7 +13,7 @@ void vm_execute(uint8_t *bytecode, size_t bytecode_len, vm_Value *constants, siz
     struct VM vm;
     vm_init(&vm);
 
-    vm_execute(bytecode, bytecode_len, constants, constant_len);
+    vm_run(&vm, bytecode, bytecode_len, constants, constant_len);
 
     vm_free(&vm);
 }
