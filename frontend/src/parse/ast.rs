@@ -54,6 +54,9 @@ pub enum Expr {
         op: UnaryOp,
         expr: Box<Expr>,
     },
+    Error {
+        span: Span,
+    },
 }
 
 impl Expr {
@@ -62,6 +65,7 @@ impl Expr {
             Expr::IntegerLiteral { span, .. } => *span,
             Expr::BinaryOp { span, .. } => *span,
             Expr::UnaryOp { span, .. } => *span,
+            Expr::Error { span } => *span,
         }
     }
 }
@@ -70,6 +74,7 @@ impl Expr {
 pub enum Stmt {
     Print { expr: Box<Expr>, span: Span },
     StmtExpr { expr: Box<Expr>, span: Span },
+    Error { span: Span },
 }
 
 impl Stmt {
@@ -77,6 +82,7 @@ impl Stmt {
         match self {
             Stmt::Print { span, .. } => *span,
             Stmt::StmtExpr { span, .. } => *span,
+            Stmt::Error { span } => *span,
         }
     }
 }

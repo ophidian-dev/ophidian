@@ -32,6 +32,9 @@ fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
             compile_expr(expr, chunk);
             chunk.write(Opcode::Pop as u8);
         }
+        _ => {
+            panic!("execution should not reach here");
+        }
     }
 }
 
@@ -67,6 +70,9 @@ fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
                 ast::UnaryopType::Negate => Opcode::Inegate,
             };
             chunk.write(opcode as u8);
+        }
+        ast::Expr::Error { span: _ } => {
+            panic!("execution should not reach here");
         }
     }
 }

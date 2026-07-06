@@ -41,6 +41,23 @@ impl<'a> Parser<'a> {
         &self.lexer.source[span.offset()..span.end()]
     }
 
+    fn sync(&mut self) {
+        while let Some(tok) = self.peek() {
+            match tok.kind {
+                TokenType::Semicolon => {
+                    self.advance();
+                    return;
+                }
+                TokenType::Print => {
+                    return;
+                }
+                _ => {
+                    self.advance();
+                }
+            }
+        }
+    }
+
     fn get_line(&self, tok: Token) -> &[u8] {
         let mut start = tok.span.offset();
         while start > 0 && self.lexer.source[start - 1] != b'\n' {
@@ -52,6 +69,20 @@ impl<'a> Parser<'a> {
             end += 1;
         }
         &self.lexer.source[start..end]
+    }
+
+    fn get_line_bounds(&self, tok: Token) -> (usize, usize) {
+        let mut start = tok.span.offset();
+        while start > 0 && self.lexer.source[start - 1] != b'\n' {
+            start -= 1;
+        }
+
+        let mut end = tok.span.offset();
+        while end < self.lexer.source.len() && self.lexer.source[end] != b'\n' {
+            end += 1;
+        }
+
+        (start, end)
     }
 
     fn expect(&mut self, expected: TokenType) -> Result<Token, ParseError> {
@@ -77,6 +108,8 @@ impl<'a> Parser<'a> {
             msg.bold()
         );
 
+        let (line_start, line_end) = self.get_line_bounds(tok);
+
         let count: usize = tok.line.to_string().len();
         for _ in 1..count {
             eprint!(" ");
@@ -93,12 +126,16 @@ impl<'a> Parser<'a> {
             eprint!(" ");
         }
         eprint!("  | ");
-        for i in 0..span.end() {
-            if i > span.offset() {
+        
+        for i in line_start..line_end {
+            if i >= span.offset() && i < span.end() {
                 eprint!("{}", "^".green());
+            } else {
+                eprint!(" ");
             }
         }
-        eprint!("\n");
+        
+        eprintln!();
     }
 
     fn parse_primary(&mut self) -> Expr {
@@ -122,12 +159,17 @@ impl<'a> Parser<'a> {
                     if let Err(e) = self.expect(TokenType::CloseParen) {
                         self.errors.push(e);
                         self.error(tok, tok.span, "expected ')'");
+                        self.sync();
+                        return Expr::Error { span: tok.span }
                     }
                     return expr;
                 }
                 _ => {
-                    eprintln!("offending token: {:?}", t);
-                    todo!("handle error");
+                    let tok = t.clone();
+                    self.errors.push(ParseError::UnexpectedToken(tok));
+                    self.error(tok, tok.span, "unexpected token");
+                    self.sync();
+                    return Expr::Error { span: tok.span };
                 }
             }
         } else {
@@ -241,8 +283,10 @@ impl<'a> Parser<'a> {
         self.advance();
         if let Err(e) = self.expect(TokenType::OpenParen) {
             self.errors.push(e);
-            let tok = self.peek().unwrap();
-            self.error(*tok, tok.span, "expected '('");
+            let tok = self.peek().unwrap().clone();
+            self.error(tok, tok.span, "expected '('");
+            self.sync();
+            return Stmt::Error { span: tok.span };
         }
 
 
@@ -252,14 +296,18 @@ impl<'a> Parser<'a> {
 
         if let Err(e) = self.expect(TokenType::CloseParen) {
             self.errors.push(e);
-            let tok = self.peek().unwrap();
-            self.error(*tok, tok.span, "expected ')'");
+            let tok = self.peek().unwrap().clone();
+            self.error(tok, tok.span, "expected ')'");
+            self.sync();
+            return Stmt::Error { span: tok.span };
         }
 
         if let Err(e) = self.expect(TokenType::Semicolon) {
             self.errors.push(e);
-            let tok = self.peek().unwrap();
-            self.error(*tok, tok.span, "expected ';'");
+            let tok = self.peek().unwrap().clone();
+            self.error(tok, tok.span, "expected ';'");
+            self.sync();
+            return Stmt::Error { span: tok.span }
         }
 
         stmt
@@ -272,9 +320,12 @@ impl<'a> Parser<'a> {
         if let Err(e) = self.expect(TokenType::Semicolon) {
             self.errors.push(e);
             let tok = self.peek();
-            match tok {
+            match tok.cloned() {
                 Some(t) => {
-                    self.error(*t, t.span, "expected ';'");
+                    self.error(t, t.span, "expected ';'");
+                    self.sync();
+                    return Stmt::Error { span: t.span };
+                    
                 }
                 None => {
                     panic!("unexpected eof")
@@ -286,13 +337,15 @@ impl<'a> Parser<'a> {
 
     fn parse_stmt(&mut self) -> Stmt {
         // we unwrap because caller guarentees that peek returns Some
-        let tok = self.peek().unwrap();
+        let tok = self.peek().unwrap().clone();
         match tok.kind {
             TokenType::Print => self.parse_print(),
             TokenType::IntegerLiteral | TokenType::OpenParen => self.parse_stmtexpr(),
             _ => {
-                self.error(*tok, tok.span, "Unexpected token at statement start");
-                panic!("idk how to handle this error");
+                self.error(tok, tok.span, "Unexpected token at statement start");
+                self.errors.push(ParseError::UnexpectedToken(tok));
+                self.sync();
+                Stmt::Error { span: tok.span }
             }
         }
     }
@@ -310,6 +363,7 @@ impl<'a> Parser<'a> {
         } else if self.errors.len() > 1 {
             eprintln!("{} errors generated.", self.errors.len());
         }
+        // exit after parser encounters errors cuz i cant be bothered to implement error ast nodes in the compiler
         if self.errors.len() > 0 {
             std::process::exit(1);
         }
