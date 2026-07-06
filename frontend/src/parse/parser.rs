@@ -41,6 +41,19 @@ impl<'a> Parser<'a> {
         &self.lexer.source[span.offset()..span.end()]
     }
 
+    fn get_line(&self, tok: Token) -> &[u8] {
+        let mut start = tok.span.offset();
+        while start > 0 && self.lexer.source[start - 1] != b'\n' {
+            start -= 1;
+        }
+
+        let mut end = tok.span.offset();
+        while end < self.lexer.source.len() && self.lexer.source[end] != b'\n' {
+            end += 1;
+        }
+        &self.lexer.source[start..end]
+    }
+
     fn expect(&mut self, expected: TokenType) -> Result<Token, ParseError> {
         match self.peek() {
             Some(tok) if tok.kind == expected => {
@@ -68,9 +81,9 @@ impl<'a> Parser<'a> {
         for _ in 1..count {
             eprint!(" ");
         }
-        eprintln!("|");
+        eprintln!("  |");
         eprint!("{} | ", tok.line + 1);
-        let bytes: &[u8] = self.get_slice(span);
+        let bytes: &[u8] = self.get_line(tok);
 
         // we unwrap here because we trust the caller to pass in a file containing only valid ascii
         let s = std::str::from_utf8(bytes).unwrap();
@@ -79,7 +92,7 @@ impl<'a> Parser<'a> {
         for _ in 1..count {
             eprint!(" ");
         }
-        eprint!("| ");
+        eprint!("  | ");
         for i in 0..span.end() {
             if i > span.offset() {
                 eprint!("{}", "^".green());
@@ -226,9 +239,23 @@ impl<'a> Parser<'a> {
     fn parse_print(&mut self) -> Stmt {
         let start = self.peek().unwrap().clone();
         self.advance();
+        if let Err(e) = self.expect(TokenType::OpenParen) {
+            self.errors.push(e);
+            let tok = self.peek().unwrap();
+            self.error(*tok, tok.span, "expected '('");
+        }
+
+
         let expr = self.parse_expression();
         let span = expr.span();
         let stmt = ctors::create_print_stmt(expr, start.span.join(span));
+
+        if let Err(e) = self.expect(TokenType::CloseParen) {
+            self.errors.push(e);
+            let tok = self.peek().unwrap();
+            self.error(*tok, tok.span, "expected ')'");
+        }
+
         if let Err(e) = self.expect(TokenType::Semicolon) {
             self.errors.push(e);
             let tok = self.peek().unwrap();
@@ -276,6 +303,17 @@ impl<'a> Parser<'a> {
             let stmt = self.parse_stmt();
             program.add(stmt);
         }
+
+        println!();
+        if self.errors.len() == 1 {
+            eprintln!("{} error generated.", self.errors.len());
+        } else if self.errors.len() > 1 {
+            eprintln!("{} errors generated.", self.errors.len());
+        }
+        if self.errors.len() > 0 {
+            std::process::exit(1);
+        }
+
 
         program
     }
