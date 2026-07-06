@@ -51,8 +51,16 @@ void vm_init(struct VM *vm) {
     vm->stack = stack;
 }
 
-uint8_t read_byte(struct VM *vm) {
+static uint8_t read_byte(struct VM *vm) {
     return *vm->ip++;
+}
+
+static void push(struct VM *vm, Value v) {
+    stack_push(&vm->stack, v);
+}
+
+static Value pop(struct VM *vm) {
+    return stack_pop(&vm->stack);
 }
 
 void vm_run(struct VM *vm, uint8_t *bytecode, size_t bytecode_len, Value *constants, size_t constant_len) {
