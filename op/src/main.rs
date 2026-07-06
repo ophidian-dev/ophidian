@@ -29,13 +29,16 @@ fn main() {
 
     let mut compiler = Compiler::new();
     let chunk = compiler.compile(&ast);
-    // println!("{:#?}", chunk);
+    println!("{:#?}", chunk);
     // println!("DEBUG AST: {:?}", ast);
 
     unsafe {
         let bytecode_len = chunk.bytecode().len();
         let constant_len = chunk.constants().len();
-        let (bytecode, constants) = chunk.chunk_data_as_mut_ptr();
+        let (mut bytecode, mut constants) = chunk.chunk_data();
+        let bytecode: *mut u8 = bytecode.as_mut_ptr();
+        let constants: *mut bindings::vm_Value = constants.as_mut_ptr(); 
+        
         bindings::vm_execute(
             bytecode, 
             bytecode_len,

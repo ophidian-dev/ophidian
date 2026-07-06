@@ -35,6 +35,10 @@ void stack_push(struct Stack *stack, Value value) {
 }
 
 Value stack_pop(struct Stack *stack) {
+    if (stack->size < 1) {
+        fprintf(stderr, "stack underflow\n");
+        exit(1);
+    }
     Value v = stack->data[stack->size - 1];
     stack->size--;
     return v;
@@ -150,7 +154,8 @@ void vm_run(struct VM *vm, Byte *bytecode, size_t bytecode_len, Value *constants
                 break;
             }
             default: {
-                fprintf(stderr, "unknown opcode: '%d'", (int)opcode);
+                fprintf(stderr, "unknown opcode: '%d'\n", (int)opcode);
+                vm->is_running = false;
             }
         }
     }
