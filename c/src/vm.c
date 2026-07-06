@@ -6,6 +6,8 @@
 
 #include "compiler/opcode.h"
 
+typedef uint8_t Byte;
+
 void stack_init(struct Stack *stack) {
     stack->size = 0;
     stack->capacity = 16;
@@ -51,7 +53,7 @@ void vm_init(struct VM *vm) {
     vm->stack = stack;
 }
 
-static uint8_t read_byte(struct VM *vm) {
+static Byte read_byte(struct VM *vm) {
     return *vm->ip++;
 }
 
@@ -63,18 +65,93 @@ static Value pop(struct VM *vm) {
     return stack_pop(&vm->stack);
 }
 
-void vm_run(struct VM *vm, uint8_t *bytecode, size_t bytecode_len, Value *constants, size_t constant_len) {
+static Value value_from_int(int i) {
+    return (Value) { .type = VT_INT, .as.integer = i };
+}
+
+static void clear_stack(struct Stack *stack) {
+    stack->size = 0;
+}
+
+static uint32_t decode3_le(Byte b0, Byte b1, Byte b2) {
+    return (uint32_t)b0
+         | ((uint32_t)b1 << 8)
+         | ((uint32_t)b2 << 16);
+}
+
+void vm_run(struct VM *vm, Byte *bytecode, size_t bytecode_len, Value *constants, size_t constant_len) {
     if (bytecode_len < 1) {
         return;
     } 
 
-    vm->ip = bytecode;
+    clear_stack(&vm->stack);
 
-    while (1) {
-        uint8_t opcode = read_byte(vm);
+    vm->ip = bytecode;
+    vm->is_running = true;
+
+    while (vm->is_running) {
+        Byte opcode = read_byte(vm);
 
         switch (opcode) {
-
+            case OP_HALT: {
+                vm->is_running = false;
+                break;
+            }
+            case OP_IADD: {
+                Value b = pop(vm);
+                Value a = pop(vm);
+                Value v = value_from_int(a.as.integer + b.as.integer);
+                push(vm, v);
+                break;
+            }
+            case OP_ISUB: {
+                Value b = pop(vm);
+                Value a = pop(vm);
+                Value v = value_from_int(a.as.integer - b.as.integer);
+                push(vm, v);
+                break;
+            }
+            case OP_IMUL: {
+                Value b = pop(vm);
+                Value a = pop(vm);
+                Value v = value_from_int(a.as.integer * b.as.integer);
+                push(vm, v);
+                break;
+            }
+            case OP_IDIV: {
+                Value b = pop(vm);
+                Value a = pop(vm);
+                Value v = value_from_int(a.as.integer / b.as.integer);
+                push(vm, v);
+                break;
+            }
+            case OP_INEGATE: {
+                Value a = pop(vm);
+                Value v = value_from_int(-a.as.integer);
+                push(vm, v);
+                break;
+            }
+            case OP_IPRINT: {
+                Value v = pop(vm);
+                printf("%d\n", v.as.integer);
+                break;
+            }
+            case OP_POP: {
+                pop(vm);
+                break;
+            }
+            case OP_LOADCONST: {
+                Byte b0 = read_byte(vm);
+                Byte b1 = read_byte(vm);
+                Byte b2 = read_byte(vm);
+                uint32_t idx = decode3_le(b0, b1, b2);
+                Value constant = constants[idx];
+                push(vm, constant);
+                break;
+            }
+            default: {
+                fprintf(stderr, "unknown opcode: '%d'", (int)opcode);
+            }
         }
     }
 } 

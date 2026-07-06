@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "runtime.h"
 
@@ -24,6 +25,7 @@ void stack_free(struct Stack *stack);
 struct VM {
     struct Stack stack;
     uint8_t *ip;
+    bool is_running;
 };
 
 void vm_init(struct VM *vm);
