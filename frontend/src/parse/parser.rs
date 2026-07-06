@@ -8,6 +8,7 @@ use owo_colors::OwoColorize;
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
     current: Option<Token>,
+    previous: Option<Token>,
     errors: Vec<ParseError>,
 }
 
@@ -25,6 +26,7 @@ impl<'a> Parser<'a> {
         Self {
             lexer,
             current,
+            previous: None,
             errors: Vec::new(),
         }
     }
@@ -34,6 +36,7 @@ impl<'a> Parser<'a> {
     }
 
     fn advance(&mut self) {
+        self.previous = self.current.clone();
         self.current = self.lexer.next();
     }
 
@@ -98,17 +101,31 @@ impl<'a> Parser<'a> {
     }
 
     fn error(&self, tok: Token, span: Span, msg: &str) {
+
+        let (line_start, line_end) = self.get_line_bounds(tok);
+
+        // If a token was expected, place a single caret right after the previous token's span.
+        // Otherwise, default to highlighting the unexpected token's span directly.
+        let (caret_start, caret_end, display_column) = if msg.starts_with("expected") {
+            let start = span.end();
+            let end = span.end() + 1;
+            let col = start - line_start + 1;
+            (start, end, col)
+        } else {
+            (span.offset(), span.end(), tok.column + 1)
+        };
+
         eprintln!(
             "{}{}{}{} {} {}",
             (tok.line + 1).bold(),
             ":".bold(),
-            (tok.column + 1).bold(),
+            display_column.bold(),
             ": ".bold(),
             "error:".bright_red().bold(),
             msg.bold()
         );
 
-        let (line_start, line_end) = self.get_line_bounds(tok);
+
 
         let count: usize = tok.line.to_string().len();
         for _ in 1..count {
@@ -127,8 +144,8 @@ impl<'a> Parser<'a> {
         }
         eprint!("  | ");
         
-        for i in line_start..line_end {
-            if i >= span.offset() && i < span.end() {
+        for i in line_start..std::cmp::max(line_end, caret_end) {
+            if i >= caret_start && i < caret_end {
                 eprint!("{}", "^".green());
             } else {
                 eprint!(" ");
@@ -155,9 +172,9 @@ impl<'a> Parser<'a> {
                 TokenType::OpenParen => {
                     self.advance();
                     let expr: Expr = self.parse_expression();
-                    let tok: Token = self.peek().unwrap().clone();
                     if let Err(e) = self.expect(TokenType::CloseParen) {
                         self.errors.push(e);
+                        let tok = self.previous.unwrap().clone();
                         self.error(tok, tok.span, "expected ')'");
                         self.sync();
                         return Expr::Error { span: tok.span }
@@ -283,7 +300,7 @@ impl<'a> Parser<'a> {
         self.advance();
         if let Err(e) = self.expect(TokenType::OpenParen) {
             self.errors.push(e);
-            let tok = self.peek().unwrap().clone();
+            let tok = self.previous.unwrap().clone();
             self.error(tok, tok.span, "expected '('");
             self.sync();
             return Stmt::Error { span: tok.span };
@@ -296,7 +313,7 @@ impl<'a> Parser<'a> {
 
         if let Err(e) = self.expect(TokenType::CloseParen) {
             self.errors.push(e);
-            let tok = self.peek().unwrap().clone();
+            let tok = self.previous.unwrap().clone();
             self.error(tok, tok.span, "expected ')'");
             self.sync();
             return Stmt::Error { span: tok.span };
@@ -304,7 +321,7 @@ impl<'a> Parser<'a> {
 
         if let Err(e) = self.expect(TokenType::Semicolon) {
             self.errors.push(e);
-            let tok = self.peek().unwrap().clone();
+            let tok = self.previous.unwrap().clone();
             self.error(tok, tok.span, "expected ';'");
             self.sync();
             return Stmt::Error { span: tok.span }
@@ -322,7 +339,8 @@ impl<'a> Parser<'a> {
             let tok = self.peek();
             match tok.cloned() {
                 Some(t) => {
-                    self.error(t, t.span, "expected ';'");
+                    let tok = self.previous.unwrap().clone();
+                    self.error(tok, tok.span, "expected ';'");
                     self.sync();
                     return Stmt::Error { span: t.span };
                     
