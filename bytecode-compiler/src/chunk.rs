@@ -28,7 +28,7 @@ impl Chunk {
         for constant in &self.constants {
             match constant.type_ {
                 bindings::vm_ValueType_VT_INT => {
-                    let i: i32 = unsafe { constant.as_.i };
+                    let i: i32 = unsafe { constant.as_.integer };
                     s.push_str(&i.to_string());
                     s.push_str(", ");
                 }

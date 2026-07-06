@@ -1,8 +1,10 @@
-#include "vm.h"
+#include "compiler/vm.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
+
+#include "compiler/opcode.h"
 
 void stack_init(struct Stack *stack) {
     stack->size = 0;
