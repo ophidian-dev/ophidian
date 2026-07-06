@@ -29,7 +29,7 @@ fn main() {
 
     let mut compiler = Compiler::new();
     let chunk = compiler.compile(&ast);
-    println!("{:#?}", chunk);
+    // println!("{:#?}", chunk);
     // println!("DEBUG AST: {:?}", ast);
 
     unsafe {
