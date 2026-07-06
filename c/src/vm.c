@@ -49,8 +49,24 @@ void vm_init(struct VM *vm) {
     vm->stack = stack;
 }
 
-void vm_run(uint8_t *bytecode, size_t bytecode_len, Value *constants, size_t constant_len) {
+uint8_t read_byte(struct VM *vm) {
+    return *vm->ip++;
+}
 
+void vm_run(struct VM *vm, uint8_t *bytecode, size_t bytecode_len, Value *constants, size_t constant_len) {
+    if (bytecode_len < 1) {
+        return;
+    } 
+
+    vm->ip = bytecode;
+
+    while (1) {
+        uint8_t opcode = read_byte(vm);
+
+        switch (opcode) {
+
+        }
+    }
 } 
 
 void vm_free(struct VM *vm) {

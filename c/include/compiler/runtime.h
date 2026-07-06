@@ -11,7 +11,7 @@ enum vm_ValueType {
 typedef struct vm_Value {
     enum vm_ValueType type;
     union {
-        int i;
+        int integer;
     } as;
 } vm_Value;
 

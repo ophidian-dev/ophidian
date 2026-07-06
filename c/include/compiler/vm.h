@@ -23,10 +23,11 @@ void stack_free(struct Stack *stack);
 
 struct VM {
     struct Stack stack;
+    uint8_t *ip;
 };
 
 void vm_init(struct VM *vm);
-void vm_run(uint8_t *bytecode, size_t bytecode_len, Value *constants, size_t constant_len);
+void vm_run(struct VM *vm, uint8_t *bytecode, size_t bytecode_len, Value *constants, size_t constant_len);
 void vm_free(struct VM *vm);
 
 #endif // VM_H
