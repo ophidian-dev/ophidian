@@ -33,11 +33,14 @@ fn main() {
     // println!("DEBUG AST: {:?}", ast);
 
     unsafe {
+        let bytecode_len = chunk.bytecode().len();
+        let constant_len = chunk.constants().len();
+        let (bytecode, constants) = chunk.chunk_data_as_mut_ptr();
         bindings::vm_execute(
-            chunk.bytecode().as_mut_ptr(),
-            chunk.bytecode().len(),
-            chunk.constants().as_mut_ptr(),
-            chunk.constants().len(),
+            bytecode, 
+            bytecode_len,
+            constants,
+            constant_len,
         );
     }
 }

@@ -21,6 +21,10 @@ impl Chunk {
         &self.constants
     }
 
+    pub fn chunk_data_as_mut_ptr(mut self) -> (*mut u8, *mut bindings::vm_Value) {
+        (self.bytecode.as_mut_ptr(), self.constants.as_mut_ptr())
+    }
+
     pub fn fmt_constants(&self) -> String {
         let mut s = String::new();
         s.push('[');
