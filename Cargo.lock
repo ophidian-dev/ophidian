@@ -196,7 +196,6 @@ dependencies = [
  "bindgen",
  "bytecode-compiler",
  "cc",
- "common",
  "frontend",
  "owo-colors",
  "walkdir",
