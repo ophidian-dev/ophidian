@@ -1,5 +1,5 @@
 use crate::parse::span::Span;
-use crate::semantic::types::Type;
+use crate::semantic::typed::Type;
 
 #[derive(Debug, Clone, Copy)]
 pub enum BinopType {

@@ -1,5 +1,9 @@
 use crate::parse::span::Span;
-use crate::semantic::types::Type;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Type {
+    Int,
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum BinopType {

@@ -1,5 +1,5 @@
 use crate::parse::ast::{BinaryOp, Expr, Stmt, UnaryOp};
-use crate::semantic::types::Type;
+use crate::semantic::typed::Type;
 use crate::parse::span::Span;
 
 pub fn create_integer_literal(value: i32, span: Span) -> Expr {

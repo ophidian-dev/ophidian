@@ -3,7 +3,7 @@ use crate::lex::token::{Token, TokenType};
 use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, UnaryOp, UnaryopType};
 use crate::parse::ctors;
 use crate::parse::span::Span;
-use crate::semantic::types::Type;
+use crate::semantic::typed::Type;
 use owo_colors::OwoColorize;
 
 pub struct Parser<'a> {
