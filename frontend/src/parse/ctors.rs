@@ -39,3 +39,11 @@ pub fn create_print_stmt(expr: Expr, span: Span) -> Stmt {
 pub fn create_var_decl(name: Vec<u8>, type_annotation: Type, initializer: Option<Expr>, span: Span) -> Stmt {
     Stmt::VarDecl { name, type_annotation, initializer, span }
 }
+
+pub fn create_variable(name: Vec<u8>, span: Span) -> Expr {
+    Expr::Variable { name, span } 
+}
+
+pub fn create_var_assign(target: Expr, value: Expr, span: Span) -> Expr {
+    Expr::VarAssign { target: Box::new(target), value: Box::new(value), span }
+}
