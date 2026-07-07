@@ -62,3 +62,7 @@ pub fn create_var_assign(target: Expr, value: Expr, span: Span) -> Expr {
         span,
     }
 }
+
+pub fn create_block(body: Vec<Stmt>, span: Span) -> Stmt {
+    Stmt::Block { body, span }
+}

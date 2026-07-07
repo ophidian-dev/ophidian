@@ -92,7 +92,7 @@ impl<'a> Parser<'a> {
     fn sync(&mut self) {
         while let Some(tok) = self.peek() {
             match tok.kind {
-                TokenType::Semicolon => {
+                TokenType::Semicolon | TokenType::CloseBrace => {
                     self.advance();
                     return;
                 }
@@ -493,6 +493,31 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn parse_block(&mut self) -> Stmt {
+        let start = self.peek().unwrap().clone();
+        self.advance();
+
+        let mut span = start.span;
+
+        let mut stmts: Vec<Stmt> = Vec::new();
+
+        while let Some(t) = self.peek().cloned() {
+            if t.kind == TokenType::CloseBrace {
+                break;
+            }
+            span = span.join(t.span);    
+            stmts.push(self.parse_stmt());
+        }
+        
+        let close_brace_span = self.peek().unwrap().clone().span;
+
+        if self.consume(TokenType::CloseBrace, "expected '}' at end of block").is_err() {
+            return Stmt::Error { span: close_brace_span };            
+        }
+
+        ctors::create_block(stmts, span)
+    }
+
     fn parse_stmt(&mut self) -> Stmt {
         let tok = self.peek().unwrap().clone();
         match tok.kind {
@@ -501,6 +526,7 @@ impl<'a> Parser<'a> {
             TokenType::IntegerLiteral | TokenType::OpenParen | TokenType::Identifier => {
                 self.parse_stmtexpr()
             }
+            TokenType::OpenBrace => self.parse_block(),
             _ => {
                 self.error(tok, tok.span, "Unexpected token at statement start");
                 self.errors.push(ParseError::UnexpectedToken(tok));
