@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 owo-colors = { workspace = true }
+common = { workspace = true }
 
 [dev-dependencies]
 frontend = { workspace = true }
