@@ -4,6 +4,9 @@ use frontend::parse::parser::Parser;
 use bytecode_compiler::bindings;
 use owo_colors::OwoColorize;
 
+const IS_DEBUG_AST: bool = true;
+const IS_DEBUG_COMPILER: bool = false;
+
 fn main() {
     let argv: Vec<String> = std::env::args().collect();
     if argv.len() < 2 {
@@ -27,24 +30,33 @@ fn main() {
     let mut parser = Parser::new(lexer);
     let ast = parser.generate_ast();
 
-    let mut compiler = Compiler::new();
-    let chunk = compiler.compile(&ast);
-    // println!("{:#?}", chunk);
-    // println!("DEBUG AST: {:?}", ast);
+    if IS_DEBUG_AST {
+        println!("DEBUG AST: {:#?}", ast);
+    }
 
-    unsafe {
-        let bytecode_len = chunk.bytecode().len();
-        let constant_len = chunk.constants().len();
-        let (mut bytecode, mut constants) = chunk.chunk_data();
-        let bytecode: *mut u8 = bytecode.as_mut_ptr();
-        let constants: *mut bindings::vm_Value = constants.as_mut_ptr(); 
-        
-        bindings::vm_execute(
-            bytecode, 
-            bytecode_len,
-            constants,
-            constant_len,
-        );
+    if IS_DEBUG_COMPILER {
+        let mut compiler = Compiler::new();
+        let chunk = compiler.compile(&ast);
+        println!("{:#?}", chunk);
+    }
+
+    if !IS_DEBUG_AST && !IS_DEBUG_COMPILER { 
+        let mut compiler = Compiler::new();
+        let chunk = compiler.compile(&ast);
+        unsafe {
+            let bytecode_len = chunk.bytecode().len();
+            let constant_len = chunk.constants().len();
+            let (mut bytecode, mut constants) = chunk.chunk_data();
+            let bytecode: *mut u8 = bytecode.as_mut_ptr();
+            let constants: *mut bindings::vm_Value = constants.as_mut_ptr(); 
+            
+            bindings::vm_execute(
+                bytecode, 
+                bytecode_len,
+                constants,
+                constant_len,
+            );
+        }
     }
 }
 

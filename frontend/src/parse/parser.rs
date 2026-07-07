@@ -1,6 +1,6 @@
 use crate::lex::lexer::Lexer;
 use crate::lex::token::{Token, TokenType};
-use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, UnaryOp, UnaryopType};
+use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, Type, UnaryOp, UnaryopType};
 use crate::parse::ctors;
 use crate::parse::span::Span;
 use owo_colors::OwoColorize;
@@ -130,6 +130,13 @@ impl<'a> Parser<'a> {
         }
 
         (start, end)
+    }
+    
+    fn is_var_type(&self, tok_type: TokenType) -> bool {
+        match tok_type {
+            TokenType::Int => true,
+            _ => false
+        }
     }
 
     fn error(&self, tok: Token, span: Span, msg: &str) {
@@ -373,10 +380,95 @@ impl<'a> Parser<'a> {
         stmt
     }
 
+    fn parse_var_decl(&mut self) -> Stmt {
+        let start = self.peek().unwrap().clone();
+        self.advance();
+
+        let identifier = match self.consume(TokenType::Identifier, "expected identifier") {
+            Ok(t) =>  { 
+                self.get_slice(t.span).to_vec()
+            }
+            Err(_) => {
+                return Stmt::Error { span: start.span };
+            }
+        };
+
+        let colon_span = self.peek().unwrap().clone().span;
+
+        if self.consume(TokenType::Colon, "expected ':'").is_err() {
+            return Stmt::Error { span:  colon_span };
+        }        
+
+        let type_tok = self.peek().unwrap().clone();
+        let type_span = type_tok.span;
+        if !self.is_var_type(type_tok.kind) {
+            // any tokentype that is a type keyword for expected here will do
+            // because it is guarenteed here that type_tok is not a type keyword
+            let _ = self.consume(TokenType::Int, "expected type annotation");
+            return Stmt::Error { span: type_span };
+        }
+
+        let var_type = match type_tok.kind {
+            TokenType::Int => {
+                Type::Int
+            }
+            _ => {
+                panic!("this should not execute");
+            }
+        };
+
+        let eq_tok_span = self.peek().unwrap().clone().span;
+        self.advance();
+
+        match self.peek().clone() {
+            Some(t) => {
+                match t.kind {
+                    TokenType::Equal => {
+                        self.advance();
+                        let expr = self.parse_expression();
+                        if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
+                            return Stmt::Error { span: eq_tok_span };
+                        }
+                        self.advance();
+                        return ctors::create_var_decl(identifier, var_type, Some(expr), start.span.join(eq_tok_span));
+                        }
+                    TokenType::Semicolon => {
+                        self.advance();
+                        return ctors::create_var_decl(identifier, var_type, None, start.span.join(eq_tok_span));
+                    }
+                    _ => {
+                        if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
+                            return Stmt::Error { span: eq_tok_span };
+                        } else {
+                            panic!("execution should not reach here");
+                        }
+                    }
+                }
+            }
+            None => {
+                let fallback_span = self
+                    .previous
+                    .as_ref()
+                    .map(|t| t.span)
+                    .unwrap_or_else(|| Span::new(0, 0));
+                self.errors.push(ParseError::UnexpectedEof);
+                eprintln!(
+                    "{}: error: unexpected end of input",
+                    "error".bright_red().bold()
+                );
+                Stmt::Error {
+                    span: fallback_span,
+                }
+            }
+        }
+
+    }
+
     fn parse_stmt(&mut self) -> Stmt {
         let tok = self.peek().unwrap().clone();
         match tok.kind {
             TokenType::Print => self.parse_print(),
+            TokenType::Let => self.parse_var_decl(),
             TokenType::IntegerLiteral | TokenType::OpenParen => self.parse_stmtexpr(),
             _ => {
                 self.error(tok, tok.span, "Unexpected token at statement start");
