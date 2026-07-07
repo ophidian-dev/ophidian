@@ -123,6 +123,14 @@ impl<'a> Iterator for Lexer<'a> {
                         self.advance();
                         return Some(self.create_token(TokenType::CloseParen));
                     }
+                    b'{' => {
+                        self.advance();
+                        return Some(self.create_token(TokenType::OpenBrace));
+                    }
+                    b'}' => {
+                        self.advance();
+                        return Some(self.create_token(TokenType::CloseBrace));
+                    }
                     b';' => {
                         self.advance();
                         return Some(self.create_token(TokenType::Semicolon));

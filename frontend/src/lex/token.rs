@@ -12,6 +12,9 @@ pub enum TokenType {
     OpenParen,
     CloseParen,
 
+    OpenBrace,
+    CloseBrace,
+
     Error(u8),
 
     Print,
