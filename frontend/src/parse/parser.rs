@@ -210,6 +210,8 @@ impl<'a> Parser<'a> {
                 _ => {
                     let tok = t.clone();
                     self.errors.push(ParseError::UnexpectedToken(tok));
+                    // TODO: make error handle the expected arithmetic expression cleanly to not pub caret in wrong place
+                    // self.error(tok, tok.span, "expected arithmetic expression");
                     self.error(tok, tok.span, "unexpected token");
                     self.sync();
                     Expr::Error { span: tok.span }
