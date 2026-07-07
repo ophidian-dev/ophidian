@@ -347,16 +347,21 @@ impl<'a> Parser<'a> {
 
     fn parse_assignment(&mut self) -> Expr {
         let left = self.parse_term();
-        
-        if self.peek().unwrap().clone().kind == TokenType::Equal {
-            let right = self.parse_assignment();
 
-            let span = left.span().join(right.span());
+        if let Some(tok) = self.peek() {
+            if tok.kind == TokenType::Equal {
+                self.advance(); 
 
-            return ctors::create_var_assign(left, right, span);
+                let right = self.parse_assignment();
+
+                let span = left.span().join(right.span());
+
+                return ctors::create_var_assign(left, right, span);
+            }
         }
+
         left
-    }
+    } 
 
     fn parse_expression(&mut self) -> Expr {
         self.parse_assignment()
@@ -445,7 +450,6 @@ impl<'a> Parser<'a> {
                     if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
                         return Stmt::Error { span: eq_tok_span };
                     }
-                    self.advance();
                     return ctors::create_var_decl(
                         identifier,
                         var_type,
@@ -493,7 +497,9 @@ impl<'a> Parser<'a> {
         match tok.kind {
             TokenType::Print => self.parse_print(),
             TokenType::Let => self.parse_var_decl(),
-            TokenType::IntegerLiteral | TokenType::OpenParen => self.parse_stmtexpr(),
+            TokenType::IntegerLiteral | TokenType::OpenParen | TokenType::Identifier => {
+                self.parse_stmtexpr()
+            }
             _ => {
                 self.error(tok, tok.span, "Unexpected token at statement start");
                 self.errors.push(ParseError::UnexpectedToken(tok));
