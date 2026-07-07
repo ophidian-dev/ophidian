@@ -34,6 +34,10 @@ impl<T: std::fmt::Debug> Stack<T> {
     pub const fn size(&self) -> usize {
         self.items.len()
     }
+
+    pub const fn get_underlying(&self) -> &Vec<T> {
+        &self.items
+    }
 }
 
 impl<T: std::fmt::Debug> std::fmt::Debug for Stack<T> {
