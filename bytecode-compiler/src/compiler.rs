@@ -32,6 +32,9 @@ fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
             compile_expr(expr, chunk);
             chunk.write(Opcode::Pop as u8);
         }
+        ast::Stmt::VarDecl { name, type_annotation, initializer, .. } => {
+            todo!("implement vardecl")
+        }
         _ => {
             panic!("execution should not reach here");
         }
@@ -70,6 +73,12 @@ fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
                 ast::UnaryopType::Negate => Opcode::Inegate,
             };
             chunk.write(opcode as u8);
+        }
+        ast::Expr::VarAssign { target, value, .. } => {
+            todo!("implement varassign")
+        }
+        ast::Expr::Variable { name, .. } => {
+            todo!("implement variable")
         }
         ast::Expr::Error { span: _ } => {
             panic!("execution should not reach here");
