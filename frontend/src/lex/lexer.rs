@@ -63,9 +63,17 @@ impl<'a> Lexer<'a> {
 
     fn get_keyword(&self, s: &[u8]) -> TokenType {
         match s {
-            b"print" => TokenType::Print,
+            b"print" => {
+                TokenType::Print
+            },
+            b"let" => {
+                TokenType::Let
+            }
+            b"int" => {
+                TokenType::Int
+            }
             _ => {
-                todo!("implement identifiers");
+                TokenType::Identifier
             }
         }
     }
@@ -126,6 +134,14 @@ impl<'a> Iterator for Lexer<'a> {
                     b';' => {
                         self.advance();
                         return Some(self.create_token(TokenType::Semicolon));
+                    }
+                    b':' => {
+                        self.advance();
+                        return Some(self.create_token(TokenType::Colon));
+                    }
+                    b'=' => {
+                        self.advance();
+                        return Some(self.create_token(TokenType::Equal));
                     }
                     _ => {
                         if c.is_ascii_digit() {
