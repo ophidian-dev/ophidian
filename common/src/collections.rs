@@ -50,7 +50,7 @@ impl<T: std::fmt::Debug> std::fmt::Debug for Stack<T> {
             }
             write!(f, "[")?;
 
-            for i in 0..self.items.len() - 1 {
+            for i in 0..self.items.len() {
                 if i == self.items.len() - 1 {
                     write!(f, "{:?}", self.items[i])?;
                     break;

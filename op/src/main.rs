@@ -3,6 +3,7 @@ use bytecode_compiler::compiler::Compiler;
 use frontend::lex::lexer::Lexer;
 use frontend::parse::parser::Parser;
 use owo_colors::OwoColorize;
+use common::collections::Stack;
 
 const IS_DEBUG_AST: bool = true;
 const IS_DEBUG_COMPILER: bool = false;
@@ -39,6 +40,11 @@ fn main() {
         let chunk = compiler.compile(&ast);
         println!("{:#?}", chunk);
     }
+
+    let mut stack: Stack<i32> = Stack::new();
+    stack.push(3);
+    stack.push(4);
+    println!("{:?}", stack);
 
     if !IS_DEBUG_AST && !IS_DEBUG_COMPILER {
         let mut compiler = Compiler::new();
