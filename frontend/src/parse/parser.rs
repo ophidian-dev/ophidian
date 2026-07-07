@@ -345,8 +345,21 @@ impl<'a> Parser<'a> {
         left
     }
 
+    fn parse_assignment(&mut self) -> Expr {
+        let left = self.parse_term();
+        
+        if self.peek().unwrap().clone().kind == TokenType::Equal {
+            let right = self.parse_assignment();
+
+            let span = left.span().join(right.span());
+
+            return ctors::create_var_assign(left, right, span);
+        }
+        left
+    }
+
     fn parse_expression(&mut self) -> Expr {
-        self.parse_term()
+        self.parse_assignment()
     }
 
     fn parse_print(&mut self) -> Stmt {
