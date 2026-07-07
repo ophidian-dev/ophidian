@@ -39,7 +39,7 @@ impl UnaryOp {
 }
 
 #[derive(Debug, Clone)]
-pub enum Expr {
+pub enum TypedExpr {
     IntegerLiteral {
         span: Span,
         ty: Type,
@@ -49,14 +49,14 @@ pub enum Expr {
         span: Span,
         op: BinaryOp,
         ty: Type,
-        left: Box<Expr>,
-        right: Box<Expr>,
+        left: Box<TypedExpr>,
+        right: Box<TypedExpr>,
     },
     UnaryOp {
         span: Span,
         ty: Type,
         op: UnaryOp,
-        expr: Box<Expr>,
+        expr: Box<TypedExpr>,
     },
     Variable {
         name: Vec<u8>,
@@ -64,8 +64,8 @@ pub enum Expr {
         span: Span,
     },
     VarAssign {
-        target: Box<Expr>,
-        value: Box<Expr>,
+        target: Box<TypedExpr>,
+        value: Box<TypedExpr>,
         ty: Type,
         span: Span,
     },
@@ -74,7 +74,7 @@ pub enum Expr {
     },
 }
 
-impl Expr {
+impl TypedExpr {
     pub fn span(&self) -> Span {
         match self {
             Self::IntegerLiteral { span, .. } => *span,
@@ -88,19 +88,19 @@ impl Expr {
 }
 
 #[derive(Debug, Clone)]
-pub enum Stmt {
+pub enum TypedStmt {
     Print {
-        expr: Box<Expr>,
+        expr: Box<TypedExpr>,
         span: Span,
     },
     StmtExpr {
-        expr: Box<Expr>,
+        expr: Box<TypedExpr>,
         span: Span,
     },
     VarDecl {
         name: Vec<u8>,
         type_annotation: Type,
-        initializer: Option<Expr>,
+        initializer: Option<TypedExpr>,
         span: Span,
     },
     Error {
@@ -108,7 +108,7 @@ pub enum Stmt {
     },
 }
 
-impl Stmt {
+impl TypedStmt {
     pub fn span(&self) -> Span {
         match self {
             Self::Print { span, .. } => *span,
@@ -120,16 +120,16 @@ impl Stmt {
 }
 
 #[derive(Debug, Clone)]
-pub struct Program {
-    pub stmts: Vec<Stmt>,
+pub struct TypedProgram {
+    pub stmts: Vec<TypedStmt>,
 }
 
-impl Program {
+impl TypedProgram {
     pub fn new() -> Self {
         Self { stmts: Vec::new() }
     }
 
-    pub fn add(&mut self, stmt: Stmt) {
+    pub fn add(&mut self, stmt: TypedStmt) {
         self.stmts.push(stmt);
     }
 }
