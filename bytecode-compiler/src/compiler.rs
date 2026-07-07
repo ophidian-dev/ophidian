@@ -32,7 +32,12 @@ fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
             compile_expr(expr, chunk);
             chunk.write(Opcode::Pop as u8);
         }
-        ast::Stmt::VarDecl { name, type_annotation, initializer, .. } => {
+        ast::Stmt::VarDecl {
+            name,
+            type_annotation,
+            initializer,
+            ..
+        } => {
             todo!("implement vardecl")
         }
         _ => {

@@ -63,18 +63,10 @@ impl<'a> Lexer<'a> {
 
     fn get_keyword(&self, s: &[u8]) -> TokenType {
         match s {
-            b"print" => {
-                TokenType::Print
-            },
-            b"let" => {
-                TokenType::Let
-            }
-            b"int" => {
-                TokenType::Int
-            }
-            _ => {
-                TokenType::Identifier
-            }
+            b"print" => TokenType::Print,
+            b"let" => TokenType::Let,
+            b"int" => TokenType::Int,
+            _ => TokenType::Identifier,
         }
     }
 }

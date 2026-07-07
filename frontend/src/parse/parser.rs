@@ -131,11 +131,11 @@ impl<'a> Parser<'a> {
 
         (start, end)
     }
-    
+
     fn is_var_type(&self, tok_type: TokenType) -> bool {
         match tok_type {
             TokenType::Int => true,
-            _ => false
+            _ => false,
         }
     }
 
@@ -387,9 +387,7 @@ impl<'a> Parser<'a> {
         self.advance();
 
         let identifier = match self.consume(TokenType::Identifier, "expected identifier") {
-            Ok(t) =>  { 
-                self.get_slice(t.span).to_vec()
-            }
+            Ok(t) => self.get_slice(t.span).to_vec(),
             Err(_) => {
                 return Stmt::Error { span: start.span };
             }
@@ -398,8 +396,8 @@ impl<'a> Parser<'a> {
         let colon_span = self.peek().unwrap().clone().span;
 
         if self.consume(TokenType::Colon, "expected ':'").is_err() {
-            return Stmt::Error { span:  colon_span };
-        }        
+            return Stmt::Error { span: colon_span };
+        }
 
         let type_tok = self.peek().unwrap().clone();
         let type_span = type_tok.span;
@@ -411,9 +409,7 @@ impl<'a> Parser<'a> {
         }
 
         let var_type = match type_tok.kind {
-            TokenType::Int => {
-                Type::Int
-            }
+            TokenType::Int => Type::Int,
             _ => {
                 panic!("this should not execute");
             }
@@ -423,30 +419,38 @@ impl<'a> Parser<'a> {
         self.advance();
 
         match self.peek().clone() {
-            Some(t) => {
-                match t.kind {
-                    TokenType::Equal => {
-                        self.advance();
-                        let expr = self.parse_expression();
-                        if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
-                            return Stmt::Error { span: eq_tok_span };
-                        }
-                        self.advance();
-                        return ctors::create_var_decl(identifier, var_type, Some(expr), start.span.join(eq_tok_span));
-                        }
-                    TokenType::Semicolon => {
-                        self.advance();
-                        return ctors::create_var_decl(identifier, var_type, None, start.span.join(eq_tok_span));
+            Some(t) => match t.kind {
+                TokenType::Equal => {
+                    self.advance();
+                    let expr = self.parse_expression();
+                    if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
+                        return Stmt::Error { span: eq_tok_span };
                     }
-                    _ => {
-                        if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
-                            return Stmt::Error { span: eq_tok_span };
-                        } else {
-                            panic!("execution should not reach here");
-                        }
+                    self.advance();
+                    return ctors::create_var_decl(
+                        identifier,
+                        var_type,
+                        Some(expr),
+                        start.span.join(eq_tok_span),
+                    );
+                }
+                TokenType::Semicolon => {
+                    self.advance();
+                    return ctors::create_var_decl(
+                        identifier,
+                        var_type,
+                        None,
+                        start.span.join(eq_tok_span),
+                    );
+                }
+                _ => {
+                    if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
+                        return Stmt::Error { span: eq_tok_span };
+                    } else {
+                        panic!("execution should not reach here");
                     }
                 }
-            }
+            },
             None => {
                 let fallback_span = self
                     .previous
@@ -463,7 +467,6 @@ impl<'a> Parser<'a> {
                 }
             }
         }
-
     }
 
     fn parse_stmt(&mut self) -> Stmt {

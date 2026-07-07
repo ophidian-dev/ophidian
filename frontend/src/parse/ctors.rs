@@ -1,4 +1,4 @@
-use crate::parse::ast::{BinaryOp, Expr, Stmt, UnaryOp, Type};
+use crate::parse::ast::{BinaryOp, Expr, Stmt, Type, UnaryOp};
 use crate::parse::span::Span;
 
 pub fn create_integer_literal(value: i32, span: Span) -> Expr {
@@ -36,14 +36,28 @@ pub fn create_print_stmt(expr: Expr, span: Span) -> Stmt {
     }
 }
 
-pub fn create_var_decl(name: Vec<u8>, type_annotation: Type, initializer: Option<Expr>, span: Span) -> Stmt {
-    Stmt::VarDecl { name, type_annotation, initializer, span }
+pub fn create_var_decl(
+    name: Vec<u8>,
+    type_annotation: Type,
+    initializer: Option<Expr>,
+    span: Span,
+) -> Stmt {
+    Stmt::VarDecl {
+        name,
+        type_annotation,
+        initializer,
+        span,
+    }
 }
 
 pub fn create_variable(name: Vec<u8>, span: Span) -> Expr {
-    Expr::Variable { name, span } 
+    Expr::Variable { name, span }
 }
 
 pub fn create_var_assign(target: Expr, value: Expr, span: Span) -> Expr {
-    Expr::VarAssign { target: Box::new(target), value: Box::new(value), span }
+    Expr::VarAssign {
+        target: Box::new(target),
+        value: Box::new(value),
+        span,
+    }
 }

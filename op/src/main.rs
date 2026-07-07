@@ -1,7 +1,7 @@
+use bytecode_compiler::bindings;
 use bytecode_compiler::compiler::Compiler;
 use frontend::lex::lexer::Lexer;
 use frontend::parse::parser::Parser;
-use bytecode_compiler::bindings;
 use owo_colors::OwoColorize;
 
 const IS_DEBUG_AST: bool = true;
@@ -40,7 +40,7 @@ fn main() {
         println!("{:#?}", chunk);
     }
 
-    if !IS_DEBUG_AST && !IS_DEBUG_COMPILER { 
+    if !IS_DEBUG_AST && !IS_DEBUG_COMPILER {
         let mut compiler = Compiler::new();
         let chunk = compiler.compile(&ast);
         unsafe {
@@ -48,14 +48,9 @@ fn main() {
             let constant_len = chunk.constants().len();
             let (mut bytecode, mut constants) = chunk.chunk_data();
             let bytecode: *mut u8 = bytecode.as_mut_ptr();
-            let constants: *mut bindings::vm_Value = constants.as_mut_ptr(); 
-            
-            bindings::vm_execute(
-                bytecode, 
-                bytecode_len,
-                constants,
-                constant_len,
-            );
+            let constants: *mut bindings::vm_Value = constants.as_mut_ptr();
+
+            bindings::vm_execute(bytecode, bytecode_len, constants, constant_len);
         }
     }
 }

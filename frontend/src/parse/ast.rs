@@ -61,7 +61,7 @@ pub enum Expr {
     VarAssign {
         target: Box<Expr>,
         value: Box<Expr>,
-        span: Span,   
+        span: Span,
     },
     Error {
         span: Span,
@@ -76,7 +76,7 @@ impl Expr {
             Self::UnaryOp { span, .. } => *span,
             Self::Error { span } => *span,
             Self::Variable { span, .. } => *span,
-            Self::VarAssign { span, .. } => *span
+            Self::VarAssign { span, .. } => *span,
         }
     }
 }
@@ -88,22 +88,22 @@ pub enum Type {
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
-    Print { 
-        expr: Box<Expr>, 
-        span: Span 
+    Print {
+        expr: Box<Expr>,
+        span: Span,
     },
-    StmtExpr { 
-        expr: Box<Expr>, 
-        span: Span 
+    StmtExpr {
+        expr: Box<Expr>,
+        span: Span,
     },
     VarDecl {
         name: Vec<u8>,
         type_annotation: Type,
-        initializer: Option<Expr>, 
+        initializer: Option<Expr>,
         span: Span,
     },
-    Error { 
-        span: Span 
+    Error {
+        span: Span,
     },
 }
 

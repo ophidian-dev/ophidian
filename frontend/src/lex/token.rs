@@ -17,7 +17,7 @@ pub enum TokenType {
     Print,
 
     Semicolon,
-    
+
     Let,
 
     Int,
