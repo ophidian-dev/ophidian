@@ -1,4 +1,5 @@
 use crate::parse::span::Span;
+use crate::semantic::types::Type;
 
 #[derive(Debug, Clone, Copy)]
 pub enum BinopType {
@@ -79,11 +80,6 @@ impl Expr {
             Self::VarAssign { span, .. } => *span,
         }
     }
-}
-
-#[derive(Debug, Clone)]
-pub enum Type {
-    Int,
 }
 
 #[derive(Debug, Clone)]
