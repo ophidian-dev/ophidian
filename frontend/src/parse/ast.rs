@@ -98,6 +98,10 @@ pub enum Stmt {
         initializer: Option<Expr>,
         span: Span,
     },
+    Block {
+        body: Vec<Stmt>,
+        span: Span
+    },
     Error {
         span: Span,
     },
@@ -110,6 +114,7 @@ impl Stmt {
             Self::StmtExpr { span, .. } => *span,
             Self::Error { span } => *span,
             Self::VarDecl { span, .. } => *span,
+            Self::Block { span, .. } => *span
         }
     }
 }
