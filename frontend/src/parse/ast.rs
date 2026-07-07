@@ -54,6 +54,15 @@ pub enum Expr {
         op: UnaryOp,
         expr: Box<Expr>,
     },
+    Variable {
+        name: Vec<u8>,
+        span: Span,
+    },
+    VarAssign {
+        target: Box<Expr>,
+        value: Box<Expr>,
+        span: Span,   
+    },
     Error {
         span: Span,
     },
@@ -62,27 +71,49 @@ pub enum Expr {
 impl Expr {
     pub fn span(&self) -> Span {
         match self {
-            Expr::IntegerLiteral { span, .. } => *span,
-            Expr::BinaryOp { span, .. } => *span,
-            Expr::UnaryOp { span, .. } => *span,
-            Expr::Error { span } => *span,
+            Self::IntegerLiteral { span, .. } => *span,
+            Self::BinaryOp { span, .. } => *span,
+            Self::UnaryOp { span, .. } => *span,
+            Self::Error { span } => *span,
+            Self::Variable { span, .. } => *span,
+            Self::VarAssign { span, .. } => *span
         }
     }
 }
 
 #[derive(Debug, Clone)]
+pub enum Type {
+    Int,
+}
+
+#[derive(Debug, Clone)]
 pub enum Stmt {
-    Print { expr: Box<Expr>, span: Span },
-    StmtExpr { expr: Box<Expr>, span: Span },
-    Error { span: Span },
+    Print { 
+        expr: Box<Expr>, 
+        span: Span 
+    },
+    StmtExpr { 
+        expr: Box<Expr>, 
+        span: Span 
+    },
+    VarDecl {
+        name: Vec<u8>,
+        type_annotation: Type,
+        initializer: Option<Expr>, 
+        span: Span,
+    },
+    Error { 
+        span: Span 
+    },
 }
 
 impl Stmt {
     pub fn span(&self) -> Span {
         match self {
-            Stmt::Print { span, .. } => *span,
-            Stmt::StmtExpr { span, .. } => *span,
-            Stmt::Error { span } => *span,
+            Self::Print { span, .. } => *span,
+            Self::StmtExpr { span, .. } => *span,
+            Self::Error { span } => *span,
+            Self::VarDecl { span, .. } => *span,
         }
     }
 }
