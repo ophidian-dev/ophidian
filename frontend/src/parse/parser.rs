@@ -207,6 +207,12 @@ impl<'a> Parser<'a> {
                     }
                     expr
                 }
+                TokenType::Identifier => {
+                    let tok = self.peek().unwrap().clone();
+                    let name = self.get_slice(tok.span).to_vec();
+                    self.advance();
+                    ctors::create_variable(name, tok.span)
+                }
                 _ => {
                     let tok = t.clone();
                     self.errors.push(ParseError::UnexpectedToken(tok));
