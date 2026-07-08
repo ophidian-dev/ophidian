@@ -1,6 +1,8 @@
-pub mod compiler;
+pub mod bindings;
 
 // private modules
-pub mod bindings;
 mod chunk;
 mod opcodes;
+mod compiler;
+
+pub use compiler::Compiler;

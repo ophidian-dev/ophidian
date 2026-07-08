@@ -1,11 +1,6 @@
 use compiler::bindings;
-use compiler::compiler::Compiler;
-use frontend::lex::lexer::Lexer;
-use frontend::parse::parser::Parser;
+use compiler::Compiler;
 use owo_colors::OwoColorize;
-
-const IS_DEBUG_AST: bool = true;
-const IS_DEBUG_COMPILER: bool = false;
 
 fn main() {
     let argv: Vec<String> = std::env::args().collect();
@@ -26,33 +21,40 @@ fn main() {
         "N.B.".yellow()
     );
 
-    let lexer = Lexer::new(&file);
-    let mut parser = Parser::new(lexer);
-    let ast = parser.generate_ast();
+    let mut compiler = Compiler::new();
+    let res = compiler.compile(&file);
 
-    if IS_DEBUG_AST {
-        println!("DEBUG AST: {:#?}", ast);
-    }
-
-    if IS_DEBUG_COMPILER {
-        let mut compiler = Compiler::new();
-        let chunk = compiler.compile(&ast);
-        println!("{:#?}", chunk);
-    }
-
-    if !IS_DEBUG_AST && !IS_DEBUG_COMPILER {
-        let mut compiler = Compiler::new();
-        let chunk = compiler.compile(&ast);
-        unsafe {
-            let bytecode_len = chunk.bytecode().len();
-            let constant_len = chunk.constants().len();
-            let (mut bytecode, mut constants) = chunk.chunk_data();
-            let bytecode: *mut u8 = bytecode.as_mut_ptr();
-            let constants: *mut bindings::vm_Value = constants.as_mut_ptr();
-
-            bindings::vm_execute(bytecode, bytecode_len, constants, constant_len);
+    let chunk = match res {
+        Ok(c) => {
+            c
         }
+        Err(diagnostics) => {
+            for diagnostic in &diagnostics {
+                eprintln!("{}", diagnostic);
+            }
+
+            println!("\n{} error{} generated.", diagnostics.len(), plural(diagnostics.len()));
+
+            std::process::exit(1);
+        }
+    };
+
+    unsafe {
+        let bytecode_len = chunk.bytecode().len();
+        let constant_len = chunk.constants().len();
+        let (mut bytecode, mut constants) = chunk.chunk_data();
+        let bytecode: *mut u8 = bytecode.as_mut_ptr();
+        let constants: *mut bindings::vm_Value = constants.as_mut_ptr();
+
+        bindings::vm_execute(bytecode, bytecode_len, constants, constant_len);
     }
+}
+
+fn plural(i: usize) -> &'static str {
+    if i == 1 {
+        return "";
+    } 
+    "s"
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {
