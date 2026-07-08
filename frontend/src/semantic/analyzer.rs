@@ -2,18 +2,18 @@ use crate::semantic::typed::*;
 use std::collections::HashMap;
 use common::collections::Stack;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct SemanticAnalyzer {
     scopes: Stack<Scope>,
     id_count: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct Scope {
     symbols: HashMap<Vec<u8>, Symbol>
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct Symbol {
     id: usize,
     ty: Type

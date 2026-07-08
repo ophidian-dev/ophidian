@@ -1,13 +1,23 @@
+
+
 // stack implementation
-pub struct Stack<T: std::fmt::Debug> {
+
+#[derive(PartialEq)]
+pub struct Stack<T: std::fmt::Debug + PartialEq> {
     items: Vec<T>
 }
 
-impl<T: std::fmt::Debug> Stack<T> {
+impl<T: std::fmt::Debug + PartialEq> Stack<T> {
     pub fn new() -> Self {
         Self {
             items: Vec::new()
         }
+    }
+
+    pub fn from(value: T) -> Self {
+        let mut s: Stack<T> = Stack::new();
+        s.push(value); 
+        s
     }
 
     pub fn push(&mut self, value: T) {
@@ -30,12 +40,23 @@ impl<T: std::fmt::Debug> Stack<T> {
         self.items.len()
     }
 
-    pub const fn get_underlying(&self) -> &Vec<T> {
-        &self.items
-    }
 }
 
-impl<T: std::fmt::Debug> std::fmt::Debug for Stack<T> {
+#[macro_export]
+macro_rules! stack {
+    () => {
+        Stack::new(); 
+    };
+    ($($element:expr),+ $(,)?) => {{
+        let mut s = Stack::new();
+        $(
+            s.push($element);
+        )+
+        s
+    }};
+}
+
+impl<T: std::fmt::Debug + PartialEq> std::fmt::Debug for Stack<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if f.alternate() {
             todo!("implement pretty print for debug formatting");
