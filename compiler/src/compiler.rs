@@ -1,7 +1,13 @@
 use crate::bindings;
 use crate::chunk::Chunk;
 use crate::opcodes::Opcode;
+use frontend::diagnostics::Diagnostic;
+use frontend::lex::Lexer;
+use frontend::parse::Parser;
 use frontend::parse::ast;
+use frontend::semantic::analyzer::SemanticAnalyzer;
+use frontend::semantic::typed::Type;
+use frontend::semantic::typed;
 
 pub struct Compiler {}
 
@@ -10,29 +16,45 @@ impl Compiler {
         Self {}
     }
 
-    pub fn compile(&mut self, ast: &ast::Program) -> Chunk {
+    pub fn compile(
+        &mut self,
+        source: &[u8]
+    ) -> Result<Chunk, Vec<Diagnostic>> {
+
+        let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+        let lexer = Lexer::new(source);
+        let mut parser = Parser::new(lexer, &mut diagnostics);
+        let unchecked_program = parser.generate_ast();
+
+        let mut analyzer = SemanticAnalyzer::new();
+        let program = analyzer.analyze(unchecked_program, &mut diagnostics);
+        if !diagnostics.is_empty() {
+            return Err(diagnostics);
+        }
+
         let mut chunk: Chunk = Chunk::new();
 
-        for stmt in &ast.stmts {
+        for stmt in &program.stmts {
             compile_stmt(stmt, &mut chunk);
         }
 
         chunk.write(Opcode::Halt as u8);
-        chunk
+        Ok(chunk)
     }
 }
 
-fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
+fn compile_stmt(stmt: &typed::Stmt, chunk: &mut Chunk) {
     match stmt {
-        ast::Stmt::Print { expr, .. } => {
+        typed::Stmt::Print { expr, .. } => {
             compile_expr(expr, chunk);
             chunk.write(Opcode::Iprint as u8);
         }
-        ast::Stmt::StmtExpr { expr, .. } => {
+        typed::Stmt::StmtExpr { expr, .. } => {
             compile_expr(expr, chunk);
             chunk.write(Opcode::Pop as u8);
         }
-        ast::Stmt::VarDecl {
+        typed::Stmt::VarDecl {
             name,
             type_annotation,
             initializer,
@@ -46,46 +68,47 @@ fn compile_stmt(stmt: &ast::Stmt, chunk: &mut Chunk) {
     }
 }
 
-fn compile_expr(expr: &ast::Expr, chunk: &mut Chunk) {
+fn compile_expr(expr: &typed::Expr, chunk: &mut Chunk) {
     match expr {
-        ast::Expr::IntegerLiteral { span: _, value } => {
+        typed::Expr::IntegerLiteral { span: _, value, ty } => {
             let v: bindings::vm_Value = unsafe { bindings::vm_create_int_value(*value) };
             chunk.write(Opcode::Loadconst as u8);
             let idx = chunk.write_constant(v);
             assert!(idx <= 0xFF_FF_FF);
             chunk.write_u24(idx as u32);
         }
-        ast::Expr::BinaryOp {
+        typed::Expr::BinaryOp {
             span: _,
             op,
             left,
             right,
+            ty
         } => {
             compile_expr(&*left, chunk);
             compile_expr(&*right, chunk);
             let opcode = match op.kind {
-                ast::BinopType::Add => Opcode::Iadd,
-                ast::BinopType::Sub => Opcode::Isub,
-                ast::BinopType::Mul => Opcode::Imul,
-                ast::BinopType::Div => Opcode::Idiv,
+                typed::BinopType::Add => Opcode::Iadd,
+                typed::BinopType::Sub => Opcode::Isub,
+                typed::BinopType::Mul => Opcode::Imul,
+                typed::BinopType::Div => Opcode::Idiv,
             };
 
             chunk.write(opcode as u8);
         }
-        ast::Expr::UnaryOp { span: _, op, expr } => {
+        typed::Expr::UnaryOp { span: _, op, expr, ty } => {
             compile_expr(&*expr, chunk);
             let opcode: Opcode = match op.kind {
-                ast::UnaryopType::Negate => Opcode::Inegate,
+                typed::UnaryopType::Negate => Opcode::Inegate,
             };
             chunk.write(opcode as u8);
         }
-        ast::Expr::VarAssign { target, value, .. } => {
+        typed::Expr::VarAssign { target, value,  .. } => {
             todo!("implement varassign")
         }
-        ast::Expr::Variable { name, .. } => {
+        typed::Expr::Variable { name, .. } => {
             todo!("implement variable")
         }
-        ast::Expr::Error { span: _ } => {
+        typed::Expr::Error { span: _ } => {
             panic!("execution should not reach here");
         }
     }

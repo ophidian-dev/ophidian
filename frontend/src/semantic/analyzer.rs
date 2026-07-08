@@ -1,5 +1,7 @@
 use crate::parse::ast as untyped;
-use crate::semantic::typed::*;
+use crate::semantic::typed;
+use crate::semantic::typed::Type;
+use crate::diagnostics::Diagnostic;
 use common::collections::Stack;
 use std::collections::HashMap;
 
@@ -51,6 +53,10 @@ impl SemanticAnalyzer {
 
         analyzer.enter_scope();
         analyzer
+    }
+
+    pub fn analyze(&mut self, program: untyped::Program, diagnostics: &mut [Diagnostic]) -> typed::Program {
+        typed::Program { stmts: Vec::new() }
     }
 
     fn next_id(&mut self) -> usize {

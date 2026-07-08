@@ -15,7 +15,7 @@ impl Diagnostic {
         Self {
             message,
             severity,
-            span
+            span,
         }
     }
 }

@@ -43,7 +43,7 @@ impl UnaryOp {
 }
 
 #[derive(Debug, Clone)]
-pub enum TypedExpr {
+pub enum Expr {
     IntegerLiteral {
         span: Span,
         ty: Type,
@@ -53,14 +53,14 @@ pub enum TypedExpr {
         span: Span,
         op: BinaryOp,
         ty: Type,
-        left: Box<TypedExpr>,
-        right: Box<TypedExpr>,
+        left: Box<Expr>,
+        right: Box<Expr>,
     },
     UnaryOp {
         span: Span,
         ty: Type,
         op: UnaryOp,
-        expr: Box<TypedExpr>,
+        expr: Box<Expr>,
     },
     Variable {
         name: Vec<u8>,
@@ -68,8 +68,8 @@ pub enum TypedExpr {
         span: Span,
     },
     VarAssign {
-        target: Box<TypedExpr>,
-        value: Box<TypedExpr>,
+        target: Box<Expr>,
+        value: Box<Expr>,
         ty: Type,
         span: Span,
     },
@@ -78,7 +78,7 @@ pub enum TypedExpr {
     },
 }
 
-impl TypedExpr {
+impl Expr {
     pub fn span(&self) -> Span {
         match self {
             Self::IntegerLiteral { span, .. } => *span,
@@ -92,19 +92,19 @@ impl TypedExpr {
 }
 
 #[derive(Debug, Clone)]
-pub enum TypedStmt {
+pub enum Stmt {
     Print {
-        expr: Box<TypedExpr>,
+        expr: Box<Expr>,
         span: Span,
     },
     StmtExpr {
-        expr: Box<TypedExpr>,
+        expr: Box<Expr>,
         span: Span,
     },
     VarDecl {
         name: Vec<u8>,
         type_annotation: Type,
-        initializer: Option<TypedExpr>,
+        initializer: Option<Expr>,
         span: Span,
     },
     Error {
@@ -112,7 +112,7 @@ pub enum TypedStmt {
     },
 }
 
-impl TypedStmt {
+impl Stmt {
     pub fn span(&self) -> Span {
         match self {
             Self::Print { span, .. } => *span,
@@ -124,16 +124,16 @@ impl TypedStmt {
 }
 
 #[derive(Debug, Clone)]
-pub struct TypedProgram {
-    pub stmts: Vec<TypedStmt>,
+pub struct Program {
+    pub stmts: Vec<Stmt>,
 }
 
-impl TypedProgram {
+impl Program {
     pub fn new() -> Self {
         Self { stmts: Vec::new() }
     }
 
-    pub fn add(&mut self, stmt: TypedStmt) {
+    pub fn add(&mut self, stmt: Stmt) {
         self.stmts.push(stmt);
     }
 }

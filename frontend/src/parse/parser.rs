@@ -1,10 +1,10 @@
-use crate::lex::lexer::Lexer;
-use crate::lex::token::{Token, TokenType};
+use crate::diagnostics::{Diagnostic, Severity};
+use crate::lex::Lexer;
+use crate::lex::{Token, TokenType};
 use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, UnaryOp, UnaryopType};
 use crate::parse::ctors;
 use crate::semantic::typed::Type;
-use crate::span::Span; 
-use crate::diagnostics::{Diagnostic, Severity};
+use crate::span::Span;
 
 pub struct Parser<'src, 'diag> {
     lexer: Lexer<'src>,
@@ -20,7 +20,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             lexer,
             current,
             previous: None,
-            diagnostics
+            diagnostics,
         }
     }
 
@@ -105,7 +105,8 @@ impl<'src, 'diag> Parser<'src, 'diag> {
     }
 
     fn error<T: Into<String>>(&mut self, message: T, span: Span) {
-        self.diagnostics.push(Diagnostic::new(message.into(), span, Severity::Error));
+        self.diagnostics
+            .push(Diagnostic::new(message.into(), span, Severity::Error));
     }
 
     fn parse_primary(&mut self) -> Expr {

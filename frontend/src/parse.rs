@@ -1,3 +1,5 @@
 pub mod ast;
-pub mod ctors;
-pub mod parser;
+mod ctors;
+mod parser;
+
+pub use parser::Parser;
