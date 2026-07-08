@@ -6,8 +6,8 @@ use frontend::lex::Lexer;
 use frontend::parse::Parser;
 use frontend::parse::ast;
 use frontend::semantic::analyzer::SemanticAnalyzer;
-use frontend::semantic::typed::Type;
 use frontend::semantic::typed;
+use frontend::semantic::typed::Type;
 
 pub struct Compiler {}
 
@@ -16,16 +16,16 @@ impl Compiler {
         Self {}
     }
 
-    pub fn compile(
-        &mut self,
-        source: &[u8]
-    ) -> Result<Chunk, Vec<Diagnostic>> {
-
+    pub fn compile(&mut self, source: &[u8]) -> Result<Chunk, Vec<Diagnostic>> {
         let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
         let lexer = Lexer::new(source);
         let mut parser = Parser::new(lexer, &mut diagnostics);
         let unchecked_program = parser.generate_ast();
+
+        if !diagnostics.is_empty() {
+            return Err(diagnostics);
+        }
 
         let mut analyzer = SemanticAnalyzer::new();
         let program = analyzer.analyze(unchecked_program, &mut diagnostics);
@@ -82,7 +82,7 @@ fn compile_expr(expr: &typed::Expr, chunk: &mut Chunk) {
             op,
             left,
             right,
-            ty
+            ty,
         } => {
             compile_expr(&*left, chunk);
             compile_expr(&*right, chunk);
@@ -95,14 +95,19 @@ fn compile_expr(expr: &typed::Expr, chunk: &mut Chunk) {
 
             chunk.write(opcode as u8);
         }
-        typed::Expr::UnaryOp { span: _, op, expr, ty } => {
+        typed::Expr::UnaryOp {
+            span: _,
+            op,
+            expr,
+            ty,
+        } => {
             compile_expr(&*expr, chunk);
             let opcode: Opcode = match op.kind {
                 typed::UnaryopType::Negate => Opcode::Inegate,
             };
             chunk.write(opcode as u8);
         }
-        typed::Expr::VarAssign { target, value,  .. } => {
+        typed::Expr::VarAssign { target, value, .. } => {
             todo!("implement varassign")
         }
         typed::Expr::Variable { name, .. } => {

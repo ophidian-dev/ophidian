@@ -2,7 +2,7 @@ pub mod bindings;
 
 // private modules
 mod chunk;
-mod opcodes;
 mod compiler;
+mod opcodes;
 
 pub use compiler::Compiler;

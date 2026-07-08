@@ -1,5 +1,6 @@
-use compiler::bindings;
 use compiler::Compiler;
+use compiler::bindings;
+use frontend::diagnostics::DiagnosticEmitter;
 use owo_colors::OwoColorize;
 
 fn main() {
@@ -25,15 +26,18 @@ fn main() {
     let res = compiler.compile(&file);
 
     let chunk = match res {
-        Ok(c) => {
-            c
-        }
+        Ok(c) => c,
         Err(diagnostics) => {
+            let emitter = DiagnosticEmitter::new(&file);
             for diagnostic in &diagnostics {
-                eprintln!("{}", diagnostic);
+                eprintln!("{}", emitter.emit(diagnostic));
             }
 
-            println!("\n{} error{} generated.", diagnostics.len(), plural(diagnostics.len()));
+            println!(
+                "\n{} error{} generated.",
+                diagnostics.len(),
+                plural(diagnostics.len())
+            );
 
             std::process::exit(1);
         }
@@ -53,7 +57,7 @@ fn main() {
 fn plural(i: usize) -> &'static str {
     if i == 1 {
         return "";
-    } 
+    }
     "s"
 }
 
