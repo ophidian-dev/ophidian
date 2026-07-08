@@ -40,6 +40,10 @@ impl<T: std::fmt::Debug + PartialEq> Stack<T> {
         self.items.len()
     }
 
+    pub const fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
 }
 
 #[macro_export]

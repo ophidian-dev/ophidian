@@ -17,5 +17,12 @@ fn push_multiple_values() {
     stack.push(2);
     stack.push(3);
     stack.push(4);
-    assert_eq!(stack, stack![2 ,3 ,4])
+    assert_eq!(stack, stack![2 ,3 ,4]);
 }
+
+#[test]
+fn new_stack_from() {
+    let stack = Stack::from(3);
+    assert_eq!(stack, stack![3]);
+}
+
