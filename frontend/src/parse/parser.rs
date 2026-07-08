@@ -3,30 +3,24 @@ use crate::lex::token::{Token, TokenType};
 use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, UnaryOp, UnaryopType};
 use crate::parse::ctors;
 use crate::semantic::typed::Type;
-use crate::span::Span;
-use owo_colors::OwoColorize;
+use crate::span::Span; 
+use crate::diagnostics::{Diagnostic, Severity};
 
-pub struct Parser<'a> {
-    lexer: Lexer<'a>,
+pub struct Parser<'src, 'diag> {
+    lexer: Lexer<'src>,
     current: Option<Token>,
     previous: Option<Token>,
-    errors: Vec<ParseError>,
+    diagnostics: &'diag mut Vec<Diagnostic>,
 }
 
-#[derive(Debug)]
-pub enum ParseError {
-    UnexpectedToken(Token),
-    UnexpectedEof,
-}
-
-impl<'a> Parser<'a> {
-    pub fn new(mut lexer: Lexer<'a>) -> Self {
+impl<'src, 'diag> Parser<'src, 'diag> {
+    pub fn new(mut lexer: Lexer<'src>, diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
         let current: Option<Token> = lexer.next();
         Self {
             lexer,
             current,
             previous: None,
-            errors: Vec::new(),
+            diagnostics
         }
     }
 
@@ -54,24 +48,21 @@ impl<'a> Parser<'a> {
             }
             Some(tok) => {
                 let tok = *tok;
-                self.errors.push(ParseError::UnexpectedToken(tok));
 
                 // FIX: If a token is missing, anchor the error to the END of the previous token
                 if let Some(prev) = &self.previous {
-                    self.error(*prev, prev.span, error_msg);
+                    self.error(error_msg, prev.span);
                 } else {
-                    self.error(tok, tok.span, error_msg);
+                    self.error(error_msg, tok.span);
                 }
 
                 self.sync();
                 Err(())
             }
             None => {
-                self.errors.push(ParseError::UnexpectedEof);
-
                 // FIX: Handle EOF gracefully by pointing right after the final token in the file
                 if let Some(prev) = &self.previous {
-                    self.error(*prev, prev.span, error_msg);
+                    self.error(error_msg, prev.span);
                 } else {
                     // Extreme fallback if the file is completely empty
                     let fallback = Token {
@@ -80,7 +71,7 @@ impl<'a> Parser<'a> {
                         line: 0,
                         column: 0,
                     };
-                    self.error(fallback, fallback.span, error_msg);
+                    self.error(error_msg, fallback.span);
                 }
 
                 self.sync();
@@ -106,33 +97,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn get_line(&self, tok: Token) -> &[u8] {
-        let mut start = tok.span.offset();
-        while start > 0 && self.lexer.source[start - 1] != b'\n' {
-            start -= 1;
-        }
-
-        let mut end = tok.span.offset();
-        while end < self.lexer.source.len() && self.lexer.source[end] != b'\n' {
-            end += 1;
-        }
-        &self.lexer.source[start..end]
-    }
-
-    fn get_line_bounds(&self, tok: Token) -> (usize, usize) {
-        let mut start = tok.span.offset();
-        while start > 0 && self.lexer.source[start - 1] != b'\n' {
-            start -= 1;
-        }
-
-        let mut end = tok.span.offset();
-        while end < self.lexer.source.len() && self.lexer.source[end] != b'\n' {
-            end += 1;
-        }
-
-        (start, end)
-    }
-
     fn is_var_type(&self, tok_type: TokenType) -> bool {
         match tok_type {
             TokenType::Int => true,
@@ -140,53 +104,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn error(&self, tok: Token, span: Span, msg: &str) {
-        let (line_start, line_end) = self.get_line_bounds(tok);
-
-        let (caret_start, caret_end, display_column) = if msg.starts_with("expected") {
-            let start = span.end();
-            let end = span.end() + 1;
-            let col = start - line_start + 1;
-            (start, end, col)
-        } else {
-            (span.offset(), span.end(), tok.column + 1)
-        };
-
-        eprintln!(
-            "{}{}{}{} {} {}",
-            (tok.line + 1).bold(),
-            ":".bold(),
-            display_column.bold(),
-            ": ".bold(),
-            "error:".bright_red().bold(),
-            msg.bold()
-        );
-
-        let count: usize = tok.line.to_string().len();
-        for _ in 1..count {
-            eprint!(" ");
-        }
-        eprintln!("  |");
-        eprint!("{} | ", tok.line + 1);
-        let bytes: &[u8] = self.get_line(tok);
-
-        let s = std::str::from_utf8(bytes).unwrap_or("<invalid utf8>");
-        eprintln!("{}", s);
-
-        for _ in 1..count {
-            eprint!(" ");
-        }
-        eprint!("  | ");
-
-        for i in line_start..std::cmp::max(line_end, caret_end) {
-            if i >= caret_start && i < caret_end {
-                eprint!("{}", "^".green());
-            } else {
-                eprint!(" ");
-            }
-        }
-
-        eprintln!();
+    fn error<T: Into<String>>(&mut self, message: T, span: Span) {
+        self.diagnostics.push(Diagnostic::new(message.into(), span, Severity::Error));
     }
 
     fn parse_primary(&mut self) -> Expr {
@@ -216,10 +135,9 @@ impl<'a> Parser<'a> {
                 }
                 _ => {
                     let tok = t.clone();
-                    self.errors.push(ParseError::UnexpectedToken(tok));
-                    // TODO: make error handle the expected arithmetic expression cleanly to not pub caret in wrong place
+                    // TODO: make error handle the expected arithmetic expression cleanly to not put caret in wrong place
                     // self.error(tok, tok.span, "expected arithmetic expression");
-                    self.error(tok, tok.span, "unexpected token");
+                    self.error("unexpected token", tok.span);
                     self.sync();
                     Expr::Error { span: tok.span }
                 }
@@ -231,11 +149,7 @@ impl<'a> Parser<'a> {
                 .as_ref()
                 .map(|t| t.span)
                 .unwrap_or_else(|| Span::new(0, 0));
-            self.errors.push(ParseError::UnexpectedEof);
-            eprintln!(
-                "{}: error: unexpected end of input",
-                "error".bright_red().bold()
-            );
+            self.error("unexpected end of input", fallback_span);
             Expr::Error {
                 span: fallback_span,
             }
@@ -264,11 +178,7 @@ impl<'a> Parser<'a> {
                     .as_ref()
                     .map(|t| t.span)
                     .unwrap_or_else(|| Span::new(0, 0));
-                self.errors.push(ParseError::UnexpectedEof);
-                eprintln!(
-                    "{}: error: unexpected end of input",
-                    "error".bright_red().bold()
-                );
+                self.error("unexpected end of input", fallback_span);
                 Expr::Error {
                     span: fallback_span,
                 }
@@ -481,11 +391,7 @@ impl<'a> Parser<'a> {
                     .as_ref()
                     .map(|t| t.span)
                     .unwrap_or_else(|| Span::new(0, 0));
-                self.errors.push(ParseError::UnexpectedEof);
-                eprintln!(
-                    "{}: error: unexpected end of input",
-                    "error".bright_red().bold()
-                );
+                self.error("unexpected end of input", fallback_span);
                 Stmt::Error {
                     span: fallback_span,
                 }
@@ -533,8 +439,7 @@ impl<'a> Parser<'a> {
             }
             TokenType::OpenBrace => self.parse_block(),
             _ => {
-                self.error(tok, tok.span, "Unexpected token at statement start");
-                self.errors.push(ParseError::UnexpectedToken(tok));
+                self.error("unexpected token at statement start", tok.span);
                 self.sync();
                 Stmt::Error { span: tok.span }
             }
@@ -546,17 +451,6 @@ impl<'a> Parser<'a> {
         while self.peek().is_some() {
             let stmt = self.parse_stmt();
             program.add(stmt);
-        }
-
-        println!();
-        if self.errors.len() == 1 {
-            eprintln!("{} error generated.", self.errors.len());
-        } else if self.errors.len() > 1 {
-            eprintln!("{} errors generated.", self.errors.len());
-        }
-
-        if !self.errors.is_empty() {
-            std::process::exit(1);
         }
 
         program
