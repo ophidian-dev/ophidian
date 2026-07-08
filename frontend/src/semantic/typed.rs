@@ -89,6 +89,17 @@ impl Expr {
             Self::VarAssign { span, .. } => *span,
         }
     }
+
+    pub fn ty(&self) -> Type {
+        match self {
+            Self::BinaryOp { ty, .. } => *ty,
+            Self::IntegerLiteral { ty, .. } => *ty,
+            Self::UnaryOp { ty, .. } => *ty,
+            Self::VarAssign { ty, .. } => *ty,
+            Self::Variable { ty, .. } => *ty,
+            Self::Error { .. } => panic!("tried to get type of error node")
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -107,6 +118,10 @@ pub enum Stmt {
         initializer: Option<Expr>,
         span: Span,
     },
+    Block {
+        body: Vec<Stmt>,
+        span: Span,
+    },
     Error {
         span: Span,
     },
@@ -119,6 +134,7 @@ impl Stmt {
             Self::StmtExpr { span, .. } => *span,
             Self::Error { span } => *span,
             Self::VarDecl { span, .. } => *span,
+            Self::Block { span, .. } => *span,
         }
     }
 }

@@ -27,8 +27,8 @@ impl Compiler {
             return Err(diagnostics);
         }
 
-        let mut analyzer = SemanticAnalyzer::new();
-        let program = analyzer.analyze(unchecked_program, &mut diagnostics);
+        let mut analyzer = SemanticAnalyzer::new(&mut diagnostics);
+        let program = analyzer.analyze(unchecked_program);
         if !diagnostics.is_empty() {
             return Err(diagnostics);
         }

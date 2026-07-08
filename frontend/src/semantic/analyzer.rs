@@ -1,14 +1,16 @@
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, Severity};
 use crate::parse::ast as untyped;
+use crate::semantic::ctors::{binary_op_from_untyped, create_binary_op, create_block, create_integer_literal, create_print, create_stmtexpr, create_unary_op, create_var_assign, create_var_decl, create_variable, unary_op_from_untyped};
 use crate::semantic::typed;
 use crate::semantic::typed::Type;
+use crate::span::Span;
 use common::collections::Stack;
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq)]
-pub struct SemanticAnalyzer {
+pub struct SemanticAnalyzer<'a> {
     scopes: Stack<Scope>,
     id_count: usize,
+    diagnostics: &'a mut Vec<Diagnostic>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -18,8 +20,8 @@ struct Scope {
 
 #[derive(Debug, PartialEq, Clone)]
 struct Symbol {
-    id: usize,
-    ty: Type,
+    pub id: usize,
+    pub ty: Type,
 }
 
 impl Scope {
@@ -34,33 +36,18 @@ impl Symbol {
     pub fn new(id: usize, ty: Type) -> Self {
         Self { id, ty }
     }
-
-    fn id(&self) -> usize {
-        self.id
-    }
-
-    fn ty(&self) -> Type {
-        self.ty
-    }
 }
 
-impl SemanticAnalyzer {
-    pub fn new() -> Self {
+impl<'a> SemanticAnalyzer<'a> {
+    pub fn new(diagnostics: &'a mut Vec<Diagnostic>) -> Self {
         let mut analyzer = Self {
             scopes: Stack::new(),
             id_count: 0,
+            diagnostics
         };
 
         analyzer.enter_scope();
         analyzer
-    }
-
-    pub fn analyze(
-        &mut self,
-        program: untyped::Program,
-        diagnostics: &mut [Diagnostic],
-    ) -> typed::Program {
-        typed::Program { stmts: Vec::new() }
     }
 
     fn next_id(&mut self) -> usize {
@@ -98,10 +85,159 @@ impl SemanticAnalyzer {
         None
     }
 
-    fn visit_expr(&mut self, expr: untyped::Expr) -> Type {
-        match expr {
-            untyped::Expr::IntegerLiteral { .. } => Type::Int,
-            _ => todo!("visit other exprs"),
+    fn error<T: Into<String>>(&mut self, msg: T, span: Span) {
+        self.diagnostics.push(Diagnostic::new(msg.into(), span, Severity::Error));
+    }
+
+    fn can_assign(&self, target: &typed::Expr, value: &typed::Expr) -> bool {
+        match target {
+            typed::Expr::Variable { ty, .. } => {
+                match value.ty() {
+                    Type::Int => {
+                        match ty {
+                            Type::Int => {
+                                return true
+                            }
+                        }
+                    } 
+                } 
+            }
+            _ => {
+                return false;
+            }
         }
+    }
+
+    
+    // when a variables name is preceded by 'a_' then it refers to that Expression be 'analyzed'
+    fn visit_expr(&mut self, expr: untyped::Expr) -> typed::Expr {
+        match expr {
+            untyped::Expr::IntegerLiteral { span, value } => {
+                return create_integer_literal(value, Type::Int, span);
+            }
+            untyped::Expr::BinaryOp { span, op, left, right } => {
+                let a_left = self.visit_expr(*left);
+                let a_right = self.visit_expr(*right);
+
+                if a_left.ty() == Type::Int && a_right.ty() == Type::Int {
+                    match op.kind {
+                        untyped::BinopType::Add | untyped::BinopType::Sub | untyped::BinopType::Mul | untyped::BinopType::Div => {
+                            return create_binary_op(binary_op_from_untyped(op), Type::Int, a_left, a_right, span)
+                        }
+                    }
+                }
+
+                unreachable!("integer type is the only one that exists as of this moment")
+            }
+            untyped::Expr::UnaryOp { span, op, expr } => {
+                let a_expr = self.visit_expr(*expr);
+                match op.kind {
+                    untyped::UnaryopType::Negate => {
+                        if a_expr.ty() == Type::Int {
+                            return create_unary_op(unary_op_from_untyped(op), Type::Int, a_expr, span);
+                        }
+
+                        unreachable!("no other type except int should exist")
+                    }
+                }
+            }
+            untyped::Expr::VarAssign { target, value, span } => {
+                let a_target = self.visit_expr(*target);
+                let a_value = self.visit_expr(*value);
+
+                if !self.can_assign(&a_target, &a_value) {
+                    self.error("mismatched types", a_target.span().join(a_value.span()));
+                    todo!("recover from error");
+                }
+
+                match a_value.ty() {
+                    Type::Int => {
+                        return create_var_assign(a_target, a_value, Type::Int, span);
+                    }
+                }
+            }
+            untyped::Expr::Variable { name, span } => {
+                match self.lookup_var(&name) {
+                    Some(v) => {
+                        return create_variable(name, v.ty, span);
+                    }
+                    None => {
+                        self.error("undeclared identifier", span);
+                        todo!("recover from error");
+                    }
+                }
+            } 
+            _ => {
+                unreachable!("parser should have exited if error encountered");
+            }
+        }
+    }
+
+    fn visit_stmt(&mut self, stmt: untyped::Stmt) -> typed::Stmt {
+        match stmt {
+            untyped::Stmt::Block { body, span } => {
+                self.enter_scope();
+
+                let mut a_body: Vec<typed::Stmt> = Vec::new();
+
+                let mut span = span;
+
+                for stmt in body {
+                    span = span.join(stmt.span());
+                    a_body.push(self.visit_stmt(stmt));
+                }
+
+                self.exit_scope();
+
+                return create_block(a_body, span);
+            }
+            untyped::Stmt::Print { expr, span } => {
+                let a_expr = self.visit_expr(*expr);
+
+                if a_expr.ty() != Type::Int {
+                    self.error("statement 'print' expected type 'int'", span);
+                }
+
+                return create_print(a_expr, span);
+            }
+            untyped::Stmt::StmtExpr { expr, span } => {
+                let a_expr = self.visit_expr(*expr);
+                return create_stmtexpr(a_expr, span);
+            }
+            untyped::Stmt::VarDecl { name, type_annotation, initializer, span } => {
+                if let Some(init) = initializer {
+                    let a_expr = self.visit_expr(init);
+
+                    if type_annotation != a_expr.ty() {
+                        self.error("variable type mismatch", span);
+                        todo!("recover from error");
+                    }
+
+                    self.declare_var(&name, type_annotation);
+
+                    return create_var_decl(name, type_annotation, Some(a_expr), span)
+                }
+
+                self.declare_var(&name, type_annotation);
+
+                return create_var_decl(name, type_annotation, None, span);
+            }
+            _ => {
+                unreachable!("parser should have stopped after errors");
+            }
+        }
+    }
+
+    pub fn analyze(
+        &mut self,
+        program: untyped::Program,
+    ) -> typed::Program {
+        let mut typed_program = typed::Program::new();
+
+        for stmt in program.stmts {
+            typed_program.stmts.push(self.visit_stmt(stmt));
+        } 
+
+        typed_program
     }
 }
