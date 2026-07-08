@@ -1,7 +1,7 @@
 use crate::span::Span;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
-pub enum TokenType {
+pub(crate) enum TokenType {
     IntegerLiteral,
 
     Plus,

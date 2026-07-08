@@ -2,8 +2,8 @@ use crate::lex::lexer::Lexer;
 use crate::lex::token::{Token, TokenType};
 use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, UnaryOp, UnaryopType};
 use crate::parse::ctors;
-use crate::span::Span;
 use crate::semantic::typed::Type;
+use crate::span::Span;
 use owo_colors::OwoColorize;
 
 pub struct Parser<'a> {
@@ -351,7 +351,7 @@ impl<'a> Parser<'a> {
 
         if let Some(tok) = self.peek() {
             if tok.kind == TokenType::Equal {
-                self.advance(); 
+                self.advance();
 
                 let right = self.parse_assignment();
 
@@ -362,7 +362,7 @@ impl<'a> Parser<'a> {
         }
 
         left
-    } 
+    }
 
     fn parse_expression(&mut self) -> Expr {
         self.parse_assignment()
@@ -505,14 +505,19 @@ impl<'a> Parser<'a> {
             if t.kind == TokenType::CloseBrace {
                 break;
             }
-            span = span.join(t.span);    
+            span = span.join(t.span);
             stmts.push(self.parse_stmt());
         }
-        
+
         let close_brace_span = self.peek().unwrap().clone().span;
 
-        if self.consume(TokenType::CloseBrace, "expected '}' at end of block").is_err() {
-            return Stmt::Error { span: close_brace_span };            
+        if self
+            .consume(TokenType::CloseBrace, "expected '}' at end of block")
+            .is_err()
+        {
+            return Stmt::Error {
+                span: close_brace_span,
+            };
         }
 
         ctors::create_block(stmts, span)

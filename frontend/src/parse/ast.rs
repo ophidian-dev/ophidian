@@ -1,5 +1,5 @@
-use crate::span::Span;
 use crate::semantic::typed::Type;
+use crate::span::Span;
 
 #[derive(Debug, Clone, Copy)]
 pub enum BinopType {
@@ -100,7 +100,7 @@ pub enum Stmt {
     },
     Block {
         body: Vec<Stmt>,
-        span: Span
+        span: Span,
     },
     Error {
         span: Span,
@@ -114,7 +114,7 @@ impl Stmt {
             Self::StmtExpr { span, .. } => *span,
             Self::Error { span } => *span,
             Self::VarDecl { span, .. } => *span,
-            Self::Block { span, .. } => *span
+            Self::Block { span, .. } => *span,
         }
     }
 }

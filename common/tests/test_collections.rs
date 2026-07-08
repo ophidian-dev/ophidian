@@ -1,7 +1,6 @@
 use common::collections::*;
 use common::stack;
 
-
 // tests for stack
 
 #[test]
@@ -17,7 +16,7 @@ fn push_multiple_values() {
     stack.push(2);
     stack.push(3);
     stack.push(4);
-    assert_eq!(stack, stack![2 ,3 ,4]);
+    assert_eq!(stack, stack![2, 3, 4]);
 }
 
 #[test]
@@ -54,7 +53,7 @@ fn top_of_empty_stack() {
 #[test]
 fn top_of_stack_with_1_value() {
     let mut stack: Stack<i32> = Stack::new();
-    stack.push(1); 
+    stack.push(1);
     assert_eq!(stack.top(), Some(1).as_ref());
 }
 

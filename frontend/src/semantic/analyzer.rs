@@ -1,7 +1,7 @@
-use crate::semantic::typed::*;
 use crate::parse::ast as untyped;
-use std::collections::HashMap;
+use crate::semantic::typed::*;
 use common::collections::Stack;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub struct SemanticAnalyzer {
@@ -11,29 +11,26 @@ pub struct SemanticAnalyzer {
 
 #[derive(Debug, PartialEq)]
 struct Scope {
-    symbols: HashMap<Vec<u8>, Symbol>
+    symbols: HashMap<Vec<u8>, Symbol>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 struct Symbol {
     id: usize,
-    ty: Type
+    ty: Type,
 }
 
 impl Scope {
     fn new() -> Self {
         Self {
-            symbols: HashMap::new()
+            symbols: HashMap::new(),
         }
     }
 }
 
 impl Symbol {
     pub fn new(id: usize, ty: Type) -> Self {
-        Self {
-            id,
-            ty
-        }
+        Self { id, ty }
     }
 
     fn id(&self) -> usize {
@@ -49,7 +46,7 @@ impl SemanticAnalyzer {
     pub fn new() -> Self {
         let mut analyzer = Self {
             scopes: Stack::new(),
-            id_count: 0
+            id_count: 0,
         };
 
         analyzer.enter_scope();
@@ -75,7 +72,11 @@ impl SemanticAnalyzer {
             todo!("implement error system for variable redeclaration");
         }
         let symbol = Symbol::new(self.next_id(), ty);
-        self.scopes.top_mut().unwrap().symbols.insert(name.to_vec(), symbol);
+        self.scopes
+            .top_mut()
+            .unwrap()
+            .symbols
+            .insert(name.to_vec(), symbol);
     }
 
     fn lookup_var(&mut self, name: &[u8]) -> Option<Symbol> {
@@ -85,12 +86,12 @@ impl SemanticAnalyzer {
             }
         }
         None
-    } 
+    }
 
     fn visit_expr(&mut self, expr: untyped::Expr) -> Type {
         match expr {
             untyped::Expr::IntegerLiteral { .. } => Type::Int,
-            _ => todo!("visit other exprs")
+            _ => todo!("visit other exprs"),
         }
     }
 }

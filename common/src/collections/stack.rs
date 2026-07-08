@@ -1,22 +1,18 @@
-
-
 // stack implementation
 
 #[derive(PartialEq)]
 pub struct Stack<T: std::fmt::Debug + PartialEq> {
-    items: Vec<T>
+    items: Vec<T>,
 }
 
 impl<T: std::fmt::Debug + PartialEq> Stack<T> {
     pub fn new() -> Self {
-        Self {
-            items: Vec::new()
-        }
+        Self { items: Vec::new() }
     }
 
     pub fn from(value: T) -> Self {
         let mut s: Stack<T> = Stack::new();
-        s.push(value); 
+        s.push(value);
         s
     }
 
@@ -47,13 +43,12 @@ impl<T: std::fmt::Debug + PartialEq> Stack<T> {
     pub fn iter(&self) -> std::slice::Iter<'_, T> {
         self.items.iter()
     }
-
 }
 
 #[macro_export]
 macro_rules! stack {
     () => {
-        Stack::new(); 
+        Stack::new();
     };
     ($($element:expr),+ $(,)?) => {{
         let mut s = Stack::new();
@@ -84,7 +79,7 @@ impl<T: std::fmt::Debug + PartialEq> std::fmt::Debug for Stack<T> {
                     break;
                 }
                 write!(f, "{:?}, ", self.items[i])?;
-            } 
+            }
 
             write!(f, "]")
         }
