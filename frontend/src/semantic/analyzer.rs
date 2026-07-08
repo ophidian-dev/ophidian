@@ -1,4 +1,5 @@
 use crate::semantic::typed::*;
+use crate::parse::ast as untyped;
 use std::collections::HashMap;
 use common::collections::Stack;
 
@@ -13,7 +14,7 @@ struct Scope {
     symbols: HashMap<Vec<u8>, Symbol>
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 struct Symbol {
     id: usize,
     ty: Type
@@ -77,5 +78,19 @@ impl SemanticAnalyzer {
         self.scopes.top_mut().unwrap().symbols.insert(name.to_vec(), symbol);
     }
 
-    
+    fn lookup_var(&mut self, name: &[u8]) -> Option<Symbol> {
+        for scope in self.scopes.iter().rev() {
+            if let Some(symbol) = scope.symbols.get(name) {
+                return Some(symbol.clone());
+            }
+        }
+        None
+    } 
+
+    fn visit_expr(&mut self, expr: untyped::Expr) -> Type {
+        match expr {
+            untyped::Expr::IntegerLiteral { .. } => Type::Int,
+            _ => todo!("visit other exprs")
+        }
+    }
 }

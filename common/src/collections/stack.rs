@@ -44,6 +44,10 @@ impl<T: std::fmt::Debug + PartialEq> Stack<T> {
         self.items.is_empty()
     }
 
+    pub fn iter(&self) -> std::slice::Iter<'_, T> {
+        self.items.iter()
+    }
+
 }
 
 #[macro_export]
