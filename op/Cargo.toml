@@ -6,7 +6,7 @@ build = "build.rs"
 
 [dependencies]
 owo-colors = { workspace = true }
-bytecode-compiler = { workspace = true }
+compiler = { workspace = true }
 frontend = { workspace = true }
 
 [build-dependencies]

@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
-    "bytecode-compiler", 
+    "compiler",
     "common",
     "frontend", 
     "op",
@@ -11,7 +11,7 @@ members = [
 [workspace.dependencies] 
 owo-colors = "4.3.0"
 frontend = { path = "frontend" }
-bytecode-compiler = { path = "bytecode-compiler" }
+compiler = { path = "compiler" }
 common = { path = "common" }
 bindgen = "0.72.1"
 cc = "1.2.65"

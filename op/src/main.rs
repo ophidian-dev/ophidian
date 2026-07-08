@@ -1,5 +1,5 @@
-use bytecode_compiler::bindings;
-use bytecode_compiler::compiler::Compiler;
+use compiler::bindings;
+use compiler::compiler::Compiler;
 use frontend::lex::lexer::Lexer;
 use frontend::parse::parser::Parser;
 use owo_colors::OwoColorize;

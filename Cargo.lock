@@ -38,16 +38,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8"
 
 [[package]]
-name = "bytecode-compiler"
-version = "0.1.0"
-dependencies = [
- "bindgen",
- "cc",
- "frontend",
- "walkdir",
-]
-
-[[package]]
 name = "cc"
 version = "1.2.65"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -88,6 +78,16 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "common",
+]
+
+[[package]]
+name = "compiler"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "frontend",
+ "walkdir",
 ]
 
 [[package]]
@@ -197,8 +197,8 @@ name = "op"
 version = "0.1.0"
 dependencies = [
  "bindgen",
- "bytecode-compiler",
  "cc",
+ "compiler",
  "frontend",
  "owo-colors",
  "walkdir",
