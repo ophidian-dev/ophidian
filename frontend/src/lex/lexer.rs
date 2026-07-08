@@ -1,7 +1,5 @@
-use crate::{
-    lex::token::{Token, TokenType},
-    parse::span::Span,
-};
+use crate::lex::token::*;
+use crate::span::Span;
 
 pub struct Lexer<'a> {
     current: usize,

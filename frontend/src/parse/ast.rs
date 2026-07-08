@@ -1,4 +1,4 @@
-use crate::parse::span::Span;
+use crate::span::Span;
 use crate::semantic::typed::Type;
 
 #[derive(Debug, Clone, Copy)]
