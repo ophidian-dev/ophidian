@@ -51,7 +51,14 @@ fn compile_stmt(stmt: &typed::Stmt, chunk: &mut Chunk) {
         }
         typed::Stmt::StmtExpr { expr, .. } => {
             compile_expr(expr, chunk);
-            chunk.write(Opcode::Pop as u8);
+            match **expr {
+                typed::Expr::VarAssign { .. } => {
+                    // do not pop value off stack if assignment
+                } 
+                _ => {
+                    chunk.write(Opcode::Pop as u8);
+                }
+            }
         }
         typed::Stmt::VarDecl {
             id,

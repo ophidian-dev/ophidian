@@ -55,7 +55,7 @@ void vm_init(struct VM *vm) {
     struct Stack stack;
     stack_init(&stack);
     vm->stack = stack;
-    vm->locals = malloc(LOCAL_MAX);
+    vm->locals = calloc(LOCAL_MAX, sizeof(Value));
     if (!vm->locals) {
         fprintf(stderr, "memory allocation failure");
         exit(1);
@@ -187,4 +187,6 @@ void vm_run(struct VM *vm, Byte *bytecode, size_t bytecode_len, Value *constants
 
 void vm_free(struct VM *vm) {
     stack_free(&vm->stack);
+    free(vm->locals);
+    vm->locals = NULL;
 }
