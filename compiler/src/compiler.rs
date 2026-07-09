@@ -88,6 +88,11 @@ fn compile_stmt(stmt: &typed::Stmt, chunk: &mut Chunk) {
                 }
             }
         }
+        typed::Stmt::Block { body, .. } => {
+            for stmt in body {
+                compile_stmt(stmt, chunk);
+            } 
+        }
         _ => {
             unreachable!("execution should not reach here");
         }
