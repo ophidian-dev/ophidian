@@ -22,11 +22,13 @@ void stack_push(struct Stack *stack, Value value);
 Value stack_pop(struct Stack *stack);
 void stack_free(struct Stack *stack);
 
+#define LOCAL_MAX 0xFFFFFF
+
 struct VM {
     struct Stack stack;
     uint8_t *ip;
     bool is_running;
-    Value locals[0xffffff];
+    Value *locals;
 };
 
 void vm_init(struct VM *vm);

@@ -55,6 +55,11 @@ void vm_init(struct VM *vm) {
     struct Stack stack;
     stack_init(&stack);
     vm->stack = stack;
+    vm->locals = malloc(LOCAL_MAX);
+    if (!vm->locals) {
+        fprintf(stderr, "memory allocation failure");
+        exit(1);
+    }
 }
 
 static Byte read_byte(struct VM *vm) {
@@ -84,6 +89,7 @@ static uint32_t decode3_le(Byte b0, Byte b1, Byte b2) {
 }
 
 void vm_run(struct VM *vm, Byte *bytecode, size_t bytecode_len, Value *constants, size_t constant_len) {
+    (void)constant_len;
     if (bytecode_len < 1) {
         return;
     } 
