@@ -2,7 +2,7 @@ use crate::diagnostics::{Diagnostic, Severity};
 use crate::lex::Lexer;
 use crate::lex::{Token, TokenType};
 use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, UnaryOp, UnaryopType};
-use crate::parse::ctors;
+use crate::parse::ctors::{self, create_var_decl};
 use crate::semantic::typed::Type;
 use crate::span::Span;
 
@@ -102,6 +102,15 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             TokenType::Int => true,
             _ => false,
         }
+    }
+
+    fn get_fallback_span(&self) -> Span {
+        let fallback_span = self
+                .previous
+                .as_ref()
+                .map(|t| t.span)
+                .unwrap_or_else(|| Span::new(0, 0));
+        fallback_span
     }
 
     fn error<T: Into<String>>(&mut self, message: T, span: Span) {
@@ -329,75 +338,120 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             }
         };
 
-        let colon_span = self.peek().unwrap().clone().span;
-
-        if self.consume(TokenType::Colon, "expected ':'").is_err() {
-            return Stmt::Error { span: colon_span };
+        if self.peek().clone().is_none() {
+            let fallback_span = self.get_fallback_span();
+            self.error("unexpected end of input", fallback_span);
+            return Stmt::Error {
+                span: fallback_span,
+            };
         }
 
-        let type_tok = self.peek().unwrap().clone();
-        let type_span = type_tok.span;
-        if !self.is_var_type(type_tok.kind) {
-            // any tokentype that is a type keyword for expected here will do
-            // because it is guarenteed here that type_tok is not a type keyword
-            let _ = self.consume(TokenType::Int, "expected type annotation");
-            return Stmt::Error { span: type_span };
-        }
+        // unwrap here because peek is guarenteed to return Some(t) as checked above
+        match self.peek().unwrap().clone().kind {
+            TokenType::Colon => {
+                // advance past colon
+                self.advance(); 
+                let type_tok = self.peek().unwrap().clone();
+                let type_span = type_tok.span;
+                if !self.is_var_type(type_tok.kind) {
+                    // any tokentype that is a type keyword for expected here will do
+                    // because it is guarenteed here that type_tok is not a type keyword
+                    let _ = self.consume(TokenType::Int, "expected type annotation");
+                    return Stmt::Error { span: type_span };
+                }
 
-        let var_type = match type_tok.kind {
-            TokenType::Int => Type::Int,
+                let var_type = match type_tok.kind {
+                    TokenType::Int => Type::Int,
+                    _ => {
+                        unreachable!("no other types");
+                    }
+                };
+
+                let eq_tok_span = match self.peek() {
+                    Some(t) => {
+                        t.span
+                    }
+                    None => {
+                        let fallback_span = self.get_fallback_span();
+                        self.error("unexpected end of input", fallback_span);
+                        return Stmt::Error {
+                            span: fallback_span,
+                        };
+
+                    }
+                };
+
+                self.advance();
+
+                match self.peek().clone() {
+                    Some(t) => match t.kind {
+                        TokenType::Equal => {
+                            self.advance();
+                            let expr = self.parse_expression();
+                            if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
+                                return Stmt::Error { span: eq_tok_span };
+                            }
+                            return ctors::create_var_decl(
+                                identifier,
+                                Some(var_type),
+                                Some(expr),
+                                start.span.join(eq_tok_span),
+                            );
+                        }
+                        TokenType::Semicolon => {
+                            self.advance();
+                            return ctors::create_var_decl(
+                                identifier,
+                                Some(var_type),
+                                None,
+                                start.span.join(eq_tok_span),
+                            );
+                        }
+                        _ => {
+                            if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
+                                return Stmt::Error { span: eq_tok_span };
+                            } else {
+                                panic!("execution should not reach here");
+                            }
+                        }
+                    },
+                    None => {
+                        let fallback_span = self.get_fallback_span();
+                        self.error("unexpected end of input", fallback_span);
+                        return Stmt::Error {
+                            span: fallback_span,
+                        };
+                    }
+                }
+            }
+            TokenType::Equal => {
+                // advance past equal 
+                self.advance();
+
+                let init = self.parse_expression();
+                let span = match self.peek() {
+                    Some(t) => t.span,
+                    None => {
+                        let fallback_span = self.get_fallback_span();
+                        self.error("unexpected end of input", fallback_span);
+                        return Stmt::Error { span: fallback_span };
+                    }
+                };
+
+                if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
+                    return Stmt::Error { span };
+                }
+
+                return create_var_decl(identifier, None, Some(init), span)
+            }
             _ => {
-                panic!("this should not execute");
-            }
-        };
-
-        let eq_tok_span = self.peek().unwrap().clone().span;
-        self.advance();
-
-        match self.peek().clone() {
-            Some(t) => match t.kind {
-                TokenType::Equal => {
-                    self.advance();
-                    let expr = self.parse_expression();
-                    if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
-                        return Stmt::Error { span: eq_tok_span };
-                    }
-                    return ctors::create_var_decl(
-                        identifier,
-                        var_type,
-                        Some(expr),
-                        start.span.join(eq_tok_span),
-                    );
-                }
-                TokenType::Semicolon => {
-                    self.advance();
-                    return ctors::create_var_decl(
-                        identifier,
-                        var_type,
-                        None,
-                        start.span.join(eq_tok_span),
-                    );
-                }
-                _ => {
-                    if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
-                        return Stmt::Error { span: eq_tok_span };
-                    } else {
-                        panic!("execution should not reach here");
-                    }
-                }
-            },
-            None => {
-                let fallback_span = self
-                    .previous
-                    .as_ref()
-                    .map(|t| t.span)
-                    .unwrap_or_else(|| Span::new(0, 0));
-                self.error("unexpected end of input", fallback_span);
-                Stmt::Error {
-                    span: fallback_span,
-                }
+                let span = self.peek().unwrap().span;
+                let _ = self.consume(TokenType::Equal, "expected assignment expression");
+                return Stmt::Error { span };
             }
         }
+
+        
     }
 
     fn parse_block(&mut self) -> Stmt {

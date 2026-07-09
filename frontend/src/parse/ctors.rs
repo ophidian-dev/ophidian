@@ -39,7 +39,7 @@ pub fn create_print_stmt(expr: Expr, span: Span) -> Stmt {
 
 pub fn create_var_decl(
     name: Vec<u8>,
-    type_annotation: Type,
+    type_annotation: Option<Type>,
     initializer: Option<Expr>,
     span: Span,
 ) -> Stmt {

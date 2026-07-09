@@ -94,7 +94,7 @@ pub enum Stmt {
     },
     VarDecl {
         name: Vec<u8>,
-        type_annotation: Type,
+        type_annotation: Option<Type>,
         initializer: Option<Expr>,
         span: Span,
     },

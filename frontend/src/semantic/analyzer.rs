@@ -280,38 +280,70 @@ impl<'a> SemanticAnalyzer<'a> {
                 return create_stmtexpr(a_expr, span);
             }
             untyped::Stmt::VarDecl { name, type_annotation, initializer, span } => {
-                if let Some(init) = initializer {
-                    let a_expr = self.visit_expr(init);
+                match type_annotation {
+                    Some(t) => {
+                        if let Some(init) = initializer {
+                            let a_expr = self.visit_expr(init);
 
-                    if type_annotation != a_expr.ty() {
-                        self.error("variable type mismatch", span);
-                        todo!("recover from error");
+                            if t != a_expr.ty() {
+                                self.error("variable type mismatch", span);
+                                todo!("recover from error");
+                            }
+
+                            let id = match self.declare_var(&name, t) {
+                                Ok(i) => {
+                                    i
+                                }
+                                Err((e, i)) => {
+                                    self.error(e, span);
+                                    return create_var_decl(Type::Error, None, i, span)
+                                }
+                            };
+
+                            return create_var_decl(t, Some(a_expr), id, span);
+                        }
+
+                        let id = match self.declare_var(&name, t) {
+                            Ok(i) => {
+                                i
+                            }
+                            Err((e, i)) => {
+                                self.error(e, span);
+                                return create_var_decl(Type::Error, None, i, span)
+                            }
+                        };
+
+                        return create_var_decl(t, None, id, span);
+
                     }
+                    None => {
+                        if initializer.is_none() {
+                            self.error(format!("cannot infer type of identifier '{}' without initializer expression", String::from_utf8_lossy(&name)), span);
+                            let id = match self.declare_var(&name, Type::Error) {
+                                Ok(i) => i,
+                                Err((e, i)) => {
+                                    self.error(e, span);
+                                    return create_var_decl(Type::Error, None, i, span);
+                                }
+                            };
 
-                    let id = match self.declare_var(&name, type_annotation) {
-                        Ok(i) => {
-                            i
+                            return create_var_decl(Type::Error, None, id, span);
                         }
-                        Err((e, i)) => {
-                            self.error(e, span);
-                            return create_var_decl(Type::Error, None, i, span)
-                        }
-                    };
 
-                    return create_var_decl(type_annotation, Some(a_expr), id, span);
+                        // initializer is guarenteed to be Some(v) after the checks above
+                        let init = initializer.unwrap();
+
+                        let a_expr = self.visit_expr(init);
+                        let id = match self.declare_var(&name, a_expr.ty()) {
+                            Ok(i) => i,
+                            Err((e, i)) => {
+                                self.error(e, span);
+                                return create_var_decl(Type::Error, None, i, span);
+                            }
+                        };
+                        return create_var_decl(a_expr.ty(), Some(a_expr), id, span);
+                    }
                 }
-
-                let id = match self.declare_var(&name, type_annotation) {
-                    Ok(i) => {
-                        i
-                    }
-                    Err((e, i)) => {
-                        self.error(e, span);
-                        return create_var_decl(Type::Error, None, i, span)
-                    }
-                };
-
-                return create_var_decl(type_annotation, None, id, span);
             }
             _ => {
                 unreachable!("parser should have stopped after errors");
