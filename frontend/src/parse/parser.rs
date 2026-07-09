@@ -129,6 +129,11 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     let n: i32 = s.parse().unwrap();
                     ctors::create_integer_literal(n, tok.span)
                 }
+                TokenType::BooleanLiteral(b) => {
+                    let tok = self.peek().unwrap().clone();
+                    self.advance();
+                    ctors::create_boolean_literal(b, tok.span)
+                },
                 TokenType::OpenParen => {
                     self.advance();
                     let expr: Expr = self.parse_expression();
@@ -474,6 +479,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
 
                 let var_type = match type_tok.kind {
                     TokenType::Int => Type::Int,
+                    TokenType::Bool => Type::Bool,
                     _ => {
                         unreachable!("no other types");
                     }

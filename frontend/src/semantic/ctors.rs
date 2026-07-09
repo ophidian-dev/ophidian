@@ -35,6 +35,38 @@ pub fn binary_op_from_untyped(untyped_op: untyped::BinaryOp) -> BinaryOp {
             kind: BinopType::Div,
             span: untyped_op.span,
         },
+        untyped::BinopType::Or => BinaryOp {
+            kind: BinopType::Or,
+            span: untyped_op.span,
+        },
+        untyped::BinopType::And => BinaryOp {
+            kind: BinopType::And,
+            span: untyped_op.span,
+        },
+        untyped::BinopType::EqEq => BinaryOp {
+            kind: BinopType::EqEq,
+            span: untyped_op.span,
+        },
+        untyped::BinopType::BangEq => BinaryOp {
+            kind: BinopType::BangEq,
+            span: untyped_op.span,
+        },
+        untyped::BinopType::Lesser => BinaryOp {
+            kind: BinopType::Lesser,
+            span: untyped_op.span,
+        },
+        untyped::BinopType::Greater => BinaryOp {
+            kind: BinopType::Greater,
+            span: untyped_op.span,
+        },
+        untyped::BinopType::GreaterEq => BinaryOp {
+            kind: BinopType::GreaterEq,
+            span: untyped_op.span,
+        },
+        untyped::BinopType::LesserEq => BinaryOp {
+            kind: BinopType::LesserEq,
+            span: untyped_op.span,
+        },
     }
 }
 
@@ -51,6 +83,10 @@ pub fn unary_op_from_untyped(untyped_op: untyped::UnaryOp) -> UnaryOp {
     match untyped_op.kind {
         untyped::UnaryopType::Negate => UnaryOp {
             kind: UnaryopType::Negate,
+            span: untyped_op.span,
+        },
+        untyped::UnaryopType::Not => UnaryOp {
+            kind: UnaryopType::Not,
             span: untyped_op.span,
         },
     }

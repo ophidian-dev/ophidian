@@ -66,3 +66,7 @@ pub fn create_var_assign(target: Expr, value: Expr, span: Span) -> Expr {
 pub fn create_block(body: Vec<Stmt>, span: Span) -> Stmt {
     Stmt::Block { body, span }
 }
+
+pub fn create_boolean_literal(value: bool, span: Span) -> Expr {
+    Expr::BooleanLiteral { span, value }
+}

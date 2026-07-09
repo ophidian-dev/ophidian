@@ -53,6 +53,10 @@ pub enum Expr {
         span: Span,
         value: i32,
     },
+    BooleanLiteral {
+        span: Span,
+        value: bool,
+    },
     BinaryOp {
         span: Span,
         op: BinaryOp,
@@ -87,6 +91,7 @@ impl Expr {
             Self::Error { span } => *span,
             Self::Variable { span, .. } => *span,
             Self::VarAssign { span, .. } => *span,
+            Self::BooleanLiteral { span , .. } => *span, 
         }
     }
 }
