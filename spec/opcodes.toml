@@ -42,3 +42,13 @@ description = "pops 1 int off the stack, negates and pushes result"
 name = "pop"
 value = 8
 description = "pops top value off the stack"
+
+[[opcodes]]
+name = "ILOAD_LOCAL"
+value = 9
+description = "takes a 3 byte operand and indexes into local pool and pushes the value at index operand"
+
+[[opcodes]]
+name = "ISTORE_LOCAL"
+value = 10
+description = "takes a 3 byte operand, then pops an int off the stack then adds the value into local pool at index"

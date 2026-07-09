@@ -4,6 +4,7 @@
 #[repr(i32)]
 #[derive(Debug)]
 pub enum Opcode {
+
     // halts execution of the virtual machine
     Halt = 0,
     // pops 2 ints off the stack and adds them then pushes the result
@@ -22,4 +23,8 @@ pub enum Opcode {
     Inegate = 7,
     // pops top value off the stack
     Pop = 8,
+    // takes a 3 byte operand and indexes into local pool and pushes the value at index operand
+    IloadLocal = 9,
+    // takes a 3 byte operand, then pops an int off the stack then adds the value into local pool at index
+    IstoreLocal = 10,
 }

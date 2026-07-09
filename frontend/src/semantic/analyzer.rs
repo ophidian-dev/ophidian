@@ -14,6 +14,45 @@ impl VarId {
     pub const ERROR: VarId = VarId(usize::MAX);
 }
 
+impl PartialEq<usize> for VarId {
+    fn eq(&self, other: &usize) -> bool {
+        self.0 == *other 
+    }
+
+    fn ne(&self, other: &usize) -> bool {
+        self.0 != *other
+    }
+}
+
+impl Into<u32> for VarId {
+    fn into(self) -> u32 {
+        assert!(self.0 <= u32::MAX as usize);
+        self.0 as u32
+    }
+}
+
+impl PartialOrd<usize> for VarId {
+    fn ge(&self, other: &usize) -> bool {
+        self.0 >= *other 
+    }
+
+    fn gt(&self, other: &usize) -> bool {
+        self.0 > *other 
+    }
+
+    fn le(&self, other: &usize) -> bool {
+        self.0 <= *other 
+    }
+
+    fn lt(&self, other: &usize) -> bool {
+        self.0 < *other
+    }
+
+    fn partial_cmp(&self, other: &usize) -> Option<std::cmp::Ordering> {
+        self.0.partial_cmp(other)
+    }
+}
+
 impl std::ops::AddAssign<usize> for VarId {
     fn add_assign(&mut self, rhs: usize) {
         self.0 += rhs;

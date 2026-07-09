@@ -4,8 +4,7 @@ use crate::opcodes::Opcode;
 use frontend::diagnostics::Diagnostic;
 use frontend::lex::Lexer;
 use frontend::parse::Parser;
-use frontend::parse::ast;
-use frontend::semantic::analyzer::SemanticAnalyzer;
+use frontend::semantic::analyzer::{SemanticAnalyzer, VarId};
 use frontend::semantic::typed;
 use frontend::semantic::typed::Type;
 
@@ -60,17 +59,44 @@ fn compile_stmt(stmt: &typed::Stmt, chunk: &mut Chunk) {
             initializer,
             ..
         } => {
-            todo!("implement vardecl")
+            match initializer {
+                Some(init) => {
+                    compile_expr(init, chunk);
+
+                    chunk.write(Opcode::IstoreLocal as u8);        
+                    chunk.write_u24(<VarId as Into<u32>>::into(*id));
+                }
+                None => {
+                    match type_annotation {
+                        Type::Int => {
+                            let idx = unsafe {
+                                chunk.write_constant(bindings::vm_create_int_value(0))
+                            };
+                            chunk.write(Opcode::Loadconst as u8);
+                            assert!(idx <= 0xFF_FF_FF);
+                            chunk.write_u24(idx as u32);
+                            
+                            chunk.write(Opcode::IstoreLocal as u8);
+
+                            chunk.write_u24(<VarId as Into<u32>>::into(*id));
+                            
+                        }
+                        _ => {
+                            unreachable!("analysis should have aborted after errors");
+                        }
+                    }
+                }
+            }
         }
         _ => {
-            panic!("execution should not reach here");
+            unreachable!("execution should not reach here");
         }
     }
 }
 
 fn compile_expr(expr: &typed::Expr, chunk: &mut Chunk) {
     match expr {
-        typed::Expr::IntegerLiteral { span: _, value, ty } => {
+        typed::Expr::IntegerLiteral { span: _, value, .. } => {
             let v: bindings::vm_Value = unsafe { bindings::vm_create_int_value(*value) };
             chunk.write(Opcode::Loadconst as u8);
             let idx = chunk.write_constant(v);
@@ -86,11 +112,19 @@ fn compile_expr(expr: &typed::Expr, chunk: &mut Chunk) {
         } => {
             compile_expr(&*left, chunk);
             compile_expr(&*right, chunk);
-            let opcode = match op.kind {
-                typed::BinopType::Add => Opcode::Iadd,
-                typed::BinopType::Sub => Opcode::Isub,
-                typed::BinopType::Mul => Opcode::Imul,
-                typed::BinopType::Div => Opcode::Idiv,
+            let opcode = match ty {
+                Type::Int => { 
+                    let op = match op.kind {
+                        typed::BinopType::Add => Opcode::Iadd,
+                        typed::BinopType::Sub => Opcode::Isub,
+                        typed::BinopType::Mul => Opcode::Imul,
+                        typed::BinopType::Div => Opcode::Idiv,
+                    };
+                    op
+                }   
+                _ => {
+                    unreachable!("parser should have exited after error");
+                }
             };
 
             chunk.write(opcode as u8);
@@ -102,19 +136,50 @@ fn compile_expr(expr: &typed::Expr, chunk: &mut Chunk) {
             ty,
         } => {
             compile_expr(&*expr, chunk);
-            let opcode: Opcode = match op.kind {
-                typed::UnaryopType::Negate => Opcode::Inegate,
+            let opcode = match ty {
+                Type::Int => {
+                        let op: Opcode = match op.kind {
+                            typed::UnaryopType::Negate => Opcode::Inegate,
+                        };
+                        op
+                }
+                _ => {
+                    unreachable!("analysis should have aborted after error");
+                }
             };
-            chunk.write(opcode as u8);
+ 
+           chunk.write(opcode as u8);
         }
-        typed::Expr::VarAssign { target, value, .. } => {
-            todo!("implement varassign")
+        typed::Expr::VarAssign { target, value, ty, .. } => {
+            compile_expr(&*value, chunk);
+
+            let var_id = match **target {
+                typed::Expr::Variable { id, .. } => {
+                    id
+                }
+                _ => {
+                    unreachable!("analysis should have made sure only lvalues are assignable");
+                }
+            };
+
+            match ty {
+                Type::Int => {
+                    chunk.write(Opcode::IstoreLocal as u8);
+                    chunk.write_u24(<VarId as Into<u32>>::into(var_id));
+                }
+                _ => {
+                    unreachable!("analysis should have aborted after error");
+                }
+            }
         }
         typed::Expr::Variable { id, .. } => {
-            todo!("implement variable")
+            assert!(*id <= 0xFF_FF_FF);
+            chunk.write(Opcode::IloadLocal as u8);
+            chunk.write_u24(<VarId as Into<u32>>::into(*id));
+
         }
         typed::Expr::Error { span: _ } => {
-            panic!("execution should not reach here");
+            unreachable!("execution should not reach here");
         }
     }
 }

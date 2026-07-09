@@ -28,3 +28,9 @@
 // pops top value off the stack
 #define OP_POP 8
 
+// takes a 3 byte operand and indexes into local pool and pushes the value at index operand
+#define OP_ILOAD_LOCAL 9
+
+// takes a 3 byte operand, then pops an int off the stack then adds the value into local pool at index
+#define OP_ISTORE_LOCAL 10
+
