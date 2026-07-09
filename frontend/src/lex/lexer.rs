@@ -80,7 +80,7 @@ impl<'a> Lexer<'a> {
                 }
                 false
             }
-            None => false
+            None => false,
         }
     }
 }

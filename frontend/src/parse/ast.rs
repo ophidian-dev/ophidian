@@ -7,6 +7,14 @@ pub enum BinopType {
     Sub,
     Mul,
     Div,
+    Or,
+    And,
+    EqEq,
+    BangEq,
+    Lesser,
+    Greater,
+    LesserEq,
+    GreaterEq,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -24,6 +32,7 @@ impl BinaryOp {
 #[derive(Debug, Clone, Copy)]
 pub enum UnaryopType {
     Negate,
+    Not,
 }
 
 #[derive(Debug, Clone, Copy)]

@@ -180,6 +180,18 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     tok.span.join(right_span),
                 )
             }
+            Some(t) if t.kind == TokenType::Bang => {
+                let tok = self.peek().unwrap().clone();
+                self.advance();
+                let right: Expr = self.parse_unary();
+                let right_span: Span = right.span();
+
+                ctors::create_unary_op(
+                    UnaryOp::new(UnaryopType::Not, tok.span),
+                    right,
+                    tok.span.join(right_span),
+                )
+            }
             Some(_) => self.parse_primary(),
             None => {
                 // safe recovery point instead of panic
@@ -266,8 +278,108 @@ impl<'src, 'diag> Parser<'src, 'diag> {
         left
     }
 
+    fn parse_comparison(&mut self) -> Expr {
+        let mut left = self.parse_term();
+        let start_span = left.span();
+        while let Some(t) = self.peek().cloned() {
+            let op_span: Span = self.peek().unwrap().span;
+            self.advance();
+            let right = self.parse_term();
+            let right_span = right.span();
+            left = ctors::create_binary_op(
+                BinaryOp::new(
+                    match t.kind {
+                        TokenType::GreaterEqual => BinopType::GreaterEq,
+                        TokenType::Greater => BinopType::Greater,
+                        TokenType::Lesser => BinopType::Lesser,
+                        TokenType::LesserEqual => BinopType::LesserEq,
+                        _ => break,
+                    },
+                    op_span,
+                ),
+                left,
+                right,
+                start_span.join(right_span),
+            );
+        }
+        left
+    }
+
+    fn parse_equality(&mut self) -> Expr {
+        let mut left = self.parse_comparison();
+        let start_span = left.span();
+        while let Some(t) = self.peek().cloned() {
+            let op_span: Span = self.peek().unwrap().span;
+            self.advance();
+            let right = self.parse_comparison();
+            let right_span = right.span();
+            left = ctors::create_binary_op(
+                BinaryOp::new(
+                    match t.kind {
+                        TokenType::EqualEqual => BinopType::EqEq,
+                        TokenType::BangEqual => BinopType::BangEq,
+                        _ => break,
+                    },
+                    op_span,
+                ),
+                left,
+                right,
+                start_span.join(right_span),
+            );
+        }
+        left
+    }
+
+    fn parse_and(&mut self) -> Expr {
+        let mut left = self.parse_equality();
+        let start_span = left.span();
+        while let Some(t) = self.peek().cloned() {
+            let op_span = t.span;
+            self.advance();
+            let right = self.parse_equality();
+            let right_span = right.span();
+            left = ctors::create_binary_op(
+                BinaryOp::new(
+                    match t.kind {
+                        TokenType::And => BinopType::And,
+                        _ => break,
+                    },
+                    op_span,
+                ),
+                left,
+                right,
+                start_span.join(right_span),
+            );
+        }
+        left
+    }
+
+    fn parse_or(&mut self) -> Expr {
+        let mut left = self.parse_and();
+        let start_span = left.span();
+        while let Some(t) = self.peek().cloned() {
+            let op_span = t.span;
+            self.advance();
+            let right = self.parse_and();
+            let right_span = right.span();
+            left = ctors::create_binary_op(
+                BinaryOp::new(
+                    match t.kind {
+                        TokenType::Or => BinopType::Or,
+                        _ => break,
+                    },
+                    op_span,
+                ),
+                left,
+                right,
+                start_span.join(right_span),
+            );
+        }
+        left
+    }
+
     fn parse_assignment(&mut self) -> Expr {
-        let left = self.parse_term();
+        let left = self.parse_or();
 
         if let Some(tok) = self.peek() {
             if tok.kind == TokenType::Equal {
