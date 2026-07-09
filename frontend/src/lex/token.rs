@@ -4,6 +4,8 @@ use crate::span::Span;
 pub enum TokenType {
     IntegerLiteral,
 
+    BooleanLiteral(bool),
+
     Plus,
     Minus,
     Star,
@@ -24,8 +26,20 @@ pub enum TokenType {
     Let,
 
     Int,
+    Bool,
 
     Equal,
+
+    EqualEqual,
+    BangEqual,
+    GreaterEqual,
+    LesserEqual,
+    Greater,
+    Lesser,
+
+    Bang,
+    Or,
+    And,
 
     Identifier,
 

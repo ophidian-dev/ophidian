@@ -64,7 +64,23 @@ impl<'a> Lexer<'a> {
             b"print" => TokenType::Print,
             b"let" => TokenType::Let,
             b"int" => TokenType::Int,
+            b"bool" => TokenType::Bool,
+            b"true" => TokenType::BooleanLiteral(true),
+            b"false" => TokenType::BooleanLiteral(false),
             _ => TokenType::Identifier,
+        }
+    }
+
+    fn consume(&mut self, expected: u8) -> bool {
+        match self.peek() {
+            Some(t) => {
+                if t == expected {
+                    self.advance();
+                    return true;
+                }
+                false
+            }
+            None => false
         }
     }
 }
@@ -139,7 +155,45 @@ impl<'a> Iterator for Lexer<'a> {
                     }
                     b'=' => {
                         self.advance();
+                        if self.consume(b'=') {
+                            return Some(self.create_token(TokenType::EqualEqual));
+                        }
                         return Some(self.create_token(TokenType::Equal));
+                    }
+                    b'!' => {
+                        self.advance();
+                        if self.consume(b'=') {
+                            return Some(self.create_token(TokenType::BangEqual));
+                        }
+                        return Some(self.create_token(TokenType::Bang));
+                    }
+                    b'>' => {
+                        self.advance();
+                        if self.consume(b'=') {
+                            return Some(self.create_token(TokenType::GreaterEqual));
+                        }
+                        return Some(self.create_token(TokenType::Greater));
+                    }
+                    b'<' => {
+                        self.advance();
+                        if self.consume(b'=') {
+                            return Some(self.create_token(TokenType::LesserEqual));
+                        }
+                        return Some(self.create_token(TokenType::Lesser));
+                    }
+                    b'|' => {
+                        self.advance();
+                        if self.consume(b'|') {
+                            return Some(self.create_token(TokenType::Or));
+                        }
+                        return Some(self.create_error(b'|'));
+                    }
+                    b'&' => {
+                        self.advance();
+                        if self.consume(b'&') {
+                            return Some(self.create_token(TokenType::And));
+                        }
+                        return Some(self.create_error(b'&'));
                     }
                     _ => {
                         if c.is_ascii_digit() {
