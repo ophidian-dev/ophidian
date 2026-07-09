@@ -106,10 +106,10 @@ impl<'src, 'diag> Parser<'src, 'diag> {
 
     fn get_fallback_span(&self) -> Span {
         let fallback_span = self
-                .previous
-                .as_ref()
-                .map(|t| t.span)
-                .unwrap_or_else(|| Span::new(0, 0));
+            .previous
+            .as_ref()
+            .map(|t| t.span)
+            .unwrap_or_else(|| Span::new(0, 0));
         fallback_span
     }
 
@@ -350,7 +350,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
         match self.peek().unwrap().clone().kind {
             TokenType::Colon => {
                 // advance past colon
-                self.advance(); 
+                self.advance();
                 let type_tok = self.peek().unwrap().clone();
                 let type_span = type_tok.span;
                 if !self.is_var_type(type_tok.kind) {
@@ -368,16 +368,13 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                 };
 
                 let eq_tok_span = match self.peek() {
-                    Some(t) => {
-                        t.span
-                    }
+                    Some(t) => t.span,
                     None => {
                         let fallback_span = self.get_fallback_span();
                         self.error("unexpected end of input", fallback_span);
                         return Stmt::Error {
                             span: fallback_span,
                         };
-
                     }
                 };
 
@@ -425,7 +422,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                 }
             }
             TokenType::Equal => {
-                // advance past equal 
+                // advance past equal
                 self.advance();
 
                 let init = self.parse_expression();
@@ -434,7 +431,9 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     None => {
                         let fallback_span = self.get_fallback_span();
                         self.error("unexpected end of input", fallback_span);
-                        return Stmt::Error { span: fallback_span };
+                        return Stmt::Error {
+                            span: fallback_span,
+                        };
                     }
                 };
 
@@ -442,7 +441,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     return Stmt::Error { span };
                 }
 
-                return create_var_decl(identifier, None, Some(init), span)
+                return create_var_decl(identifier, None, Some(init), span);
             }
             _ => {
                 let span = self.peek().unwrap().span;
@@ -450,8 +449,6 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                 return Stmt::Error { span };
             }
         }
-
-        
     }
 
     fn parse_block(&mut self) -> Stmt {

@@ -1,6 +1,10 @@
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parse::ast as untyped;
-use crate::semantic::ctors::{binary_op_from_untyped, create_binary_op, create_block, create_integer_literal, create_print, create_stmtexpr, create_unary_op, create_var_assign, create_var_decl, create_variable, unary_op_from_untyped};
+use crate::semantic::ctors::{
+    binary_op_from_untyped, create_binary_op, create_block, create_integer_literal, create_print,
+    create_stmtexpr, create_unary_op, create_var_assign, create_var_decl, create_variable,
+    unary_op_from_untyped,
+};
 use crate::semantic::typed;
 use crate::semantic::typed::Type;
 use crate::span::Span;
@@ -16,7 +20,7 @@ impl VarId {
 
 impl PartialEq<usize> for VarId {
     fn eq(&self, other: &usize) -> bool {
-        self.0 == *other 
+        self.0 == *other
     }
 
     fn ne(&self, other: &usize) -> bool {
@@ -33,15 +37,15 @@ impl Into<u32> for VarId {
 
 impl PartialOrd<usize> for VarId {
     fn ge(&self, other: &usize) -> bool {
-        self.0 >= *other 
+        self.0 >= *other
     }
 
     fn gt(&self, other: &usize) -> bool {
-        self.0 > *other 
+        self.0 > *other
     }
 
     fn le(&self, other: &usize) -> bool {
-        self.0 <= *other 
+        self.0 <= *other
     }
 
     fn lt(&self, other: &usize) -> bool {
@@ -101,7 +105,7 @@ impl<'a> SemanticAnalyzer<'a> {
         let mut analyzer = Self {
             scopes: Stack::new(),
             id_count: VarId(0),
-            diagnostics
+            diagnostics,
         };
 
         analyzer.enter_scope();
@@ -124,7 +128,13 @@ impl<'a> SemanticAnalyzer<'a> {
 
     fn declare_var(&mut self, name: &[u8], ty: Type) -> Result<VarId, (String, VarId)> {
         if let Some(v) = self.scopes.top().unwrap().symbols.get(name) {
-            return Err((format!("redeclaration of identifier: '{}'", String::from_utf8_lossy(name)), v.id));
+            return Err((
+                format!(
+                    "redeclaration of identifier: '{}'",
+                    String::from_utf8_lossy(name)
+                ),
+                v.id,
+            ));
         }
         let id = self.next_id();
         let symbol = Symbol::new(id, ty);
@@ -146,50 +156,56 @@ impl<'a> SemanticAnalyzer<'a> {
     }
 
     fn error<T: Into<String>>(&mut self, msg: T, span: Span) {
-        self.diagnostics.push(Diagnostic::new(msg.into(), span, Severity::Error));
+        self.diagnostics
+            .push(Diagnostic::new(msg.into(), span, Severity::Error));
     }
 
     fn can_assign(&self, target: &typed::Expr, value: &typed::Expr) -> bool {
         match target {
-            typed::Expr::Variable { ty, .. } => {
-                match value.ty() {
-                    Type::Int => {
-                        match ty {
-                            Type::Int | Type::Error => {
-                                return true
-                            }
-                        }
-                    } ,
-                    Type::Error => {
-                        match ty {
-                            Type::Int | Type::Error => {
-                                return true;
-                            }
-                        }
+            typed::Expr::Variable { ty, .. } => match value.ty() {
+                Type::Int => match ty {
+                    Type::Int | Type::Error => return true,
+                },
+                Type::Error => match ty {
+                    Type::Int | Type::Error => {
+                        return true;
                     }
-                } 
-            }
+                },
+            },
             _ => {
                 return false;
             }
         }
     }
 
-    
     // when a variables name is preceded by 'a_' then it refers to that Expression be 'analyzed'
     fn visit_expr(&mut self, expr: untyped::Expr) -> typed::Expr {
         match expr {
             untyped::Expr::IntegerLiteral { span, value } => {
                 return create_integer_literal(value, Type::Int, span);
             }
-            untyped::Expr::BinaryOp { span, op, left, right } => {
+            untyped::Expr::BinaryOp {
+                span,
+                op,
+                left,
+                right,
+            } => {
                 let a_left = self.visit_expr(*left);
                 let a_right = self.visit_expr(*right);
 
                 if a_left.ty() == Type::Int && a_right.ty() == Type::Int {
                     match op.kind {
-                        untyped::BinopType::Add | untyped::BinopType::Sub | untyped::BinopType::Mul | untyped::BinopType::Div => {
-                            return create_binary_op(binary_op_from_untyped(op), Type::Int, a_left, a_right, span)
+                        untyped::BinopType::Add
+                        | untyped::BinopType::Sub
+                        | untyped::BinopType::Mul
+                        | untyped::BinopType::Div => {
+                            return create_binary_op(
+                                binary_op_from_untyped(op),
+                                Type::Int,
+                                a_left,
+                                a_right,
+                                span,
+                            );
                         }
                     }
                 }
@@ -201,14 +217,23 @@ impl<'a> SemanticAnalyzer<'a> {
                 match op.kind {
                     untyped::UnaryopType::Negate => {
                         if a_expr.ty() == Type::Int {
-                            return create_unary_op(unary_op_from_untyped(op), Type::Int, a_expr, span);
+                            return create_unary_op(
+                                unary_op_from_untyped(op),
+                                Type::Int,
+                                a_expr,
+                                span,
+                            );
                         }
 
                         unreachable!("no other type except int should exist")
                     }
                 }
             }
-            untyped::Expr::VarAssign { target, value, span } => {
+            untyped::Expr::VarAssign {
+                target,
+                value,
+                span,
+            } => {
                 let a_target = self.visit_expr(*target);
                 let a_value = self.visit_expr(*value);
 
@@ -219,7 +244,7 @@ impl<'a> SemanticAnalyzer<'a> {
 
                 let id = match a_target {
                     typed::Expr::Variable { id, .. } => id,
-                    _ => VarId::ERROR
+                    _ => VarId::ERROR,
                 };
 
                 match a_value.ty() {
@@ -227,21 +252,31 @@ impl<'a> SemanticAnalyzer<'a> {
                         return create_var_assign(a_target, a_value, Type::Int, id, span);
                     }
                     Type::Error => {
-                        return create_var_assign(a_target, a_value, Type::Error, VarId::ERROR, span)
+                        return create_var_assign(
+                            a_target,
+                            a_value,
+                            Type::Error,
+                            VarId::ERROR,
+                            span,
+                        );
                     }
                 }
             }
-            untyped::Expr::Variable { name, span } => {
-                match self.lookup_var(&name) {
-                    Some(v) => {
-                        return create_variable(v.id, v.ty, span);
-                    }
-                    None => {
-                        self.error(format!("use of undeclared identifier: '{}'", String::from_utf8_lossy(&name)), span);
-                        return create_variable(VarId::ERROR, Type::Error, span);
-                    }
+            untyped::Expr::Variable { name, span } => match self.lookup_var(&name) {
+                Some(v) => {
+                    return create_variable(v.id, v.ty, span);
                 }
-            } 
+                None => {
+                    self.error(
+                        format!(
+                            "use of undeclared identifier: '{}'",
+                            String::from_utf8_lossy(&name)
+                        ),
+                        span,
+                    );
+                    return create_variable(VarId::ERROR, Type::Error, span);
+                }
+            },
             _ => {
                 unreachable!("parser should have exited if error encountered");
             }
@@ -279,7 +314,12 @@ impl<'a> SemanticAnalyzer<'a> {
                 let a_expr = self.visit_expr(*expr);
                 return create_stmtexpr(a_expr, span);
             }
-            untyped::Stmt::VarDecl { name, type_annotation, initializer, span } => {
+            untyped::Stmt::VarDecl {
+                name,
+                type_annotation,
+                initializer,
+                span,
+            } => {
                 match type_annotation {
                     Some(t) => {
                         if let Some(init) = initializer {
@@ -291,12 +331,10 @@ impl<'a> SemanticAnalyzer<'a> {
                             }
 
                             let id = match self.declare_var(&name, t) {
-                                Ok(i) => {
-                                    i
-                                }
+                                Ok(i) => i,
                                 Err((e, i)) => {
                                     self.error(e, span);
-                                    return create_var_decl(Type::Error, None, i, span)
+                                    return create_var_decl(Type::Error, None, i, span);
                                 }
                             };
 
@@ -304,17 +342,14 @@ impl<'a> SemanticAnalyzer<'a> {
                         }
 
                         let id = match self.declare_var(&name, t) {
-                            Ok(i) => {
-                                i
-                            }
+                            Ok(i) => i,
                             Err((e, i)) => {
                                 self.error(e, span);
-                                return create_var_decl(Type::Error, None, i, span)
+                                return create_var_decl(Type::Error, None, i, span);
                             }
                         };
 
                         return create_var_decl(t, None, id, span);
-
                     }
                     None => {
                         if initializer.is_none() {
@@ -351,15 +386,12 @@ impl<'a> SemanticAnalyzer<'a> {
         }
     }
 
-    pub fn analyze(
-        &mut self,
-        program: untyped::Program,
-    ) -> typed::Program {
+    pub fn analyze(&mut self, program: untyped::Program) -> typed::Program {
         let mut typed_program = typed::Program::new();
 
         for stmt in program.stmts {
             typed_program.stmts.push(self.visit_stmt(stmt));
-        } 
+        }
 
         typed_program
     }

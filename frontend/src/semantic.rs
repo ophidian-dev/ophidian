@@ -1,3 +1,3 @@
 pub mod analyzer;
-pub mod typed;
 mod ctors;
+pub mod typed;

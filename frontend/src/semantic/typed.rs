@@ -100,7 +100,7 @@ impl Expr {
             Self::UnaryOp { ty, .. } => *ty,
             Self::VarAssign { ty, .. } => *ty,
             Self::Variable { ty, .. } => *ty,
-            Self::Error { .. } => panic!("tried to get type of error node")
+            Self::Error { .. } => panic!("tried to get type of error node"),
         }
     }
 }
