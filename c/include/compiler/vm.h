@@ -26,6 +26,7 @@ struct VM {
     struct Stack stack;
     uint8_t *ip;
     bool is_running;
+    Value locals[0xffffff];
 };
 
 void vm_init(struct VM *vm);

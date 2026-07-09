@@ -153,6 +153,24 @@ void vm_run(struct VM *vm, Byte *bytecode, size_t bytecode_len, Value *constants
                 push(vm, constant);
                 break;
             }
+            case OP_ILOAD_LOCAL: {
+                Byte b0 = read_byte(vm);
+                Byte b1 = read_byte(vm);
+                Byte b2 = read_byte(vm);
+                uint32_t idx = decode3_le(b0, b1, b2);
+                Value v = vm->locals[idx];
+                push(vm, v);
+                break;
+            }
+            case OP_ISTORE_LOCAL: {
+                Value store = pop(vm);
+                Byte b0 = read_byte(vm);
+                Byte b1 = read_byte(vm);
+                Byte b2 = read_byte(vm);
+                uint32_t idx = decode3_le(b0, b1, b2);
+                vm->locals[idx] = store;
+                break;
+            }
             default: {
                 fprintf(stderr, "unknown opcode: '%d'\n", (int)opcode);
                 vm->is_running = false;

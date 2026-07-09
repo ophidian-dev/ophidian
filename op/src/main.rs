@@ -43,6 +43,9 @@ fn main() {
         }
     };
 
+    // println!("{:?}", chunk);
+    // std::process::exit(1);
+
     unsafe {
         let bytecode_len = chunk.bytecode().len();
         let constant_len = chunk.constants().len();
