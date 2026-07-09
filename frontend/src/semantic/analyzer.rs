@@ -95,11 +95,18 @@ impl<'a> SemanticAnalyzer<'a> {
                 match value.ty() {
                     Type::Int => {
                         match ty {
-                            Type::Int => {
+                            Type::Int | Type::Error => {
                                 return true
                             }
                         }
-                    } 
+                    } ,
+                    Type::Error => {
+                        match ty {
+                            Type::Int | Type::Error => {
+                                return true;
+                            }
+                        }
+                    }
                 } 
             }
             _ => {
@@ -154,6 +161,9 @@ impl<'a> SemanticAnalyzer<'a> {
                     Type::Int => {
                         return create_var_assign(a_target, a_value, Type::Int, span);
                     }
+                    Type::Error => {
+                        return create_var_assign(a_target, a_value, Type::Error, span)
+                    }
                 }
             }
             untyped::Expr::Variable { name, span } => {
@@ -162,8 +172,8 @@ impl<'a> SemanticAnalyzer<'a> {
                         return create_variable(name, v.ty, span);
                     }
                     None => {
-                        self.error("undeclared identifier", span);
-                        todo!("recover from error");
+                        self.error(format!("use of undeclared identifier: '{}'", String::from_utf8_lossy(&name)), span);
+                        return create_variable(name, Type::Error, span);
                     }
                 }
             } 

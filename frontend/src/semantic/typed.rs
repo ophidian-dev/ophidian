@@ -3,6 +3,7 @@ use crate::span::Span;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Type {
     Int,
+    Error,
 }
 
 #[derive(Debug, Clone, Copy)]

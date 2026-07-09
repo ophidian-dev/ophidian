@@ -46,20 +46,12 @@ impl<'a> DiagnosticEmitter<'a> {
         }
         fmt.push_str("| ");
 
-        let mut start = diagnostic.span.offset();
-        while start > 0 && self.source[start - 1] != b'\n' {
-            start -= 1;
-        }
-        
-        for i in start..diagnostic.span.end() + 1 { 
-            if i > diagnostic.span.offset() {
-                println!("caret printed");
-                fmt.push_str(&format!("{}", "^".green().bold()));
-            }    
-            fmt.push(' ');
-        }
+        fmt.push_str(&" ".repeat(column - 1));
+        fmt.push_str(&format!(
+            "{}",
+            "^".repeat(diagnostic.span.len().max(1)).green().bold()
+        ));
 
-        println!("{}", "^^^".bold());
         fmt
     }
 
