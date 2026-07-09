@@ -1,3 +1,4 @@
+use crate::semantic::analyzer::VarId;
 use crate::span::Span;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -64,14 +65,15 @@ pub enum Expr {
         expr: Box<Expr>,
     },
     Variable {
-        name: Vec<u8>,
         ty: Type,
+        id: VarId,
         span: Span,
     },
     VarAssign {
         target: Box<Expr>,
         value: Box<Expr>,
         ty: Type,
+        id: VarId,
         span: Span,
     },
     Error {
@@ -114,9 +116,9 @@ pub enum Stmt {
         span: Span,
     },
     VarDecl {
-        name: Vec<u8>,
         type_annotation: Type,
         initializer: Option<Expr>,
+        id: VarId,
         span: Span,
     },
     Block {

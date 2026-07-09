@@ -7,9 +7,28 @@ use crate::span::Span;
 use common::collections::Stack;
 use std::collections::HashMap;
 
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+pub struct VarId(usize);
+
+impl VarId {
+    pub const ERROR: VarId = VarId(usize::MAX);
+}
+
+impl std::ops::AddAssign<usize> for VarId {
+    fn add_assign(&mut self, rhs: usize) {
+        self.0 += rhs;
+    }
+}
+
+impl std::ops::AddAssign<Self> for VarId {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+    }
+}
+
 pub struct SemanticAnalyzer<'a> {
     scopes: Stack<Scope>,
-    id_count: usize,
+    id_count: VarId,
     diagnostics: &'a mut Vec<Diagnostic>,
 }
 
@@ -20,7 +39,7 @@ struct Scope {
 
 #[derive(Debug, PartialEq, Clone)]
 struct Symbol {
-    pub id: usize,
+    pub id: VarId,
     pub ty: Type,
 }
 
@@ -33,7 +52,7 @@ impl Scope {
 }
 
 impl Symbol {
-    pub fn new(id: usize, ty: Type) -> Self {
+    pub fn new(id: VarId, ty: Type) -> Self {
         Self { id, ty }
     }
 }
@@ -42,7 +61,7 @@ impl<'a> SemanticAnalyzer<'a> {
     pub fn new(diagnostics: &'a mut Vec<Diagnostic>) -> Self {
         let mut analyzer = Self {
             scopes: Stack::new(),
-            id_count: 0,
+            id_count: VarId(0),
             diagnostics
         };
 
@@ -50,8 +69,8 @@ impl<'a> SemanticAnalyzer<'a> {
         analyzer
     }
 
-    fn next_id(&mut self) -> usize {
-        let tmp: usize = self.id_count;
+    fn next_id(&mut self) -> VarId {
+        let tmp = self.id_count;
         self.id_count += 1;
         tmp
     }
@@ -64,16 +83,18 @@ impl<'a> SemanticAnalyzer<'a> {
         self.scopes.pop();
     }
 
-    fn declare_var(&mut self, name: &[u8], ty: Type) {
-        if self.scopes.top().unwrap().symbols.contains_key(name) {
-            todo!("implement error system for variable redeclaration");
+    fn declare_var(&mut self, name: &[u8], ty: Type) -> Result<VarId, (String, VarId)> {
+        if let Some(v) = self.scopes.top().unwrap().symbols.get(name) {
+            return Err((format!("redeclaration of identifier: '{}'", String::from_utf8_lossy(name)), v.id));
         }
-        let symbol = Symbol::new(self.next_id(), ty);
+        let id = self.next_id();
+        let symbol = Symbol::new(id, ty);
         self.scopes
             .top_mut()
             .unwrap()
             .symbols
             .insert(name.to_vec(), symbol);
+        Ok(id)
     }
 
     fn lookup_var(&mut self, name: &[u8]) -> Option<Symbol> {
@@ -157,23 +178,28 @@ impl<'a> SemanticAnalyzer<'a> {
                     todo!("recover from error");
                 }
 
+                let id = match a_target {
+                    typed::Expr::Variable { id, .. } => id,
+                    _ => VarId::ERROR
+                };
+
                 match a_value.ty() {
                     Type::Int => {
-                        return create_var_assign(a_target, a_value, Type::Int, span);
+                        return create_var_assign(a_target, a_value, Type::Int, id, span);
                     }
                     Type::Error => {
-                        return create_var_assign(a_target, a_value, Type::Error, span)
+                        return create_var_assign(a_target, a_value, Type::Error, VarId::ERROR, span)
                     }
                 }
             }
             untyped::Expr::Variable { name, span } => {
                 match self.lookup_var(&name) {
                     Some(v) => {
-                        return create_variable(name, v.ty, span);
+                        return create_variable(v.id, v.ty, span);
                     }
                     None => {
                         self.error(format!("use of undeclared identifier: '{}'", String::from_utf8_lossy(&name)), span);
-                        return create_variable(name, Type::Error, span);
+                        return create_variable(VarId::ERROR, Type::Error, span);
                     }
                 }
             } 
@@ -223,14 +249,30 @@ impl<'a> SemanticAnalyzer<'a> {
                         todo!("recover from error");
                     }
 
-                    self.declare_var(&name, type_annotation);
+                    let id = match self.declare_var(&name, type_annotation) {
+                        Ok(i) => {
+                            i
+                        }
+                        Err((e, i)) => {
+                            self.error(e, span);
+                            return create_var_decl(Type::Error, None, i, span)
+                        }
+                    };
 
-                    return create_var_decl(name, type_annotation, Some(a_expr), span)
+                    return create_var_decl(type_annotation, Some(a_expr), id, span);
                 }
 
-                self.declare_var(&name, type_annotation);
+                let id = match self.declare_var(&name, type_annotation) {
+                    Ok(i) => {
+                        i
+                    }
+                    Err((e, i)) => {
+                        self.error(e, span);
+                        return create_var_decl(Type::Error, None, i, span)
+                    }
+                };
 
-                return create_var_decl(name, type_annotation, None, span);
+                return create_var_decl(type_annotation, None, id, span);
             }
             _ => {
                 unreachable!("parser should have stopped after errors");

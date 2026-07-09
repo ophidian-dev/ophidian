@@ -55,7 +55,7 @@ fn compile_stmt(stmt: &typed::Stmt, chunk: &mut Chunk) {
             chunk.write(Opcode::Pop as u8);
         }
         typed::Stmt::VarDecl {
-            name,
+            id,
             type_annotation,
             initializer,
             ..
@@ -110,7 +110,7 @@ fn compile_expr(expr: &typed::Expr, chunk: &mut Chunk) {
         typed::Expr::VarAssign { target, value, .. } => {
             todo!("implement varassign")
         }
-        typed::Expr::Variable { name, .. } => {
+        typed::Expr::Variable { id, .. } => {
             todo!("implement variable")
         }
         typed::Expr::Error { span: _ } => {

@@ -1,3 +1,4 @@
+use crate::semantic::analyzer::VarId;
 use crate::semantic::typed::*;
 use crate::parse::ast as untyped;
 use crate::span::Span;
@@ -29,12 +30,12 @@ pub fn unary_op_from_untyped(untyped_op: untyped::UnaryOp) -> UnaryOp {
     }
 }
 
-pub fn create_var_assign(target: Expr, value: Expr, ty: Type, span: Span) -> Expr {
-    Expr::VarAssign { target: Box::new(target), value: Box::new(value), ty, span }
+pub fn create_var_assign(target: Expr, value: Expr, ty: Type, id: VarId, span: Span) -> Expr {
+    Expr::VarAssign { target: Box::new(target), value: Box::new(value), ty, id, span }
 }
 
-pub fn create_variable(name: Vec<u8>, ty: Type, span: Span) -> Expr {
-    Expr::Variable { name, ty, span }
+pub fn create_variable(id: VarId, ty: Type, span: Span) -> Expr {
+    Expr::Variable { id, ty, span }
 }
 
 pub fn create_block(body: Vec<Stmt>, span: Span) -> Stmt {
@@ -49,6 +50,6 @@ pub fn create_stmtexpr(expr: Expr, span: Span) -> Stmt {
     Stmt::StmtExpr { expr: Box::new(expr), span }
 }
 
-pub fn create_var_decl(name: Vec<u8>, type_annotation: Type, initializer: Option<Expr>, span: Span) -> Stmt {
-    Stmt::VarDecl { name, type_annotation, initializer, span }
+pub fn create_var_decl(type_annotation: Type, initializer: Option<Expr>, id: VarId, span: Span) -> Stmt {
+    Stmt::VarDecl { type_annotation, initializer, id, span }
 }
