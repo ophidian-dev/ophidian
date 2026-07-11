@@ -91,7 +91,7 @@ impl Expr {
             Self::Error { span } => *span,
             Self::Variable { span, .. } => *span,
             Self::VarAssign { span, .. } => *span,
-            Self::BooleanLiteral { span , .. } => *span, 
+            Self::BooleanLiteral { span, .. } => *span,
         }
     }
 }

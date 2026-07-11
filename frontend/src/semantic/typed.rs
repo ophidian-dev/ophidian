@@ -61,6 +61,11 @@ pub enum Expr {
         ty: Type,
         value: i32,
     },
+    BooleanLiteral {
+        span: Span,
+        ty: Type,
+        value: bool,
+    },
     BinaryOp {
         span: Span,
         op: BinaryOp,
@@ -100,6 +105,7 @@ impl Expr {
             Self::Error { span } => *span,
             Self::Variable { span, .. } => *span,
             Self::VarAssign { span, .. } => *span,
+            Self::BooleanLiteral { span, .. } => *span,
         }
     }
 
@@ -110,6 +116,7 @@ impl Expr {
             Self::UnaryOp { ty, .. } => *ty,
             Self::VarAssign { ty, .. } => *ty,
             Self::Variable { ty, .. } => *ty,
+            Self::BooleanLiteral { ty, .. } => *ty,
             Self::Error { .. } => panic!("tried to get type of error node"),
         }
     }

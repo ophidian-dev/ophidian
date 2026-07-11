@@ -133,7 +133,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     let tok = self.peek().unwrap().clone();
                     self.advance();
                     ctors::create_boolean_literal(b, tok.span)
-                },
+                }
                 TokenType::OpenParen => {
                     self.advance();
                     let expr: Expr = self.parse_expression();

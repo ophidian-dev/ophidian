@@ -69,6 +69,89 @@ impl std::ops::AddAssign<Self> for VarId {
     }
 }
 
+struct Signature {
+    lhs: Type,
+    rhs: Type,
+    result: Type
+}
+
+static ADD_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Int),
+];
+
+static SUB_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Int),
+];
+
+static MUL_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Int),
+];
+
+static DIV_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Int),
+];
+
+static OR_SIGS: &[Signature] = &[
+    Signature::new(Type::Bool, Type::Bool, Type::Bool),
+];
+
+static AND_SIGS: &[Signature] = &[
+    Signature::new(Type::Bool, Type::Bool, Type::Bool),
+];
+
+static EQEQ_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Bool),
+    Signature::new(Type::Bool, Type::Bool, Type::Bool),
+];
+
+static BANGEQ_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Bool),
+    Signature::new(Type::Bool, Type::Bool, Type::Bool),
+];
+
+static LESSER_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Bool),
+];
+
+static GREATER_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Bool),
+];
+
+static LESSEREQ_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Bool),
+];
+
+static GREATEREQ_SIGS: &[Signature] = &[
+    Signature::new(Type::Int, Type::Int, Type::Bool),
+];
+
+impl untyped::BinopType {
+    fn signatures(&self) -> &'static [Signature] {
+        use untyped::BinopType;
+
+        match self {
+            BinopType::Add => ADD_SIGS,
+            BinopType::Sub => SUB_SIGS,
+            BinopType::Mul => MUL_SIGS,
+            BinopType::Div => DIV_SIGS,
+            BinopType::Or => OR_SIGS,
+            BinopType::And => AND_SIGS,
+            BinopType::EqEq => EQEQ_SIGS,
+            BinopType::BangEq => BANGEQ_SIGS,
+            BinopType::Lesser => LESSER_SIGS,
+            BinopType::Greater => GREATER_SIGS,
+            BinopType::LesserEq => LESSEREQ_SIGS,
+            BinopType::GreaterEq => GREATEREQ_SIGS, 
+        }
+    }
+}
+
+impl Signature {
+    const fn new(lhs: Type, rhs: Type, res: Type) -> Self {
+        Self { lhs, rhs, result: res }
+    }
+}
+
 pub struct SemanticAnalyzer<'a> {
     scopes: Stack<Scope>,
     id_count: VarId,
@@ -165,9 +248,14 @@ impl<'a> SemanticAnalyzer<'a> {
             typed::Expr::Variable { ty, .. } => match value.ty() {
                 Type::Int => match ty {
                     Type::Int | Type::Error => return true,
+                    _ => false,
+                },
+                Type::Bool => match ty {
+                    Type::Bool | Type::Error => return true,
+                    _ => false,
                 },
                 Type::Error => match ty {
-                    Type::Int | Type::Error => {
+                    _ => {
                         return true;
                     }
                 },
@@ -193,30 +281,18 @@ impl<'a> SemanticAnalyzer<'a> {
                 let a_left = self.visit_expr(*left);
                 let a_right = self.visit_expr(*right);
 
-                if a_left.ty() == Type::Int && a_right.ty() == Type::Int {
-                    match op.kind {
-                        untyped::BinopType::Add
-                        | untyped::BinopType::Sub
-                        | untyped::BinopType::Mul
-                        | untyped::BinopType::Div => {
-                            return create_binary_op(
-                                binary_op_from_untyped(op),
-                                Type::Int,
-                                a_left,
-                                a_right,
-                                span,
-                            );
-                        }
+                for sig in op.kind.signatures() {
+                    if sig.lhs == a_left.ty() && sig.rhs == a_right.ty() {
+                        
                     }
                 }
 
-                unreachable!("integer type is the only one that exists as of this moment")
             }
             untyped::Expr::UnaryOp { span, op, expr } => {
                 let a_expr = self.visit_expr(*expr);
                 match op.kind {
-                    untyped::UnaryopType::Negate => {
-                        if a_expr.ty() == Type::Int {
+                    untyped::UnaryopType::Negate => match a_expr.ty() {
+                        Type::Int => {
                             return create_unary_op(
                                 unary_op_from_untyped(op),
                                 Type::Int,
@@ -224,9 +300,41 @@ impl<'a> SemanticAnalyzer<'a> {
                                 span,
                             );
                         }
-
-                        unreachable!("no other type except int should exist")
-                    }
+                        Type::Bool => {
+                            self.error("operator '-' cannot be used on type 'bool'", span);
+                            return create_unary_op(
+                                unary_op_from_untyped(op),
+                                Type::Error,
+                                a_expr,
+                                span,
+                            );
+                        }
+                        Type::Error => {
+                            unreachable!("no other type except int and bool should exist")
+                        }
+                    },
+                    untyped::UnaryopType::Not => match a_expr.ty() {
+                        Type::Bool => {
+                            return create_unary_op(
+                                unary_op_from_untyped(op),
+                                Type::Bool,
+                                a_expr,
+                                span,
+                            );
+                        }
+                        Type::Int => {
+                            self.error("operator '!' cannot be applied on type 'int'", span);
+                            return create_unary_op(
+                                unary_op_from_untyped(op),
+                                Type::Error,
+                                a_expr,
+                                span,
+                            );
+                        }
+                        Type::Error => {
+                            unreachable!("no other type except int and bool should exist")
+                        }
+                    },
                 }
             }
             untyped::Expr::VarAssign {
@@ -250,6 +358,9 @@ impl<'a> SemanticAnalyzer<'a> {
                 match a_value.ty() {
                     Type::Int => {
                         return create_var_assign(a_target, a_value, Type::Int, id, span);
+                    }
+                    Type::Bool => {
+                        return create_var_assign(a_target, a_value, Type::Bool, id, span);
                     }
                     Type::Error => {
                         return create_var_assign(
