@@ -1,8 +1,7 @@
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::lex::Lexer;
 use crate::lex::{Token, TokenType};
-use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, UnaryOp, UnaryopType};
-use crate::parse::ctors::{self, create_var_decl};
+use crate::parse::ast::{BinaryOp, BinopType, Expr, Program, Stmt, UnaryOp, UnaryopType, NodeId};
 use crate::semantic::typed::Type;
 use crate::span::Span;
 
@@ -11,6 +10,7 @@ pub struct Parser<'src, 'diag> {
     current: Option<Token>,
     previous: Option<Token>,
     diagnostics: &'diag mut Vec<Diagnostic>,
+    nodeid: usize,
 }
 
 impl<'src, 'diag> Parser<'src, 'diag> {
@@ -21,7 +21,14 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             current,
             previous: None,
             diagnostics,
+            nodeid: 0,
         }
+    }
+
+    pub(crate) fn next_id(&mut self) -> NodeId {
+        let id = NodeId(self.nodeid);
+        self.nodeid += 1;
+        id
     }
 
     fn peek(&self) -> Option<&Token> {
@@ -127,18 +134,18 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     let value: &[u8] = self.get_slice(tok.span);
                     let s: &str = std::str::from_utf8(value).unwrap();
                     let n: i32 = s.parse().unwrap();
-                    ctors::create_integer_literal(n, tok.span)
+                    self.create_integer_literal(n, tok.span)
                 }
                 TokenType::BooleanLiteral(b) => {
                     let tok = self.peek().unwrap().clone();
                     self.advance();
-                    ctors::create_boolean_literal(b, tok.span)
+                    self.create_boolean_literal(b, tok.span)
                 }
                 TokenType::OpenParen => {
                     self.advance();
                     let expr: Expr = self.parse_expression();
                     if self.consume(TokenType::CloseParen, "expected ')'").is_err() {
-                        return Expr::Error { span: expr.span() };
+                        return self.create_expr_err(expr.span());
                     }
                     expr
                 }
@@ -146,7 +153,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     let tok = self.peek().unwrap().clone();
                     let name = self.get_slice(tok.span).to_vec();
                     self.advance();
-                    ctors::create_variable(name, tok.span)
+                    self.create_variable(name, tok.span)
                 }
                 _ => {
                     let tok = t.clone();
@@ -154,7 +161,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     // self.error(tok, tok.span, "expected arithmetic expression");
                     self.error("unexpected token", tok.span);
                     self.sync();
-                    Expr::Error { span: tok.span }
+                    self.create_expr_err(tok.span)
                 }
             }
         } else {
@@ -165,9 +172,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                 .map(|t| t.span)
                 .unwrap_or_else(|| Span::new(0, 0));
             self.error("unexpected end of input", fallback_span);
-            Expr::Error {
-                span: fallback_span,
-            }
+            self.create_expr_err(fallback_span)
         }
     }
 
@@ -179,7 +184,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                 let right: Expr = self.parse_unary();
                 let right_span: Span = right.span();
 
-                ctors::create_unary_op(
+                self.create_unary_op(
                     UnaryOp::new(UnaryopType::Negate, tok.span),
                     right,
                     tok.span.join(right_span),
@@ -191,7 +196,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                 let right: Expr = self.parse_unary();
                 let right_span: Span = right.span();
 
-                ctors::create_unary_op(
+                self.create_unary_op(
                     UnaryOp::new(UnaryopType::Not, tok.span),
                     right,
                     tok.span.join(right_span),
@@ -206,9 +211,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     .map(|t| t.span)
                     .unwrap_or_else(|| Span::new(0, 0));
                 self.error("unexpected end of input", fallback_span);
-                Expr::Error {
-                    span: fallback_span,
-                }
+                self.create_expr_err(fallback_span)
             }
         }
     }
@@ -223,7 +226,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     self.advance();
                     let right: Expr = self.parse_unary();
                     let right_span: Span = right.span();
-                    left = ctors::create_binary_op(
+                    left = self.create_binary_op(
                         BinaryOp::new(BinopType::Mul, op_span),
                         left,
                         right,
@@ -235,7 +238,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     self.advance();
                     let right: Expr = self.parse_unary();
                     let right_span: Span = right.span();
-                    left = ctors::create_binary_op(
+                    left = self.create_binary_op(
                         BinaryOp::new(BinopType::Div, op_span),
                         left,
                         right,
@@ -258,7 +261,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     self.advance();
                     let right: Expr = self.parse_factor();
                     let right_span: Span = right.span();
-                    left = ctors::create_binary_op(
+                    left = self.create_binary_op(
                         BinaryOp::new(BinopType::Add, op_span),
                         left,
                         right,
@@ -270,7 +273,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     self.advance();
                     let right: Expr = self.parse_factor();
                     let right_span: Span = right.span();
-                    left = ctors::create_binary_op(
+                    left = self.create_binary_op(
                         BinaryOp::new(BinopType::Sub, op_span),
                         left,
                         right,
@@ -291,7 +294,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             self.advance();
             let right = self.parse_term();
             let right_span = right.span();
-            left = ctors::create_binary_op(
+            left = self.create_binary_op(
                 BinaryOp::new(
                     match t.kind {
                         TokenType::GreaterEqual => BinopType::GreaterEq,
@@ -318,7 +321,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             self.advance();
             let right = self.parse_comparison();
             let right_span = right.span();
-            left = ctors::create_binary_op(
+            left = self.create_binary_op(
                 BinaryOp::new(
                     match t.kind {
                         TokenType::EqualEqual => BinopType::EqEq,
@@ -343,7 +346,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             self.advance();
             let right = self.parse_equality();
             let right_span = right.span();
-            left = ctors::create_binary_op(
+            left = self.create_binary_op(
                 BinaryOp::new(
                     match t.kind {
                         TokenType::And => BinopType::And,
@@ -367,7 +370,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             self.advance();
             let right = self.parse_and();
             let right_span = right.span();
-            left = ctors::create_binary_op(
+            left = self.create_binary_op(
                 BinaryOp::new(
                     match t.kind {
                         TokenType::Or => BinopType::Or,
@@ -394,7 +397,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
 
                 let span = left.span().join(right.span());
 
-                return ctors::create_var_assign(left, right, span);
+                return self.create_var_assign(left, right, span);
             }
         }
 
@@ -410,23 +413,19 @@ impl<'src, 'diag> Parser<'src, 'diag> {
         self.advance();
 
         if self.consume(TokenType::OpenParen, "expected '('").is_err() {
-            return Stmt::Error { span: start.span };
+            return self.create_stmt_err(start.span);
         }
 
         let expr = self.parse_expression();
         let span = expr.span();
-        let stmt = ctors::create_print_stmt(expr, start.span.join(span));
+        let stmt = self.create_print_stmt(expr, start.span.join(span));
 
         if self.consume(TokenType::CloseParen, "expected ')'").is_err() {
-            return Stmt::Error {
-                span: start.span.join(span),
-            };
+            return self.create_stmt_err(start.span.join(span));
         }
 
         if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
-            return Stmt::Error {
-                span: start.span.join(span),
-            };
+            return self.create_stmt_err(start.span.join(span));
         }
 
         stmt
@@ -435,10 +434,10 @@ impl<'src, 'diag> Parser<'src, 'diag> {
     fn parse_stmtexpr(&mut self) -> Stmt {
         let expr = self.parse_expression();
         let span = expr.span();
-        let stmt = ctors::create_exprstmt(expr, span);
+        let stmt = self.create_exprstmt(expr, span);
 
         if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
-            return Stmt::Error { span };
+            return self.create_stmt_err(span);
         }
 
         stmt
@@ -451,16 +450,14 @@ impl<'src, 'diag> Parser<'src, 'diag> {
         let identifier = match self.consume(TokenType::Identifier, "expected identifier") {
             Ok(t) => self.get_slice(t.span).to_vec(),
             Err(_) => {
-                return Stmt::Error { span: start.span };
+                return self.create_stmt_err(start.span);
             }
         };
 
         if self.peek().clone().is_none() {
             let fallback_span = self.get_fallback_span();
             self.error("unexpected end of input", fallback_span);
-            return Stmt::Error {
-                span: fallback_span,
-            };
+            return self.create_stmt_err(fallback_span);
         }
 
         // unwrap here because peek is guarenteed to return Some(t) as checked above
@@ -474,7 +471,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     // any tokentype that is a type keyword for expected here will do
                     // because it is guarenteed here that type_tok is not a type keyword
                     let _ = self.consume(TokenType::Int, "expected type annotation");
-                    return Stmt::Error { span: type_span };
+                    return self.create_stmt_err(type_span);
                 }
 
                 let var_type = match type_tok.kind {
@@ -490,9 +487,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     None => {
                         let fallback_span = self.get_fallback_span();
                         self.error("unexpected end of input", fallback_span);
-                        return Stmt::Error {
-                            span: fallback_span,
-                        };
+                        return self.create_stmt_err(fallback_span);
                     }
                 };
 
@@ -504,9 +499,9 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                             self.advance();
                             let expr = self.parse_expression();
                             if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
-                                return Stmt::Error { span: eq_tok_span };
+                                return self.create_stmt_err(eq_tok_span);
                             }
-                            return ctors::create_var_decl(
+                            return self.create_var_decl(
                                 identifier,
                                 Some(var_type),
                                 Some(expr),
@@ -515,7 +510,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                         }
                         TokenType::Semicolon => {
                             self.advance();
-                            return ctors::create_var_decl(
+                            return self.create_var_decl(
                                 identifier,
                                 Some(var_type),
                                 None,
@@ -524,7 +519,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                         }
                         _ => {
                             if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
-                                return Stmt::Error { span: eq_tok_span };
+                                return self.create_stmt_err(eq_tok_span);
                             } else {
                                 panic!("execution should not reach here");
                             }
@@ -533,9 +528,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     None => {
                         let fallback_span = self.get_fallback_span();
                         self.error("unexpected end of input", fallback_span);
-                        return Stmt::Error {
-                            span: fallback_span,
-                        };
+                        return self.create_stmt_err(fallback_span);
                     }
                 }
             }
@@ -549,22 +542,20 @@ impl<'src, 'diag> Parser<'src, 'diag> {
                     None => {
                         let fallback_span = self.get_fallback_span();
                         self.error("unexpected end of input", fallback_span);
-                        return Stmt::Error {
-                            span: fallback_span,
-                        };
+                        return self.create_stmt_err(fallback_span);
                     }
                 };
 
                 if self.consume(TokenType::Semicolon, "expected ';'").is_err() {
-                    return Stmt::Error { span };
+                    return self.create_stmt_err(span);
                 }
 
-                return create_var_decl(identifier, None, Some(init), span);
+                return self.create_var_decl(identifier, None, Some(init), span);
             }
             _ => {
                 let span = self.peek().unwrap().span;
                 let _ = self.consume(TokenType::Equal, "expected assignment expression");
-                return Stmt::Error { span };
+                return  self.create_stmt_err(span);
             }
         }
     }
@@ -591,12 +582,10 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             .consume(TokenType::CloseBrace, "expected '}' at end of block")
             .is_err()
         {
-            return Stmt::Error {
-                span: close_brace_span,
-            };
+            return self.create_stmt_err(close_brace_span);
         }
 
-        ctors::create_block(stmts, span)
+        self.create_block(stmts, span)
     }
 
     fn parse_stmt(&mut self) -> Stmt {
@@ -611,7 +600,7 @@ impl<'src, 'diag> Parser<'src, 'diag> {
             _ => {
                 self.error("unexpected token at statement start", tok.span);
                 self.sync();
-                Stmt::Error { span: tok.span }
+                self.create_stmt_err(tok.span)
             }
         }
     }
