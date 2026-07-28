@@ -47,10 +47,10 @@ impl<T: std::fmt::Debug + PartialEq> Stack<T> {
 
 #[macro_export]
 macro_rules! stack {
-    () => {
+    [] => {
         Stack::new();
     };
-    ($($element:expr),+ $(,)?) => {{
+    [$($element:expr),+ $(,)?] => {{
         let mut s = Stack::new();
         $(
             s.push($element);

@@ -1,5 +1,5 @@
 use crate::parse::ast as untyped;
-use crate::semantic::analyzer::VarId;
+use crate::semantic::analysis::VarId;
 use crate::semantic::typed::*;
 use crate::span::Span;
 

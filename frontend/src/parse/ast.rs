@@ -2,7 +2,7 @@ use crate::semantic::typed::Type;
 use crate::span::Span;
 
 // NodeId is a unique way to identify each untyped ast node
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NodeId(pub usize);
 
 // defines all the possible binary operations

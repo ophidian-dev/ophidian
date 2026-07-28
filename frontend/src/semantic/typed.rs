@@ -1,4 +1,4 @@
-use crate::semantic::analyzer::VarId;
+use crate::semantic::analysis::VarId;
 use crate::span::Span;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
