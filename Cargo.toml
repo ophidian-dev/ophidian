@@ -2,19 +2,13 @@
 resolver = "3"
 members = [
     "compiler",
-    "common",
     "frontend", 
     "op",
-    "tools/opcode-gen"
 ]
 
 [workspace.dependencies] 
 owo-colors = "4.3.0"
 frontend = { path = "frontend" }
 compiler = { path = "compiler" }
-common = { path = "common" }
-bindgen = "0.72.1"
-cc = "1.2.65"
-walkdir = "2.5.0"
 
 

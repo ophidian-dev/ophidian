@@ -5,8 +5,3 @@ edition = "2024"
 
 [dependencies]
 frontend = { workspace = true }
-
-[build-dependencies]
-cc = { workspace = true }
-bindgen = { workspace = true }
-walkdir = { workspace = true }

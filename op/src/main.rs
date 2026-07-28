@@ -1,6 +1,3 @@
-use compiler::Compiler;
-use compiler::bindings;
-use frontend::diagnostics::DiagnosticEmitter;
 use owo_colors::OwoColorize;
 
 fn main() {
@@ -22,39 +19,6 @@ fn main() {
         "N.B.".yellow()
     );
 
-    let mut compiler = Compiler::new();
-    let res = compiler.compile(&file);
-
-    let chunk = match res {
-        Ok(c) => c,
-        Err(diagnostics) => {
-            let emitter = DiagnosticEmitter::new(&file);
-            for diagnostic in &diagnostics {
-                eprintln!("{}", emitter.emit(diagnostic));
-            }
-
-            println!(
-                "\n{} error{} generated.",
-                diagnostics.len(),
-                plural(diagnostics.len())
-            );
-
-            std::process::exit(1);
-        }
-    };
-
-    // println!("{:?}", chunk);
-    // std::process::exit(1);
-
-    unsafe {
-        let bytecode_len = chunk.bytecode().len();
-        let constant_len = chunk.constants().len();
-        let (mut bytecode, mut constants) = chunk.chunk_data();
-        let bytecode: *mut u8 = bytecode.as_mut_ptr();
-        let constants: *mut bindings::vm_Value = constants.as_mut_ptr();
-
-        bindings::vm_execute(bytecode, bytecode_len, constants, constant_len);
-    }
 }
 
 fn plural(i: usize) -> &'static str {
