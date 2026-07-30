@@ -1,4 +1,4 @@
-use crate::lexer::TokenStream;
+use crate::lexer::token::TokenStream;
 
 pub struct Parser<T>
 where

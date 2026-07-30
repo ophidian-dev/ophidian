@@ -1,3 +1,5 @@
-mod token;
+mod lexer;
 
-pub use token::TokenStream;
+pub mod token;
+
+pub use lexer::Lexer;
