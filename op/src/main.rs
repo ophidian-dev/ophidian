@@ -13,19 +13,6 @@ fn main() {
     }
 
     let file = read_file_as_bytes(&argv[0], &argv[1]);
-
-    println!(
-        "{} Behaviour is undefined if file contains non-ASCII characters",
-        "N.B.".yellow()
-    );
-
-}
-
-fn plural(i: usize) -> &'static str {
-    if i == 1 {
-        return "";
-    }
-    "s"
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {

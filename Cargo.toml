@@ -3,7 +3,7 @@ resolver = "3"
 members = [
     "compiler",
     "frontend", 
-    "op",
+    "op", "runtime",
 ]
 
 [workspace.dependencies] 
