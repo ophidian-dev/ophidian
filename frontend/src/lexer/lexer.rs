@@ -18,7 +18,7 @@ pub struct Lexer<'src> {
 }
 
 impl<'src> Lexer<'src> {
-    pub fn new(source: &'src [u8]) -> Self {
+    pub const fn new(source: &'src [u8]) -> Self {
         Self {
             source,
             current: 0,
@@ -29,13 +29,33 @@ impl<'src> Lexer<'src> {
         }
     }
 
+    // returns an optional byte
+    // gets the character self.current is currently pointing at
+    // if self.current is pointing past the end of the source buffer
+    // then peek returns None
+    // otherwise it clones the character and wraps it in Some(T)
     fn peek(&self) -> Option<u8> {
-        return self.source.get(self.current).cloned()
+        return self.source.get(self.current).cloned();
     }
 
+    // advances the lexer cursor
+    // return None at EOF
     fn advance(&mut self) -> Option<u8> {
         let c = self.peek();
-        self.current += 1;
+        match c {
+            Some(c) => {
+                if c == b'\n' {
+                    self.column = 0;
+                    self.line += 1
+                } else {
+                    self.column += 1;
+                    self.current += 1;
+                }
+            }
+            None => {
+                return c;
+            }
+        }
         c
     }
 
@@ -52,7 +72,7 @@ impl<'src> TokenStream for Lexer<'src> {
                 if c.is_ascii_whitespace() {
                     self.advance();
                     continue;
-                } 
+                }
                 break;
             } else {
                 return None;
@@ -63,9 +83,7 @@ impl<'src> TokenStream for Lexer<'src> {
         self.start_column = self.column;
 
         let c = match self.peek() {
-            Some(x) => {
-                x
-            }
+            Some(x) => x,
             None => {
                 return None;
             }
@@ -106,9 +124,85 @@ impl<'src> TokenStream for Lexer<'src> {
                     }
                     return Some(self.create_token(TokenKind::IntegerLiteral));
                 } else {
-                    return Some(self.create_token(TokenKind::Error(c)))
+                    return Some(self.create_token(TokenKind::Error(c)));
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // creates a lexer with a source string and returns it
+    fn new_lexer() -> Lexer<'static> {
+        Lexer::new(b"(1 + 2) * 3")
+    }
+
+    #[test]
+    // tests to see if peek at eof will return none
+    fn test_peek_return_none_on_eof() {
+        let lexer = Lexer::new(b"");
+        assert_eq!(None, lexer.peek());
+    }
+
+    #[test]
+    // test to see if when peek is not called at eof
+    // it returns the orrect byte wrapped in Some
+    fn test_peek_return_some_with_correct_value() {
+        let lexer = new_lexer();
+        assert_eq!(Some(b'('), lexer.peek());
+    }
+
+    #[test]
+    // tests to see if the token construction function
+    // computes offsets and lengths correctly
+    fn test_token_creation() {
+        let mut lexer = new_lexer();
+        lexer.advance();
+        let tok = lexer.create_token(TokenKind::OpenParen);
+        assert_eq!(
+            tok,
+            Token::new(
+                TokenKind::OpenParen,
+                Span::new(lexer.start, lexer.current - lexer.start),
+                lexer.line,
+                lexer.start_column
+            )
+        );
+    }
+
+    #[test]
+    // see if line count in lexer increments correctly when it encounters a newline
+    fn test_newline_handling() {
+        let mut lexer = Lexer::new(b"(\n)");
+        lexer.advance();
+        lexer.advance();
+        assert_eq!(1, lexer.line);
+    }
+
+    #[test]
+    fn test_column_tracking() {
+        let mut lexer = new_lexer();
+        lexer.advance();
+        assert_eq!(1, lexer.column);
+    }
+
+    #[test]
+    fn test_column_tracking_with_newline() {
+        let mut lexer = Lexer::new(b"(\n");
+        lexer.advance();
+        lexer.advance();
+        assert_eq!(0, lexer.column);
+    }
+
+    #[test]
+    fn test_whitespace_skipping() {
+        let mut lexer = Lexer::new(b"1  +2");
+        lexer.next();
+        // we unwrap here because we know we are not at eof
+        let tok = lexer.next().unwrap();
+        assert_eq!(tok.span.start(), 3);
     }
 }

@@ -3,9 +3,18 @@ use crate::span::Span;
 // abstraction for the tokenstream
 pub trait TokenStream {
     fn next(&mut self) -> Option<Token>;
+
+    fn collect(&mut self) -> Vec<Token> {
+        let mut v = Vec::new();
+
+        while let Some(t) = self.next() {
+            v.push(t);
+        }
+        v
+    }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TokenKind {
     // base 10 integer literals
     // e.g. '10'
@@ -30,11 +39,12 @@ pub enum TokenKind {
     // close parentheses
     // i.e. ')'
     CloseParen,
-    
+
     // error token containing the offending character
     Error(u8),
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct Token {
     // type of token
     pub kind: TokenKind,
@@ -50,6 +60,11 @@ pub struct Token {
 
 impl Token {
     pub fn new(kind: TokenKind, span: Span, line: usize, column: usize) -> Self {
-        Self { kind, span, line, column }
+        Self {
+            kind,
+            span,
+            line,
+            column,
+        }
     }
 }
