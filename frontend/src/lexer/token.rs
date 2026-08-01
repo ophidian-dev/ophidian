@@ -12,7 +12,7 @@ pub trait TokenStream {
                 t if t.kind == TokenKind::Eof => {
                     break;
                 }
-                t =>  {
+                t => {
                     v.push(t);
                 }
             }

@@ -1,3 +1,1 @@
-pub struct Diagnostic {
-
-}
+pub struct Diagnostic {}

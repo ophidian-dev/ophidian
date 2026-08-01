@@ -13,7 +13,11 @@ impl Span {
         Self { start, length }
     }
 
-    //  a placeholder span that is not meant to be used 
+    pub fn retrieve_slice<'a>(text: &'a [u8], span: &Self) -> &'a [u8] {
+        &text[span.start()..span.end()]
+    }
+
+    //  a placeholder span that is not meant to be used
     // and will be thrown away
     pub const fn dummy() -> Self {
         Self::new(0, 0)

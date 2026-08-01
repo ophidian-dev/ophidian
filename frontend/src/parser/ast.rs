@@ -1,16 +1,12 @@
+use crate::parser::node_id::NodeId;
 use crate::span::{Span, Spanned};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct NodeId(usize);
-
-impl NodeId {
-    pub const ERROR: usize = usize::MAX;
-}
-
+#[derive(Debug)]
 pub enum LitKind {
-    Int(u128)
+    Int(u128),
 }
 
+#[derive(Debug)]
 pub enum BinOpKind {
     Add,
     Sub,
@@ -18,8 +14,17 @@ pub enum BinOpKind {
     Div,
 }
 
+#[derive(Debug)]
+pub enum UnaryOpKind {
+    Negate,
+}
+
 pub type BinOp = Spanned<BinOpKind>;
 
+pub type UnaryOp = Spanned<UnaryOpKind>;
+
+// all the different exprs in the language
+#[derive(Debug)]
 pub enum ExprKind {
     // a literal
     // e.g. '1'
@@ -28,11 +33,20 @@ pub enum ExprKind {
     // a binary operation like `1 + 2`
     BinaryOp(BinOp, Box<Expr>, Box<Expr>),
 
+    // a unary operation like  `-1`
+    UnaryOp(UnaryOp, Box<Expr>),
 }
 
 // an expression
+#[derive(Debug)]
 pub struct Expr {
-    id: NodeId,
-    kind: ExprKind,
-    span: Span,
+    pub id: NodeId,
+    pub kind: ExprKind,
+    pub span: Span,
+}
+
+impl Expr {
+    pub const fn new(id: NodeId, kind: ExprKind, span: Span) -> Self {
+        Self { id, kind, span }
+    }
 }

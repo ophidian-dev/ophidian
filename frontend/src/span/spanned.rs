@@ -3,5 +3,11 @@ use crate::span::Span;
 #[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub struct Spanned<T> {
     pub node: T,
-    pub span: Span, 
+    pub span: Span,
+}
+
+impl<T> Spanned<T> {
+    pub const fn new(node: T, span: Span) -> Self {
+        Self { node, span }
+    }
 }
