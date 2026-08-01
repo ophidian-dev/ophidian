@@ -34,4 +34,20 @@ impl Span {
     pub fn end(&self) -> usize {
         self.length + self.start
     }
+
+    pub fn join(self, other: Span) -> Self {
+        let start = if self.start() < other.start() {
+            self.start()
+        } else {
+            other.start()
+        };
+
+        let length = if self.start() > other.start() {
+            self.start()
+        } else {
+            other.start()
+        };
+
+        Self::new(start, length)
+    }
 }

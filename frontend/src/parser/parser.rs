@@ -1,6 +1,6 @@
 use crate::diagnostics::Diagnostic;
 use crate::lexer::token::{Token, TokenKind, TokenStream};
-use crate::parser::ast::{Expr, ExprKind, LitKind, UnaryOpKind};
+use crate::parser::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind};
 use crate::parser::node_id::NodeId;
 use crate::span::{Span, Spanned};
 
@@ -72,7 +72,35 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     }
 
     fn parse_factor(&mut self) -> Expr {
-        self.parse_unary()
+        let mut left = self.parse_unary();
+        while self.peek().kind == TokenKind::Star || self.peek().kind == TokenKind::Slash {
+            let op = self.advance();
+
+            let right = self.parse_unary();
+
+            // we create a copy of the span for right because we cannot access
+            // it after we move it into a Box
+            let right_span = right.span;
+
+            if op.kind == TokenKind::Star {
+                left = Expr::new(
+                    self.next_node_id(),
+                    ExprKind::BinaryOp(
+                        Spanned::new(BinOpKind::Mul, op.span), Box::new(left), Box::new(right)
+                    ),
+                    op.span.join(right_span)
+                )
+            } else {
+                left = Expr::new(
+                    self.next_node_id(),
+                    ExprKind::BinaryOp(
+                        Spanned::new(BinOpKind::Div, op.span), Box::new(left), Box::new(right) 
+                    ),
+                    op.span.join(right_span)
+                )
+            }
+        }
+        left
     }
 
     fn parse_unary(&mut self) -> Expr {
@@ -85,7 +113,11 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             // before we can pass the span into the function
             let right_span = right.span;
 
-            return Expr::new(self.next_node_id(), ExprKind::UnaryOp(Spanned::new(UnaryOpKind::Negate, op_span), Box::new(right)), right_span);
+            return Expr::new(
+                self.next_node_id(),
+                ExprKind::UnaryOp(Spanned::new(UnaryOpKind::Negate, op_span), Box::new(right)),
+                right_span,
+            );
         }
 
         self.parse_primary()
