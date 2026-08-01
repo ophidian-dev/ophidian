@@ -68,7 +68,39 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     }
 
     fn parse_term(&mut self) -> Expr {
-        self.parse_factor()
+        let mut left = self.parse_factor();
+        while self.peek().kind == TokenKind::Plus || self.peek().kind == TokenKind::Minus {
+            let op = self.advance();
+            
+            let right = self.parse_factor();
+
+            // we create a copy of the span for the rhs of the expr because
+            // we cannot access the span field after we move it into a box
+            let right_span = right.span;
+
+            if op.kind == TokenKind::Plus {
+                left = Expr::new(
+                    self.next_node_id(),
+                    ExprKind::BinaryOp(
+                        Spanned::new(BinOpKind::Add, op.span), 
+                        Box::new(left), 
+                        Box::new(right)
+                    ),
+                    op.span.join(right_span)
+                );
+            } else {
+                left = Expr::new(
+                    self.next_node_id(),
+                    ExprKind::BinaryOp(
+                        Spanned::new(BinOpKind::Sub, op.span),
+                        Box::new(left),
+                        Box::new(right)
+                    ),
+                    op.span.join(right_span)
+                )
+            }
+        }
+        left
     }
 
     fn parse_factor(&mut self) -> Expr {
