@@ -66,7 +66,7 @@ impl<'src> Lexer<'src> {
 }
 
 impl<'src> TokenStream for Lexer<'src> {
-    fn next(&mut self) -> Option<Token> {
+    fn next(&mut self) -> Token {
         loop {
             if let Some(c) = self.peek() {
                 if c.is_ascii_whitespace() {
@@ -75,7 +75,7 @@ impl<'src> TokenStream for Lexer<'src> {
                 }
                 break;
             } else {
-                return None;
+                return self.create_token(TokenKind::Eof);
             }
         }
 
@@ -85,34 +85,34 @@ impl<'src> TokenStream for Lexer<'src> {
         let c = match self.peek() {
             Some(x) => x,
             None => {
-                return None;
+                return self.create_token(TokenKind::Eof);
             }
         };
 
         match c {
             b'+' => {
                 self.advance();
-                return Some(self.create_token(TokenKind::Plus));
+                return self.create_token(TokenKind::Plus);
             }
             b'-' => {
                 self.advance();
-                return Some(self.create_token(TokenKind::Minus));
+                return self.create_token(TokenKind::Minus);
             }
             b'*' => {
                 self.advance();
-                return Some(self.create_token(TokenKind::Star));
+                return self.create_token(TokenKind::Star);
             }
             b'/' => {
                 self.advance();
-                return Some(self.create_token(TokenKind::Slash));
+                return self.create_token(TokenKind::Slash);
             }
             b'(' => {
                 self.advance();
-                return Some(self.create_token(TokenKind::OpenParen));
+                return self.create_token(TokenKind::OpenParen);
             }
             b')' => {
                 self.advance();
-                return Some(self.create_token(TokenKind::CloseParen));
+                return self.create_token(TokenKind::CloseParen);
             }
             _ => {
                 if c.is_ascii_digit() {
@@ -122,9 +122,9 @@ impl<'src> TokenStream for Lexer<'src> {
                         }
                         break;
                     }
-                    return Some(self.create_token(TokenKind::IntegerLiteral));
+                    return self.create_token(TokenKind::IntegerLiteral);
                 } else {
-                    return Some(self.create_token(TokenKind::Error(c)));
+                    return self.create_token(TokenKind::Error(c));
                 }
             }
         }
@@ -201,8 +201,7 @@ mod tests {
     fn test_whitespace_skipping() {
         let mut lexer = Lexer::new(b"1  +2");
         lexer.next();
-        // we unwrap here because we know we are not at eof
-        let tok = lexer.next().unwrap();
+        let tok = lexer.next();
         assert_eq!(tok.span.start(), 3);
     }
 }

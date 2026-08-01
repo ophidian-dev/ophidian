@@ -2,14 +2,22 @@ use crate::span::Span;
 
 // abstraction for the tokenstream
 pub trait TokenStream {
-    fn next(&mut self) -> Option<Token>;
+    fn next(&mut self) -> Token;
 
     fn collect(&mut self) -> Vec<Token> {
         let mut v = Vec::new();
 
-        while let Some(t) = self.next() {
-            v.push(t);
+        loop {
+            match self.next() {
+                t if t.kind == TokenKind::Eof => {
+                    break;
+                }
+                t =>  {
+                    v.push(t);
+                }
+            }
         }
+
         v
     }
 }
@@ -42,9 +50,12 @@ pub enum TokenKind {
 
     // error token containing the offending character
     Error(u8),
+
+    // end of the file
+    Eof,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Token {
     // type of token
     pub kind: TokenKind,
@@ -59,12 +70,17 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(kind: TokenKind, span: Span, line: usize, column: usize) -> Self {
+    pub const fn new(kind: TokenKind, span: Span, line: usize, column: usize) -> Self {
         Self {
             kind,
             span,
             line,
             column,
         }
+    }
+
+    // a temporary token that is used as a placehodler and will be thrown away
+    pub const fn dummy() -> Self {
+        Self::new(TokenKind::Error(u8::MAX), Span::dummy(), 0, 0)
     }
 }
