@@ -194,7 +194,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             let open_span = self.prev.span;
 
             let mut expr = self.parse_expression();
-            
+
             if self.peek().kind != TokenKind::CloseParen {
                 todo!("handle error");
             }

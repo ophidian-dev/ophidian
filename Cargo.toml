@@ -10,5 +10,5 @@ members = [
 owo-colors = "4.3.0"
 frontend = { path = "frontend" }
 compiler = { path = "compiler" }
-
+runtime = { path = "runtime" }
 

@@ -1,0 +1,36 @@
+
+
+#[repr(u8)]
+pub enum OpCode {
+    // halt the vm with exit code that we assume
+    // the last opcode has pushed onto the stack   
+    Halt = 0x00,
+
+    // i for integer
+    // e.g. iadd is integer addition
+    // the following opcodes pop 2 values of the type of the opcode off
+    // the stack, apply the operation and pushes the result
+    IAdd = 0x01,
+    ISub = 0x02,
+    IMul = 0x03,
+    IDiv = 0x04,
+
+    // integer negation
+    INegate = 0x05,
+}
+
+impl TryFrom<u8> for OpCode {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Halt),
+            1 => Ok(Self::IAdd),
+            2 => Ok(Self::ISub),
+            3 => Ok(Self::IMul),
+            4 => Ok(Self::IDiv),
+            5 => Ok(Self::INegate),
+            _ => Err(())
+        }
+    }
+}

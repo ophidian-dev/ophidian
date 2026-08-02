@@ -12,7 +12,7 @@ fn main() {
         std::process::exit(1);
     }
 
-    let file = read_file_as_bytes(&argv[0], &argv[1]);
+    let _file = read_file_as_bytes(&argv[0], &argv[1]);
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {
