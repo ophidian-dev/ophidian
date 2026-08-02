@@ -236,7 +236,10 @@ mod tests {
         let mut diag = new_diag_vec();
         let parser = new_parser(b"(", &mut diag);
 
-        assert_eq!(parser.peek(), Token::new(TokenKind::OpenParen, Span::new(0, 1), 0, 0));
+        assert_eq!(
+            parser.peek(),
+            Token::new(TokenKind::OpenParen, Span::new(0, 1), 0, 0)
+        );
     }
 
     #[test]
@@ -244,7 +247,10 @@ mod tests {
         let mut diag = new_diag_vec();
         let parser = new_parser(b"", &mut diag);
 
-        assert_eq!(parser.peek(), Token::new(TokenKind::Eof, Span::new(0, 0), 0, 0));
+        assert_eq!(
+            parser.peek(),
+            Token::new(TokenKind::Eof, Span::new(0, 0), 0, 0)
+        );
     }
 
     // test that advnace returns the token that it just advancde
@@ -254,7 +260,10 @@ mod tests {
         let mut diag = new_diag_vec();
         let mut parser = new_parser(b"(1)", &mut diag);
 
-        assert_eq!(parser.advance(), Token::new(TokenKind::OpenParen, Span::new(0, 1), 0, 0));
+        assert_eq!(
+            parser.advance(),
+            Token::new(TokenKind::OpenParen, Span::new(0, 1), 0, 0)
+        );
     }
 
     #[test]
@@ -262,6 +271,9 @@ mod tests {
         let mut diag = new_diag_vec();
         let mut parser = new_parser(b"", &mut diag);
 
-        assert_eq!(parser.advance(), Token::new(TokenKind::Eof, Span::new(0, 0), 0, 0))
+        assert_eq!(
+            parser.advance(),
+            Token::new(TokenKind::Eof, Span::new(0, 0), 0, 0)
+        )
     }
 }
