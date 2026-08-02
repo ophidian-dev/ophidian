@@ -1,5 +1,6 @@
 use owo_colors::OwoColorize;
-use runtime::value::Value;
+use compiler::Compiler;
+use runtime::vm::VirtualMachine;
 
 fn main() {
     let argv: Vec<String> = std::env::args().collect();
@@ -13,10 +14,21 @@ fn main() {
         std::process::exit(1);
     }
 
-    let _file = read_file_as_bytes(&argv[0], &argv[1]);
+    let file = read_file_as_bytes(&argv[0], &argv[1]);
 
-    let value = Value::new_int(3);
-    println!("{:?}", value);
+    let mut compiler = Compiler::new();
+    let chunk = match compiler.compile(&file) {
+        Ok(chunk) => {
+            chunk
+        }
+        Err(_diags) => {
+            todo!("pretty print diagnostics");
+        }
+    };
+
+    let mut vm = VirtualMachine::new();
+    vm.execute(&chunk);
+    
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {

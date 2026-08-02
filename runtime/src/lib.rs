@@ -8,17 +8,8 @@
 // use of raw pointers for ease of implementation rather than
 // safety i.e. very c style
 
-use crate::chunk::Chunk;
-
 pub mod chunk;
 pub mod opcodes;
 pub mod value;
 pub mod vm;
 
-use vm::VMExitCode;
-use vm::VirtualMachine;
-
-fn execute(chunk: Chunk) -> VMExitCode {
-    let mut vm = VirtualMachine::new();
-    vm.execute(chunk)
-}

@@ -17,8 +17,18 @@ impl Chunk {
         self.bytecode.push(byte);
     }
 
-    pub fn write_constant(&mut self, constant: Value) {
+    pub fn write_u24(&mut self, u24: u32) {
+        assert!(u24 > 0x00FF_FFFF);
+
+        self.write((u24 & 0xFF) as u8);
+        self.write(((u24 >> 8) & 0xFF) as u8);
+        self.write(((u24 >> 16) & 0xFF) as u8);
+    }
+
+    pub fn write_constant(&mut self, constant: Value) -> usize { 
+        let idx = self.constants.len();
         self.constants.push(constant);
+        idx
     }
 
     pub const fn bytecode_ptr(&self) -> *const u8 {
