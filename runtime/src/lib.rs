@@ -1,6 +1,5 @@
-
 // RUNTIME
-// 
+//
 // This crate contains the virtual machine used to run the bytecode generated
 // by the compiler crate
 // however, due to the nature of the language this interpreter is for
@@ -11,15 +10,15 @@
 
 use crate::chunk::Chunk;
 
-pub mod opcodes;
-pub mod vm;
-pub mod value;
 pub mod chunk;
+pub mod opcodes;
+pub mod value;
+pub mod vm;
 
-use vm::VirtualMachine;
 use vm::VMExitCode;
+use vm::VirtualMachine;
 
 fn execute(chunk: Chunk) -> VMExitCode {
     let mut vm = VirtualMachine::new();
-    vm.execute(chunk) 
+    vm.execute(chunk)
 }

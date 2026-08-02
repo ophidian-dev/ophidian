@@ -1,8 +1,8 @@
 use crate::value::Value;
 
 pub struct Chunk {
-    bytecode: Vec<u8>,
-    constants: Vec<Value>,
+    pub bytecode: Vec<u8>,
+    pub constants: Vec<Value>,
 }
 
 impl Chunk {
@@ -13,15 +13,15 @@ impl Chunk {
         }
     }
 
-    pub fn emit_byte(&mut self, byte: u8) {
+    pub fn write(&mut self, byte: u8) {
         self.bytecode.push(byte);
     }
 
-    pub fn emit_constant(&mut self, constant: Value) {
+    pub fn write_constant(&mut self, constant: Value) {
         self.constants.push(constant);
     }
 
-    pub fn bytecode_ptr(&self) -> *const u8 {
+    pub const fn bytecode_ptr(&self) -> *const u8 {
         self.bytecode.as_ptr()
     }
 }

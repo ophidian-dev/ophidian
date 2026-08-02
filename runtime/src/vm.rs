@@ -1,6 +1,6 @@
 use crate::chunk::Chunk;
-use crate::value::Value;
 use crate::opcodes::OpCode;
+use crate::value::Value;
 
 pub type VMExitCode = i32;
 
@@ -16,18 +16,18 @@ impl<T> Stack<T> {
 
     pub fn push(&mut self, value: T) {
         self.data.push(value);
-    } 
+    }
 
     // Panics
     // This function panics if the stack is empty
-    // we chose do it here because we trust that the user provides 
+    // we chose do it here because we trust that the user provides
     // the correct code
     pub fn pop(&mut self) -> T {
         self.data.pop().expect("stack underflow")
     }
 
     pub fn top(&self) -> Option<&T> {
-        self.data.last() 
+        self.data.last()
     }
 }
 
@@ -36,7 +36,6 @@ pub struct VirtualMachine {
     stack: Stack<Value>,
     // pointer to instruction to be executed
     ip: *const u8,
-
 }
 
 impl VirtualMachine {
@@ -50,7 +49,6 @@ impl VirtualMachine {
     pub fn execute(&mut self, chunk: Chunk) -> VMExitCode {
         self.ip = chunk.bytecode_ptr();
 
-
         loop {
             // we unwrap here because we assume that the bytecode is correct
             let opcode = OpCode::try_from(self.read_byte()).unwrap();
@@ -59,34 +57,26 @@ impl VirtualMachine {
                     let exit_code = self.pop();
                     // behaviour is undefined if exit code is not an integer
                     // similar to c's `exit()` function from <stdlib.h>
-                    return unsafe {
-                        exit_code.data.integer  
-                    };
+                    return unsafe { exit_code.data.integer };
                 }
                 OpCode::IAdd => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer + b.data.integer
-                    };
+                    let res = unsafe { a.data.integer + b.data.integer };
                     let value = Value::new_int(res);
                     self.push(value);
                 }
                 OpCode::ISub => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer - b.data.integer
-                    };
+                    let res = unsafe { a.data.integer - b.data.integer };
                     let value = Value::new_int(res);
                     self.push(value);
                 }
                 OpCode::IMul => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer * b.data.integer
-                    };
+                    let res = unsafe { a.data.integer * b.data.integer };
                     let value = Value::new_int(res);
                     self.push(value);
                 }
@@ -94,19 +84,25 @@ impl VirtualMachine {
                     // division by zero is undefined behaviour
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer / b.data.integer
-                    };
+                    let res = unsafe { a.data.integer / b.data.integer };
                     let value = Value::new_int(res);
                     self.push(value);
                 }
                 OpCode::INegate => {
                     let a = self.pop();
-                    let res = unsafe {
-                        -a.data.integer
-                    };
+                    let res = unsafe { -a.data.integer };
                     let value = Value::new_int(res);
                     self.push(value);
+                }
+                OpCode::LoadConst => {
+                    let b0 = self.read_byte();
+                    let b1 = self.read_byte();
+                    let b2 = self.read_byte();
+                    let idx = decode_u24_le([b0, b1, b2]);
+                    // we unwrap here because we assume the index provided is valid
+                    let constant = chunk.constants.get(idx as usize).unwrap();
+                    
+                    self.push(constant.clone());
                 }
             }
         }
@@ -127,6 +123,11 @@ impl VirtualMachine {
             byte
         }
     }
+}
+
+fn decode_u24_le(bytes: [u8; 3]) -> u32 {
+    let padded = [bytes[0], bytes[1], bytes[2], 0];
+    u32::from_le_bytes(padded)
 }
 
 #[cfg(test)]

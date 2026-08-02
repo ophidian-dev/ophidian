@@ -1,9 +1,7 @@
-
-
 #[repr(u8)]
 pub enum OpCode {
     // halt the vm with exit code that we assume
-    // the last opcode has pushed onto the stack   
+    // the last opcode has pushed onto the stack
     Halt = 0x00,
 
     // i for integer
@@ -17,6 +15,11 @@ pub enum OpCode {
 
     // integer negation
     INegate = 0x05,
+
+    // load a constant from the constant pool
+    // requires an operand that is 3 bytes as the index
+    // encoded in little endian
+    LoadConst = 0x06,
 }
 
 impl TryFrom<u8> for OpCode {
@@ -30,7 +33,8 @@ impl TryFrom<u8> for OpCode {
             3 => Ok(Self::IMul),
             4 => Ok(Self::IDiv),
             5 => Ok(Self::INegate),
-            _ => Err(())
+            6 => Ok(Self::LoadConst),
+            _ => Err(()),
         }
     }
 }

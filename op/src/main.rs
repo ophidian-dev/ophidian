@@ -1,4 +1,5 @@
 use owo_colors::OwoColorize;
+use runtime::value::Value;
 
 fn main() {
     let argv: Vec<String> = std::env::args().collect();
@@ -13,6 +14,9 @@ fn main() {
     }
 
     let _file = read_file_as_bytes(&argv[0], &argv[1]);
+
+    let value = Value::new_int(3);
+    println!("{:?}", value);
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {
