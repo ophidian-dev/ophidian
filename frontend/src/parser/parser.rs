@@ -1,4 +1,4 @@
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, Severity};
 use crate::lexer::token::{Token, TokenKind, TokenStream};
 use crate::parser::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind};
 use crate::parser::node_id::NodeId;
@@ -12,7 +12,7 @@ where
     tokenstream: T,
 
     // vector of diagnostics
-    diagnostics: &'diag mut Vec<Diagnostic>,
+    pub diagnostics: &'diag mut Vec<Diagnostic>,
 
     // a reference to the source string
     source: &'src [u8],
@@ -59,6 +59,11 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         tmp
     }
 
+    fn error<M: Into<String>>(&mut self, message: M, span: Span) {
+        self.diagnostics
+            .push(Diagnostic::new(message.into(), span, Severity::Error));
+    }
+
     pub fn parse(&mut self) -> Expr {
         self.parse_expression()
     }
@@ -71,7 +76,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         let mut left = self.parse_factor();
         while self.peek().kind == TokenKind::Plus || self.peek().kind == TokenKind::Minus {
             let op = self.advance();
-            
+
             let right = self.parse_factor();
 
             // we create a copy of the span for the rhs of the expr because
@@ -82,11 +87,11 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 left = Expr::new(
                     self.next_node_id(),
                     ExprKind::BinaryOp(
-                        Spanned::new(BinOpKind::Add, op.span), 
-                        Box::new(left), 
-                        Box::new(right)
+                        Spanned::new(BinOpKind::Add, op.span),
+                        Box::new(left),
+                        Box::new(right),
                     ),
-                    op.span.join(right_span)
+                    op.span.join(right_span),
                 );
             } else {
                 left = Expr::new(
@@ -94,9 +99,9 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                     ExprKind::BinaryOp(
                         Spanned::new(BinOpKind::Sub, op.span),
                         Box::new(left),
-                        Box::new(right)
+                        Box::new(right),
                     ),
-                    op.span.join(right_span)
+                    op.span.join(right_span),
                 )
             }
         }
@@ -118,17 +123,21 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 left = Expr::new(
                     self.next_node_id(),
                     ExprKind::BinaryOp(
-                        Spanned::new(BinOpKind::Mul, op.span), Box::new(left), Box::new(right)
+                        Spanned::new(BinOpKind::Mul, op.span),
+                        Box::new(left),
+                        Box::new(right),
                     ),
-                    op.span.join(right_span)
+                    op.span.join(right_span),
                 )
             } else {
                 left = Expr::new(
                     self.next_node_id(),
                     ExprKind::BinaryOp(
-                        Spanned::new(BinOpKind::Div, op.span), Box::new(left), Box::new(right) 
+                        Spanned::new(BinOpKind::Div, op.span),
+                        Box::new(left),
+                        Box::new(right),
                     ),
-                    op.span.join(right_span)
+                    op.span.join(right_span),
                 )
             }
         }
@@ -190,5 +199,69 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         } else {
             todo!("handle unexpected token error");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    use crate::lexer::Lexer;
+
+    fn new_diag_vec() -> Vec<Diagnostic> {
+        Vec::new()
+    }
+
+    fn new_parser<'a: 'diag, 'src: 'a, 'diag>(
+        source: &'src [u8],
+        diag: &'a mut Vec<Diagnostic>,
+    ) -> Parser<'src, 'diag, Lexer<'a>> {
+        let lexer = Lexer::new(source);
+        Parser::new(lexer, diag, source)
+    }
+
+    #[test]
+    // test node id generation
+    fn test_nodeid_generation() {
+        let mut diag = new_diag_vec();
+        let mut parser = new_parser(b"(1 + 2) * 3", &mut diag);
+        parser.next_node_id();
+        assert_eq!(NodeId(1), parser.next_node_id());
+    }
+
+    #[test]
+    // test that peek returns the correct token
+    fn test_peek() {
+        let mut diag = new_diag_vec();
+        let parser = new_parser(b"(", &mut diag);
+
+        assert_eq!(parser.peek(), Token::new(TokenKind::OpenParen, Span::new(0, 1), 0, 0));
+    }
+
+    #[test]
+    fn test_peek_at_eof() {
+        let mut diag = new_diag_vec();
+        let parser = new_parser(b"", &mut diag);
+
+        assert_eq!(parser.peek(), Token::new(TokenKind::Eof, Span::new(0, 0), 0, 0));
+    }
+
+    // test that advnace returns the token that it just advancde
+    // past
+    #[test]
+    fn test_advance_returns_correct_token() {
+        let mut diag = new_diag_vec();
+        let mut parser = new_parser(b"(1)", &mut diag);
+
+        assert_eq!(parser.advance(), Token::new(TokenKind::OpenParen, Span::new(0, 1), 0, 0));
+    }
+
+    #[test]
+    fn test_advance_at_eof() {
+        let mut diag = new_diag_vec();
+        let mut parser = new_parser(b"", &mut diag);
+
+        assert_eq!(parser.advance(), Token::new(TokenKind::Eof, Span::new(0, 0), 0, 0))
     }
 }
