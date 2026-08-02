@@ -74,6 +74,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
     fn parse_term(&mut self) -> Expr {
         let mut left = self.parse_factor();
+        let start_span = left.span;
         while self.peek().kind == TokenKind::Plus || self.peek().kind == TokenKind::Minus {
             let op = self.advance();
 
@@ -91,7 +92,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                         Box::new(left),
                         Box::new(right),
                     ),
-                    op.span.join(right_span),
+                    start_span.join(right_span),
                 );
             } else {
                 left = Expr::new(
@@ -101,7 +102,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                         Box::new(left),
                         Box::new(right),
                     ),
-                    op.span.join(right_span),
+                    start_span.join(right_span),
                 )
             }
         }
@@ -110,6 +111,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
     fn parse_factor(&mut self) -> Expr {
         let mut left = self.parse_unary();
+        let start_span = left.span;
         while self.peek().kind == TokenKind::Star || self.peek().kind == TokenKind::Slash {
             let op = self.advance();
 
@@ -127,7 +129,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                         Box::new(left),
                         Box::new(right),
                     ),
-                    op.span.join(right_span),
+                    start_span.join(right_span),
                 )
             } else {
                 left = Expr::new(
@@ -137,7 +139,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                         Box::new(left),
                         Box::new(right),
                     ),
-                    op.span.join(right_span),
+                    start_span.join(right_span),
                 )
             }
         }
@@ -157,7 +159,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             return Expr::new(
                 self.next_node_id(),
                 ExprKind::UnaryOp(Spanned::new(UnaryOpKind::Negate, op_span), Box::new(right)),
-                right_span,
+                right_span.join(op_span),
             );
         }
 
@@ -188,12 +190,20 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             // advnace past the open parentheses
             self.advance();
 
-            let expr = self.parse_expression();
+            // span of the `(`
+            let open_span = self.prev.span;
 
+            let mut expr = self.parse_expression();
+            
             if self.peek().kind != TokenKind::CloseParen {
                 todo!("handle error");
             }
             self.advance();
+
+            // span of the `)`
+            let close_span = self.prev.span;
+
+            expr.span = expr.span.join(open_span).join(close_span);
 
             return expr;
         } else {
