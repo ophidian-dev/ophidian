@@ -207,7 +207,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
             return expr;
         } else {
-            todo!("handle unexpected token error");
+            todo!("handle unexpected token error: {:?}", self.peek());
         }
     }
 }

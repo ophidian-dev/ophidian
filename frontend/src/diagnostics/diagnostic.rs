@@ -1,5 +1,6 @@
 use crate::span::Span;
 
+#[derive(Debug)]
 pub struct Diagnostic {
     pub message: String,
     pub span: Span,
@@ -16,6 +17,7 @@ impl Diagnostic {
     }
 }
 
+#[derive(Debug)]
 pub enum Severity {
     Error,
 }

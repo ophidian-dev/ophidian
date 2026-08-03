@@ -6,3 +6,6 @@ edition = "2024"
 [dependencies]
 frontend = { workspace = true }
 runtime = { workspace = true }
+
+[dev-dependencies]
+compiler = { workspace = true }

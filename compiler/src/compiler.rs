@@ -13,6 +13,7 @@ impl Compiler {
         Self {}
     }
 
+    #[must_use]
     pub fn compile(&mut self, source: &[u8]) -> Result<Chunk, Vec<Diagnostic>> {
         let mut diagnostics = Vec::<Diagnostic>::new();
         let lexer = Lexer::new(source);

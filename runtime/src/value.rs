@@ -4,6 +4,22 @@ pub struct Value {
     pub data: ValueData,
 }
 
+impl std::cmp::PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        if self.kind != other.kind {
+            return false;
+        }
+
+        unsafe {
+            match self.kind {
+                ValueKind::Integer => {
+                    return self.data.integer == other.data.integer;
+                }
+            }
+        }
+    }
+}
+
 impl std::fmt::Debug for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "kind: {:?}", self.kind)?;
@@ -27,7 +43,7 @@ impl Value {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ValueKind {
     Integer,
 }
