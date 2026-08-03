@@ -1,10 +1,10 @@
-use runtime::opcodes::OpCode;
-use runtime::chunk::Chunk;
-use runtime::value::Value;
+use frontend::diagnostics::Diagnostic;
 use frontend::lexer::Lexer;
 use frontend::parser::Parser;
 use frontend::parser::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind};
-use frontend::diagnostics::Diagnostic;
+use runtime::chunk::Chunk;
+use runtime::opcodes::OpCode;
+use runtime::value::Value;
 
 pub struct Compiler {}
 
@@ -24,7 +24,7 @@ impl Compiler {
         if !diagnostics.is_empty() {
             return Err(diagnostics);
         }
-         
+
         let mut chunk = Chunk::new();
 
         self.compile_expr(&unchecked_program, &mut chunk);
@@ -32,8 +32,8 @@ impl Compiler {
         chunk.write(OpCode::LoadConst as u8);
         let idx = chunk.write_constant(Value::new_int(0));
         chunk.write_u24(idx as u32);
-        
-        chunk.write(OpCode::Halt as u8); 
+
+        chunk.write(OpCode::Halt as u8);
 
         Ok(chunk)
     }
@@ -44,7 +44,7 @@ impl Compiler {
                 match litkind {
                     LitKind::Int(i) => {
                         // we convert to i32 here because we have not implemented
-                        // a type checker and hir yet 
+                        // a type checker and hir yet
                         let value = Value::new_int(*i as i32);
                         chunk.write(OpCode::LoadConst as u8);
                         let idx = chunk.write_constant(value);
@@ -56,7 +56,7 @@ impl Compiler {
                 self.compile_expr(&left, chunk);
                 self.compile_expr(&right, chunk);
                 let opcode = match op.node {
-                    // only type int exists rn so we dont needa 
+                    // only type int exists rn so we dont needa
                     // check for different types
                     BinOpKind::Add => OpCode::IAdd,
                     BinOpKind::Sub => OpCode::ISub,
@@ -72,7 +72,7 @@ impl Compiler {
                 let opcode = match op.node {
                     // only type int exists for now so no type checks
                     // are necessary
-                    UnaryOpKind::Negate => OpCode::INegate
+                    UnaryOpKind::Negate => OpCode::INegate,
                 };
 
                 chunk.write(opcode as u8);

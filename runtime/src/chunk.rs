@@ -15,7 +15,10 @@ impl Chunk {
     }
 
     pub const fn new_from_existing(bytecode: Vec<u8>, constants: Vec<Value>) -> Self {
-        Self { bytecode, constants }
+        Self {
+            bytecode,
+            constants,
+        }
     }
 
     pub fn write(&mut self, byte: u8) {
@@ -30,7 +33,7 @@ impl Chunk {
         self.write(((u24 >> 16) & 0xFF) as u8);
     }
 
-    pub fn write_constant(&mut self, constant: Value) -> usize { 
+    pub fn write_constant(&mut self, constant: Value) -> usize {
         let idx = self.constants.len();
         self.constants.push(constant);
         idx

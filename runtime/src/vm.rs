@@ -101,7 +101,7 @@ impl VirtualMachine {
                     let idx = decode_u24_le([b0, b1, b2]);
                     // we unwrap here because we assume the index provided is valid
                     let constant = chunk.constants.get(idx as usize).unwrap();
-                    
+
                     self.push(constant.clone());
                 }
             }

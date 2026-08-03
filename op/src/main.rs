@@ -1,5 +1,5 @@
-use owo_colors::OwoColorize;
 use compiler::Compiler;
+use owo_colors::OwoColorize;
 use runtime::vm::VirtualMachine;
 
 fn main() {
@@ -18,9 +18,7 @@ fn main() {
 
     let mut compiler = Compiler::new();
     let chunk = match compiler.compile(&file) {
-        Ok(chunk) => {
-            chunk
-        }
+        Ok(chunk) => chunk,
         Err(_diags) => {
             todo!("pretty print diagnostics");
         }
@@ -28,7 +26,6 @@ fn main() {
 
     let mut vm = VirtualMachine::new();
     vm.execute(&chunk);
-    
 }
 
 fn read_file_as_bytes(invocation: &str, file_name: &str) -> Vec<u8> {
