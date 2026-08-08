@@ -4,7 +4,7 @@ use frontend::span::Span;
 
 // test basic arigthmetic lexing like '+', '-', '(' etc.
 #[test]
-fn test_lexer_arithmetic() {
+fn test_lex_arithmetic() {
     let mut lexer = Lexer::new(b"(1 + 2) * 3");
     let tokens = lexer.collect();
     assert_eq!(
@@ -19,4 +19,15 @@ fn test_lexer_arithmetic() {
             Token::new(TokenKind::IntegerLiteral, Span::new(10, 1), 0, 10), // 3
         ]
     );
+}
+
+#[test]
+fn test_lex_print_kw() {
+    let mut lexer = Lexer::new(b"print 1");
+    let tokens = lexer.collect();
+    assert_eq!(tokens, vec![
+        Token::new(TokenKind::Print, Span::new(0, 5), 0, 0),
+        Token::new(TokenKind::IntegerLiteral, Span::new(6, 1), 0, 6)
+    ]);
+    
 }

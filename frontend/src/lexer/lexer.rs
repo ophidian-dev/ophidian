@@ -1,6 +1,7 @@
 use crate::lexer::token::{Token, TokenKind, TokenStream};
 use crate::span::Span;
 
+#[derive(Default)]
 pub struct Lexer<'src> {
     // source string to be lexed
     source: &'src [u8],
@@ -70,7 +71,7 @@ impl<'src> Lexer<'src> {
                 TokenKind::Print
             }
             _ => {
-                unreachable!("identifiers don't exist yet")
+                unreachable!("unknown: {:?}", ident);
             }
         }
     }
@@ -130,6 +131,7 @@ impl<'src> TokenStream for Lexer<'src> {
                     while let Some(d) = self.peek() {
                         if d.is_ascii_digit() {
                             self.advance();
+                            continue;
                         }
                         break;
                     }
@@ -137,12 +139,15 @@ impl<'src> TokenStream for Lexer<'src> {
                 } else if c.is_ascii_alphabetic() {
                     let mut ident = Vec::<u8>::new();
                     while let Some(d) = self.peek() {
+                        println!("{:?}, {}", d, d.is_ascii_alphabetic());
                         if d.is_ascii_alphabetic() {
                             ident.push(d);
                             self.advance();
+                            continue;
                         }
                         break;
                     }
+                    println!("{:?}", &ident);
                     let ident_kind = self.get_identifier_type(&ident);
                     return self.create_token(ident_kind);
                 } else {
@@ -225,5 +230,11 @@ mod tests {
         lexer.next();
         let tok = lexer.next();
         assert_eq!(tok.span.start(), 3);
+    }
+
+    #[test]
+    fn test_print_kw_detection() {
+        let lexer = Lexer::default();
+        assert_eq!(lexer.get_identifier_type(b"print"), TokenKind::Print);
     }
 }
