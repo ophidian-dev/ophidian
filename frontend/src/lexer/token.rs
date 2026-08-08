@@ -51,6 +51,11 @@ pub enum TokenKind {
     // error token containing the offending character
     Error(u8),
 
+    // print keyword
+    // this is a builtin statement which acts like a function
+    // until functions are implemented
+    Print,
+
     // end of the file
     Eof,
 }

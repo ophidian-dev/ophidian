@@ -63,6 +63,17 @@ impl<'src> Lexer<'src> {
         let span = Span::new(self.start, self.current - self.start);
         Token::new(kind, span, self.line, self.start_column)
     }
+
+    fn get_identifier_type(&self, ident: &[u8]) -> TokenKind {
+        match ident {
+            b"print" => {
+                TokenKind::Print
+            }
+            _ => {
+                unreachable!("identifiers don't exist yet")
+            }
+        }
+    }
 }
 
 impl<'src> TokenStream for Lexer<'src> {
@@ -123,6 +134,17 @@ impl<'src> TokenStream for Lexer<'src> {
                         break;
                     }
                     return self.create_token(TokenKind::IntegerLiteral);
+                } else if c.is_ascii_alphabetic() {
+                    let mut ident = Vec::<u8>::new();
+                    while let Some(d) = self.peek() {
+                        if d.is_ascii_alphabetic() {
+                            ident.push(d);
+                            self.advance();
+                        }
+                        break;
+                    }
+                    let ident_kind = self.get_identifier_type(&ident);
+                    return self.create_token(ident_kind);
                 } else {
                     return self.create_token(TokenKind::Error(c));
                 }
