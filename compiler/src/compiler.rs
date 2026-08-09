@@ -1,7 +1,7 @@
 use frontend::diagnostics::Diagnostic;
 use frontend::lexer::Lexer;
-use frontend::parser::Parser;
-use frontend::parser::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind};
+use frontend::parse::Parser;
+use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind};
 use runtime::chunk::Chunk;
 use runtime::opcodes::OpCode;
 use runtime::value::Value;
@@ -27,7 +27,10 @@ impl Compiler {
 
         let mut chunk = Chunk::new();
 
-        self.compile_expr(&unchecked_program, &mut chunk);
+        for stmt in unchecked_program.stmts() {
+            self.compile_stmt(stmt, &mut chunk);
+        }
+
 
         chunk.write(OpCode::LoadConst as u8);
         let idx = chunk.write_constant(Value::new_int(0));
@@ -36,6 +39,10 @@ impl Compiler {
         chunk.write(OpCode::Halt as u8);
 
         Ok(chunk)
+    }
+
+    fn compile_stmt(&mut self, stmt: &Stmt, chunk: &mut Chunk) {
+        todo!()
     }
 
     fn compile_expr(&mut self, expr: &Expr, chunk: &mut Chunk) {

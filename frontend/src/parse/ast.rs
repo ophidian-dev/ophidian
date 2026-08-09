@@ -1,4 +1,4 @@
-use crate::parser::node_id::NodeId;
+use crate::parse::node_id::NodeId;
 use crate::span::{Span, Spanned};
 
 #[derive(Debug, PartialEq)]
@@ -48,5 +48,45 @@ pub struct Expr {
 impl Expr {
     pub const fn new(id: NodeId, kind: ExprKind, span: Span) -> Self {
         Self { id, kind, span }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum StmtKind {
+
+    // because right now this language does not have functions, 
+    // we have a built in print statement that is still called like a
+    // function i.e. `print(expression);` requiring the parentheses
+    Print(Box<Expr>),
+
+    // expression statement
+    ExprStmt(Box<Expr>),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Stmt {
+    pub id: NodeId,
+    pub kind: StmtKind,
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Program {
+    body: Vec<Stmt>,
+}
+
+impl Program {
+    pub fn new() -> Self {
+        Self {
+            body: Vec::new()
+        }
+    }
+
+    pub fn add(&mut self, stmt: Stmt) {
+        self.body.push(stmt);
+    }
+
+    pub fn stmts(&self) -> &[Stmt] {
+        &self.body
     }
 }

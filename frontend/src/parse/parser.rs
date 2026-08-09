@@ -1,14 +1,14 @@
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::lexer::token::{Token, TokenKind, TokenStream};
-use crate::parser::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind};
-use crate::parser::node_id::NodeId;
+use crate::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind, Program, Stmt};
+use crate::parse::node_id::NodeId;
 use crate::span::{Span, Spanned};
 
 pub struct Parser<'src, 'diag, T>
 where
     T: TokenStream,
 {
-    // a stream of tokens that we can interate over by calling `.next()` on it
+    // a stream of tokens that we can iterate over by calling `.next()` on it
     tokenstream: T,
 
     // vector of diagnostics
@@ -64,8 +64,41 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             .push(Diagnostic::new(message.into(), span, Severity::Error));
     }
 
-    pub fn parse(&mut self) -> Expr {
-        self.parse_expression()
+    fn sync(&mut self) {
+
+    }
+
+    pub fn parse(&mut self) -> Program {
+        let mut program = Program::new();
+
+        while self.peek().kind != TokenKind::Eof {
+            let stmt = self.parse_statement();
+            program.add(stmt);
+        }
+
+        program
+    }
+
+    pub fn parse_statement(&mut self) -> Stmt {
+        match self.peek().kind {
+            TokenKind::Print => {
+                self.parse_print()
+            }
+            TokenKind::IntegerLiteral | TokenKind::OpenParen => {
+                self.parse_exprstmt()
+            }
+            _ => {
+                todo!()
+            }
+        }
+    }
+
+    fn parse_exprstmt(&mut self) -> Stmt {
+
+    }
+
+    fn parse_print(&mut self) -> Stmt {
+
     }
 
     fn parse_expression(&mut self) -> Expr {

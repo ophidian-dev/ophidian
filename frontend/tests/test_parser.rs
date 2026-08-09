@@ -1,8 +1,8 @@
 use frontend::diagnostics::Diagnostic;
 use frontend::lexer::Lexer;
-use frontend::parser::Parser;
-use frontend::parser::ast::{BinOpKind, Expr, ExprKind, LitKind};
-use frontend::parser::node_id::NodeId;
+use frontend::parse::Parser;
+use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, StmtKind};
+use frontend::parse::node_id::NodeId;
 use frontend::span::{Span, Spanned};
 
 #[test]
@@ -12,10 +12,13 @@ fn test_parser_parse_arithmetic_expression() {
     let mut diagnostics = Vec::<Diagnostic>::new();
     let mut parser = Parser::new(lexer, &mut diagnostics, source);
 
-    let ast = parser.parse();
+    let expr = match parser.parse().stmts().get(0).unwrap().kind {
+        StmtKind::ExprStmt(e) => *e,
+        _ => panic!()
+    };
 
     assert_eq!(
-        ast,
+        expr,
         Expr {
             id: NodeId(4),
             span: Span::new(0, 11),
