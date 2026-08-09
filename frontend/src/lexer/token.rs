@@ -56,6 +56,10 @@ pub enum TokenKind {
     // until functions are implemented
     Print,
 
+    // a semicolon 
+    // i.e. ';'
+    Semicolon,
+
     // end of the file
     Eof,
 }

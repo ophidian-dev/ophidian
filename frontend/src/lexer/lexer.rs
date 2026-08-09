@@ -126,6 +126,10 @@ impl<'src> TokenStream for Lexer<'src> {
                 self.advance();
                 return self.create_token(TokenKind::CloseParen);
             }
+            b';' => {
+                self.advance();
+                return self.create_token(TokenKind::Semicolon);
+            }
             _ => {
                 if c.is_ascii_digit() {
                     while let Some(d) = self.peek() {

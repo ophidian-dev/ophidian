@@ -94,7 +94,11 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     }
 
     fn parse_exprstmt(&mut self) -> Stmt {
+        let expr = self.parse_expression();
 
+        if self.peek().kind != TokenKind::Semicolon {
+
+        }
     }
 
     fn parse_print(&mut self) -> Stmt {

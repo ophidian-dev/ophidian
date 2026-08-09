@@ -61,6 +61,13 @@ pub enum StmtKind {
 
     // expression statement
     ExprStmt(Box<Expr>),
+
+    // an error node to represent a recoverable error this node exists 
+    // so that the parser can recover from a parsing function. Before the 
+    // semantic analysis phase begins, if the parser has any error nodes 
+    // then the driver will simply print the diagnostics and exit because 
+    // there is no point in analysing an ast that is half formed.
+    Error,
 }
 
 #[derive(Debug, PartialEq)]
@@ -68,6 +75,12 @@ pub struct Stmt {
     pub id: NodeId,
     pub kind: StmtKind,
     pub span: Span,
+}
+
+impl Stmt {
+    pub const fn new(id: NodeId, kind: StmtKind, span: Span) -> Self {
+        Self { id, kind, span }
+    }
 }
 
 #[derive(Debug, PartialEq)]
