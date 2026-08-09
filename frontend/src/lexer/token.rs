@@ -56,7 +56,7 @@ pub enum TokenKind {
     // until functions are implemented
     Print,
 
-    // a semicolon 
+    // a semicolon
     // i.e. ';'
     Semicolon,
 

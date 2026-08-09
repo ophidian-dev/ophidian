@@ -31,7 +31,6 @@ impl Compiler {
             self.compile_stmt(stmt, &mut chunk);
         }
 
-
         chunk.write(OpCode::LoadConst as u8);
         let idx = chunk.write_constant(Value::new_int(0));
         chunk.write_u24(idx as u32);

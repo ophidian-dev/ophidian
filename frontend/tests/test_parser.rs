@@ -12,14 +12,16 @@ fn test_parser_parse_arithmetic_expression() {
     let mut diagnostics = Vec::<Diagnostic>::new();
     let mut parser = Parser::new(lexer, &mut diagnostics, source);
 
-    let expr = match parser.parse().stmts().get(0).unwrap().kind {
-        StmtKind::ExprStmt(e) => *e,
-        _ => panic!()
+    let program = parser.parse();
+
+    let expr = match &program.stmts().get(0).unwrap().kind {
+        StmtKind::ExprStmt(e) => e,
+        _ => panic!(),
     };
 
     assert_eq!(
-        expr,
-        Expr {
+        *expr,
+        Box::new(Expr {
             id: NodeId(4),
             span: Span::new(0, 11),
             kind: ExprKind::BinaryOp(
@@ -54,5 +56,6 @@ fn test_parser_parse_arithmetic_expression() {
                 }),
             ),
         }
+    )
     );
 }

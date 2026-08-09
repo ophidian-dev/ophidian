@@ -1,6 +1,6 @@
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::lexer::token::{Token, TokenKind, TokenStream};
-use crate::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind, Program, Stmt};
+use crate::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Program, Stmt, StmtKind, UnaryOpKind};
 use crate::parse::node_id::NodeId;
 use crate::span::{Span, Spanned};
 
@@ -65,7 +65,21 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     }
 
     fn sync(&mut self) {
-
+        while self.peek().kind != TokenKind::Eof {
+            let kind = self.peek().kind;
+            match kind {
+                TokenKind::Semicolon => {
+                    self.advance();
+                    return;
+                }
+                TokenKind::Print => {
+                    return;
+                }
+                _ => {
+                    self.advance();
+                }
+            }
+        }
     }
 
     pub fn parse(&mut self) -> Program {
@@ -81,12 +95,8 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
     pub fn parse_statement(&mut self) -> Stmt {
         match self.peek().kind {
-            TokenKind::Print => {
-                self.parse_print()
-            }
-            TokenKind::IntegerLiteral | TokenKind::OpenParen => {
-                self.parse_exprstmt()
-            }
+            TokenKind::Print => self.parse_print(),
+            TokenKind::IntegerLiteral | TokenKind::OpenParen => self.parse_exprstmt(),
             _ => {
                 todo!()
             }
@@ -97,12 +107,45 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         let expr = self.parse_expression();
 
         if self.peek().kind != TokenKind::Semicolon {
-
+            let span = self.advance().span;
+            self.error("expected ';' after statement", span);
+            self.sync();
+            return Stmt::new(self.next_node_id(), StmtKind::Error, span);
         }
+
+        let span = expr.span.join(self.advance().span);
+        Stmt::new(
+            self.next_node_id(),
+            StmtKind::ExprStmt(Box::new(expr)),
+            span,
+        )
     }
 
     fn parse_print(&mut self) -> Stmt {
+        let span = self.advance().span;
 
+        if self.peek().kind != TokenKind::OpenParen {
+            let span = self.advance().span;
+            self.error("expected '(' after keyword 'print'", span);
+            self.sync();
+
+        }
+
+        self.advance();
+
+        let expr = self.parse_expression();
+
+        if self.peek().kind != TokenKind::CloseParen {}
+
+        self.advance();
+
+        if self.peek().kind != TokenKind::Semicolon {}
+
+        Stmt::new(
+            self.next_node_id(),
+            StmtKind::Print(Box::new(expr)),
+            self.advance().span.join(span),
+        )
     }
 
     fn parse_expression(&mut self) -> Expr {

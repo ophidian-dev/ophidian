@@ -25,9 +25,11 @@ fn test_lex_arithmetic() {
 fn test_lex_print_kw() {
     let mut lexer = Lexer::new(b"print 1");
     let tokens = lexer.collect();
-    assert_eq!(tokens, vec![
-        Token::new(TokenKind::Print, Span::new(0, 5), 0, 0),
-        Token::new(TokenKind::IntegerLiteral, Span::new(6, 1), 0, 6)
-    ]);
-    
+    assert_eq!(
+        tokens,
+        vec![
+            Token::new(TokenKind::Print, Span::new(0, 5), 0, 0),
+            Token::new(TokenKind::IntegerLiteral, Span::new(6, 1), 0, 6)
+        ]
+    );
 }

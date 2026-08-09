@@ -67,9 +67,7 @@ impl<'src> Lexer<'src> {
 
     fn get_identifier_type(&self, ident: &[u8]) -> TokenKind {
         match ident {
-            b"print" => {
-                TokenKind::Print
-            }
+            b"print" => TokenKind::Print,
             _ => {
                 unreachable!("unknown: {:?}", ident);
             }
