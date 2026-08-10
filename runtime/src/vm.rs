@@ -104,6 +104,14 @@ impl VirtualMachine {
 
                     self.push(constant.clone());
                 }
+                OpCode::Pop => {
+                    let _ = self.pop();
+                }
+                OpCode::IPrint => {
+                    let v = self.pop();
+                    let int = unsafe { v.data.integer };
+                    println!("{}", int);
+                }
             }
         }
     }
