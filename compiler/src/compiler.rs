@@ -1,7 +1,7 @@
 use frontend::diagnostics::Diagnostic;
 use frontend::lexer::Lexer;
 use frontend::parse::Parser;
-use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Stmt, UnaryOpKind};
+use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Stmt, StmtKind, UnaryOpKind};
 use runtime::chunk::Chunk;
 use runtime::opcodes::OpCode;
 use runtime::value::Value;
@@ -41,7 +41,21 @@ impl Compiler {
     }
 
     fn compile_stmt(&mut self, stmt: &Stmt, chunk: &mut Chunk) {
-        todo!()
+        match &stmt.kind {
+            StmtKind::ExprStmt(expr) => {
+                self.compile_expr(expr, chunk);
+
+                chunk.write(OpCode::Pop as u8);
+            }
+            StmtKind::Print(expr) => {
+                self.compile_expr(expr, chunk);
+
+                chunk.write(OpCode::IPrint as u8);
+            }
+            StmtKind::Error => {
+                unreachable!()
+            }
+        }
     }
 
     fn compile_expr(&mut self, expr: &Expr, chunk: &mut Chunk) {

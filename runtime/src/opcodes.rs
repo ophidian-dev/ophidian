@@ -20,6 +20,12 @@ pub enum OpCode {
     // requires an operand that is 3 bytes as the index
     // encoded in little endian
     LoadConst = 0x06,
+
+    // print an integer from the top of the stack
+    IPrint = 0x07,
+
+    // pops a value from the stack and discards it
+    Pop = 0x08,
 }
 
 impl TryFrom<u8> for OpCode {
