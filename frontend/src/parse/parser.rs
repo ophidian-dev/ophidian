@@ -128,18 +128,28 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             let span = self.advance().span;
             self.error("expected '(' after keyword 'print'", span);
             self.sync();
-
+            return Stmt::new(self.next_node_id(), StmtKind::Error, span);
         }
 
         self.advance();
 
         let expr = self.parse_expression();
 
-        if self.peek().kind != TokenKind::CloseParen {}
+        if self.peek().kind != TokenKind::CloseParen {
+            let span = self.advance().span;
+            self.error("expected ')' after expression", span);
+            self.sync();
+            return Stmt::new(self.next_node_id(), StmtKind::Error, span);
+        }
 
         self.advance();
 
-        if self.peek().kind != TokenKind::Semicolon {}
+        if self.peek().kind != TokenKind::Semicolon {
+            let span = self.advance().span;
+            self.error("expected ';' after statement", span);
+            self.sync();
+            return Stmt::new(self.next_node_id(), StmtKind::Error, span);
+        }
 
         Stmt::new(
             self.next_node_id(),

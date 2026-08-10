@@ -1,7 +1,7 @@
 use frontend::diagnostics::Diagnostic;
 use frontend::lexer::Lexer;
 use frontend::parse::Parser;
-use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind};
+use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, UnaryOpKind, Stmt};
 use runtime::chunk::Chunk;
 use runtime::opcodes::OpCode;
 use runtime::value::Value;
