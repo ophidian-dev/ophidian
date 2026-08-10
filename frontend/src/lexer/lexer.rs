@@ -141,7 +141,6 @@ impl<'src> TokenStream for Lexer<'src> {
                 } else if c.is_ascii_alphabetic() {
                     let mut ident = Vec::<u8>::new();
                     while let Some(d) = self.peek() {
-                        println!("{:?}, {}", d, d.is_ascii_alphabetic());
                         if d.is_ascii_alphabetic() {
                             ident.push(d);
                             self.advance();
@@ -149,7 +148,6 @@ impl<'src> TokenStream for Lexer<'src> {
                         }
                         break;
                     }
-                    println!("{:?}", &ident);
                     let ident_kind = self.get_identifier_type(&ident);
                     return self.create_token(ident_kind);
                 } else {
