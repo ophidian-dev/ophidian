@@ -51,6 +51,8 @@ impl VirtualMachine {
 
         loop {
             // we unwrap here because we assume that the bytecode is correct
+            // remember to add new match cases to OpCode::try_from() when adding 
+            // new opcodes
             let opcode = OpCode::try_from(self.read_byte()).unwrap();
             match opcode {
                 OpCode::Halt => {

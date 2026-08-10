@@ -40,6 +40,8 @@ impl TryFrom<u8> for OpCode {
             4 => Ok(Self::IDiv),
             5 => Ok(Self::INegate),
             6 => Ok(Self::LoadConst),
+            7 => Ok(Self::IPrint),
+            8 => Ok(Self::Pop),
             _ => Err(()),
         }
     }

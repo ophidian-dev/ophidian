@@ -27,7 +27,7 @@ impl Compiler {
 
         let mut chunk = Chunk::new();
 
-        for stmt in unchecked_program.stmts() {
+        for stmt in &unchecked_program.body {
             self.compile_stmt(stmt, &mut chunk);
         }
 
