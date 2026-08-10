@@ -286,7 +286,9 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             let mut expr = self.parse_expression();
 
             if self.peek().kind != TokenKind::CloseParen {
-                todo!("handle error");
+                let span = self.advance().span;
+                self.error("expected ')' after expression", span);
+                return Expr::new(self.next_node_id(), ExprKind::Error, span);
             }
             self.advance();
 
@@ -297,8 +299,9 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
             return expr;
         } else {
-            
-            todo!("handle unexpected token error: {:?}", self.peek());
+            let span = self.peek().span;
+            self.error(format!("unexpected token: '{:#?}'", Span::retrieve_slice(self.source, &span)), span);
+            return Expr::new(self.next_node_id(), ExprKind::Error, span);
         }
     }
 }
