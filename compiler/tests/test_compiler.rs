@@ -5,7 +5,7 @@ use runtime::{chunk::Chunk, value::Value};
 fn compile_arithmetic_exprs() {
     let mut compiler = Compiler::new();
     // unwrap cuz it shouldnt error and we dont care
-    let chunk = compiler.compile(b"(1 + 2) * 3").unwrap();
+    let chunk = compiler.compile(b"(1 + 2) * 3;").unwrap();
 
     let constants = vec![
         Value::new_int(1),

@@ -84,7 +84,7 @@ impl Stmt {
 
 #[derive(Debug, PartialEq)]
 pub struct Program {
-    body: Vec<Stmt>,
+    pub body: Vec<Stmt>,
 }
 
 impl Program {
@@ -96,6 +96,7 @@ impl Program {
         self.body.push(stmt);
     }
 
+    #[deprecated]
     pub fn stmts(&self) -> &[Stmt] {
         &self.body
     }
