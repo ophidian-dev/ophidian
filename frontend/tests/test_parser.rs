@@ -14,7 +14,7 @@ fn test_parser_parse_arithmetic_expression() {
 
     let program = parser.parse();
 
-    let expr = match &program.stmts().get(0).unwrap().kind {
+    let expr = match &program.body.get(0).unwrap().kind {
         StmtKind::ExprStmt(e) => e,
         _ => panic!(),
     };

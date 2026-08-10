@@ -25,10 +25,6 @@ impl<T> Stack<T> {
     pub fn pop(&mut self) -> T {
         self.data.pop().expect("stack underflow")
     }
-
-    pub fn top(&self) -> Option<&T> {
-        self.data.last()
-    }
 }
 
 pub struct VirtualMachine {
@@ -159,17 +155,4 @@ mod tests {
         assert_eq!(1, stack.pop());
     }
 
-    #[test]
-    fn test_stack_push() {
-        let mut stack = Stack::<i32>::new();
-        stack.push(1);
-        assert_eq!(*stack.top().unwrap(), 1);
-    }
-
-    #[test]
-    fn test_get_value_on_stack_top() {
-        let mut stack = Stack::<i32>::new();
-        stack.push(1);
-        assert_eq!(*stack.top().unwrap(), 1);
-    }
 }

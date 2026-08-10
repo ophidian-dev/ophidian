@@ -96,8 +96,4 @@ impl Program {
         self.body.push(stmt);
     }
 
-    #[deprecated]
-    pub fn stmts(&self) -> &[Stmt] {
-        &self.body
-    }
 }
