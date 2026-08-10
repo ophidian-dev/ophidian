@@ -1,4 +1,4 @@
 pub mod diagnostics;
-pub mod lexer;
+pub mod lex;
 pub mod parse;
 pub mod span;

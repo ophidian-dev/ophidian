@@ -1,5 +1,5 @@
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::lexer::token::{Token, TokenKind, TokenStream};
+use crate::lex::token::{Token, TokenKind, TokenStream};
 use crate::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Program, Stmt, StmtKind, UnaryOpKind};
 use crate::parse::node_id::NodeId;
 use crate::span::{Span, Spanned};
@@ -297,6 +297,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
             return expr;
         } else {
+            
             todo!("handle unexpected token error: {:?}", self.peek());
         }
     }
@@ -307,7 +308,7 @@ mod tests {
 
     use super::*;
 
-    use crate::lexer::Lexer;
+    use crate::lex::Lexer;
 
     fn new_diag_vec() -> Vec<Diagnostic> {
         Vec::new()

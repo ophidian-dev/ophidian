@@ -1,4 +1,4 @@
-use crate::lexer::token::{Token, TokenKind, TokenStream};
+use crate::lex::token::{Token, TokenKind, TokenStream};
 use crate::span::Span;
 
 #[derive(Default)]

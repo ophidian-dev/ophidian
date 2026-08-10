@@ -1,5 +1,5 @@
 use frontend::diagnostics::Diagnostic;
-use frontend::lexer::Lexer;
+use frontend::lex::Lexer;
 use frontend::parse::Parser;
 use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Program, Stmt, StmtKind};
 use frontend::parse::node_id::NodeId;

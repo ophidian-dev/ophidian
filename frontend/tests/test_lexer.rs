@@ -1,5 +1,5 @@
-use frontend::lexer::Lexer;
-use frontend::lexer::token::{Token, TokenKind, TokenStream};
+use frontend::lex::Lexer;
+use frontend::lex::token::{Token, TokenKind, TokenStream};
 use frontend::span::Span;
 
 // test basic arigthmetic lexing like '+', '-', '(' etc.
