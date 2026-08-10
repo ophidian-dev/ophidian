@@ -97,6 +97,9 @@ impl Compiler {
 
                 chunk.write(opcode as u8);
             }
+            ExprKind::Error => {
+                unreachable!()
+            }
         }
     }
 }

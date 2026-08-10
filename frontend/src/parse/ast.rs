@@ -35,6 +35,16 @@ pub enum ExprKind {
 
     // a unary operation like  `-1`
     UnaryOp(UnaryOp, Box<Expr>),
+
+    // this error node represents a recoverable error. this
+    // node exists so that when the parser encounters an error
+    // e.g. an unexpected token, it can create an error node, return it
+    // from the parsing function and continue parsing. However, before 
+    // semantic analysis begins, if the parser has accumulated any error 
+    // nodes, then complilation wont continue because theres simply no point
+    // in analysing and compiling a half broken ast. we will simply print the
+    // parser diagnostics and exit
+    Error,
 }
 
 // an expression
