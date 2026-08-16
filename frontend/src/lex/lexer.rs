@@ -71,7 +71,7 @@ impl<'src> Lexer<'src> {
             b"int" => TokenKind::Int,
             b"let" => TokenKind::Let,
             _ => {
-                unreachable!("unknown: {:?}", ident);
+                TokenKind::Identifier
             }
         }
     }

@@ -74,6 +74,9 @@ pub enum TokenKind {
     // i.e. '='
     Equal,
 
+    // an identifier
+    Identifier,
+
     // end of the file
     Eof,
 }

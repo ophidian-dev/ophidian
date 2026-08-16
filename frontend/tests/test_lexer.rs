@@ -33,3 +33,18 @@ fn test_lex_print_kw() {
         ]
     );
 }
+
+#[test]
+fn test_lex_int_var_decl() {
+    let tokens = Lexer::new(b"let x: int = 5;").collect();
+
+    assert_eq!(tokens, vec![
+        Token::new(TokenKind::Let, Span::new(0, 3), 0, 0),
+        Token::new(TokenKind::Identifier, Span::new(4, 1), 0, 4),
+        Token::new(TokenKind::Colon, Span::new(5, 1), 0, 5),
+        Token::new(TokenKind::Int, Span::new(7, 3), 0, 7),
+        Token::new(TokenKind::Equal, Span::new(11, 1), 0, 11),
+        Token::new(TokenKind::IntegerLiteral, Span::new(13, 1), 0, 13),
+        Token::new(TokenKind::Semicolon, Span::new(14, 1), 0, 14)
+    ]);
+}
