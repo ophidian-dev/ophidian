@@ -300,7 +300,13 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             return expr;
         } else {
             let span = self.peek().span;
-            self.error(format!("unexpected token: '{:#?}'", Span::retrieve_slice(self.source, &span)), span);
+            self.error(
+                format!(
+                    "unexpected token: '{:#?}'",
+                    Span::retrieve_slice(self.source, &span)
+                ),
+                span,
+            );
             return Expr::new(self.next_node_id(), ExprKind::Error, span);
         }
     }

@@ -77,6 +77,6 @@ impl<'a> DiagnosticFormatter<'a> {
 
         let col_num = span.offset() - line_start + 1;
 
-        (line_num, col_num) 
+        (line_num, col_num)
     }
 }

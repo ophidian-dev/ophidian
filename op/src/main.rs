@@ -1,7 +1,7 @@
 use compiler::Compiler;
+use frontend::diagnostics::DiagnosticFormatter;
 use owo_colors::OwoColorize;
 use runtime::vm::VirtualMachine;
-use frontend::diagnostics::DiagnosticFormatter;
 
 fn main() {
     let argv: Vec<String> = std::env::args().collect();
@@ -25,7 +25,11 @@ fn main() {
             for diag in &diags {
                 fmtter.format(diag);
             }
-            println!("\n {} {} generated.", diags.len(), if diags.len() == 1 { "error" } else { "errors" });
+            println!(
+                "\n {} {} generated.",
+                diags.len(),
+                if diags.len() == 1 { "error" } else { "errors" }
+            );
             std::process::exit(1);
         }
     };
