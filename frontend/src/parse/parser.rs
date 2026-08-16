@@ -129,7 +129,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                     TokenKind::Int => {
                         self.advance();
                         Type::Int
-                    },
+                    }
                     _ => {
                         // not a valid variable type
                         let end_span = self.advance().span;
@@ -146,11 +146,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                         if self.peek().kind != TokenKind::Semicolon {
                             let end_span = self.advance().span;
                             self.error("expected ';' after variable declaration", end_span);
-                            return Stmt::new(
-                                self.next_node_id(),
-                                StmtKind::Error,
-                                end_span,
-                            );
+                            return Stmt::new(self.next_node_id(), StmtKind::Error, end_span);
                         }
 
                         let end_span = self.advance().span;
@@ -190,10 +186,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
                 if self.peek().kind != TokenKind::Semicolon {
                     let end_span = self.advance().span;
-                    self.error(
-                        "expected ';' after expression",
-                        start_span.join(end_span),
-                    );
+                    self.error("expected ';' after expression", start_span.join(end_span));
                     return Stmt::new(
                         self.next_node_id(),
                         StmtKind::Error,
@@ -210,10 +203,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 );
             }
             _ => {
-                self.error(
-                    "expected '=' or ';'",
-                    start_span.join(self.peek().span),
-                );
+                self.error("expected '=' or ';'", start_span.join(self.peek().span));
                 return Stmt::new(
                     self.next_node_id(),
                     StmtKind::Error,
@@ -279,7 +269,27 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     }
 
     fn parse_expression(&mut self) -> Expr {
-        self.parse_term()
+        self.parse_assignment()
+    }
+
+    fn parse_assignment(&mut self) -> Expr {
+        let left = self.parse_term();
+
+        while self.peek().kind != TokenKind::Eof && self.peek().kind == TokenKind::Equal {
+            self.advance();
+
+            let right = self.parse_term();
+
+            let span = left.span.join(right.span);
+
+            return Expr::new(
+                self.next_node_id(),
+                ExprKind::VarAssign(Box::new(left), Box::new(right)),
+                span,
+            );
+        }
+
+        left
     }
 
     fn parse_term(&mut self) -> Expr {
