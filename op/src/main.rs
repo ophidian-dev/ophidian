@@ -1,6 +1,7 @@
 use compiler::Compiler;
 use owo_colors::OwoColorize;
 use runtime::vm::VirtualMachine;
+use frontend::diagnostics::DiagnosticFormatter;
 
 fn main() {
     let argv: Vec<String> = std::env::args().collect();
@@ -19,8 +20,13 @@ fn main() {
     let mut compiler = Compiler::new();
     let chunk = match compiler.compile(&file) {
         Ok(chunk) => chunk,
-        Err(_diags) => {
-            todo!("pretty print diagnostics");
+        Err(diags) => {
+            let fmtter = DiagnosticFormatter::new(&file);
+            for diag in &diags {
+                fmtter.format(diag);
+            }
+            println!("\n {} {} generated.", diags.len(), if diags.len() == 1 { "error" } else { "errors" });
+            std::process::exit(1);
         }
     };
 

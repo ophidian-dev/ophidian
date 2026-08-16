@@ -27,6 +27,10 @@ impl Span {
         self.start
     }
 
+    pub fn offset(&self) -> usize {
+        self.start()
+    }
+
     pub fn len(&self) -> usize {
         self.length
     }
