@@ -70,9 +70,7 @@ impl<'src> Lexer<'src> {
             b"print" => TokenKind::Print,
             b"int" => TokenKind::Int,
             b"let" => TokenKind::Let,
-            _ => {
-                TokenKind::Identifier
-            }
+            _ => TokenKind::Identifier,
         }
     }
 }
@@ -137,6 +135,14 @@ impl<'src> TokenStream for Lexer<'src> {
             b':' => {
                 self.advance();
                 return self.create_token(TokenKind::Colon);
+            }
+            b'{' => {
+                self.advance();
+                return self.create_token(TokenKind::OpenBrace);
+            }
+            b'}' => {
+                self.advance();
+                return self.create_token(TokenKind::CloseBrace);
             }
             _ => {
                 if c.is_ascii_digit() {

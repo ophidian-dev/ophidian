@@ -1,5 +1,7 @@
+use crate::analysis::hir::Type;
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::lex::token::{Token, TokenKind, TokenStream};
+use crate::parse::ast::StmtKind::VarDecl;
 use crate::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Program, Stmt, StmtKind, UnaryOpKind};
 use crate::parse::node_id::NodeId;
 use crate::span::{Span, Spanned};
@@ -75,6 +77,9 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 TokenKind::Print => {
                     return;
                 }
+                TokenKind::Let => {
+                    return;
+                }
                 _ => {
                     self.advance();
                 }
@@ -97,8 +102,123 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         match self.peek().kind {
             TokenKind::Print => self.parse_print(),
             TokenKind::IntegerLiteral | TokenKind::OpenParen => self.parse_exprstmt(),
+            TokenKind::Let => self.parse_var_decl(),
             _ => {
                 todo!()
+            }
+        }
+    }
+
+    fn parse_var_decl(&mut self) -> Stmt {
+        let start_span = self.advance().span;
+
+        if self.peek().kind != TokenKind::Identifier {
+            self.error("expected identier", start_span);
+            return Stmt::new(self.next_node_id(), StmtKind::Error, start_span);
+        }
+
+        // peek is now guarenteed to be an identifier
+        let identifier = Span::retrieve_slice(self.source, &self.peek().span).to_vec();
+
+        self.advance();
+
+        match self.peek().kind {
+            TokenKind::Colon => {
+                self.advance();
+
+                let var_type = match self.peek().kind {
+                    TokenKind::Int => Type::Int,
+                    _ => {
+                        // not a valid variable type
+                        self.error("expected a type annotation", self.peek().span);
+                        return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+                    }
+                };
+
+                self.advance();
+
+                match self.peek().kind {
+                    TokenKind::Equal => {
+                        self.advance();
+                        let init = self.parse_expression();
+
+                        if self.peek().kind != TokenKind::Semicolon {
+                            self.error("expected ';' after variable declaration", self.peek().span);
+                            return Stmt::new(
+                                self.next_node_id(),
+                                StmtKind::Error,
+                                self.peek().span,
+                            );
+                        }
+
+                        let end_span = self.advance().span;
+
+                        return Stmt::new(
+                            self.next_node_id(),
+                            StmtKind::VarDecl(identifier, Some(var_type), Some(init)),
+                            start_span.join(end_span),
+                        );
+                    }
+                    TokenKind::Semicolon => {
+                        let end_span = self.advance().span;
+
+                        return Stmt::new(
+                            self.next_node_id(),
+                            StmtKind::VarDecl(identifier, Some(var_type), None),
+                            start_span.join(end_span),
+                        );
+                    }
+                    _ => {
+                        let end_span = self.advance().span;
+                        if self.peek().kind != TokenKind::Semicolon {
+                            self.error("expected ';'", start_span.join(end_span));
+                        }
+
+                        // technically this shouldnt be allowed since we need either an init expr so we can
+                        // infer the type later or an explicit type, but we will allow this for now
+                        // and let semantic analysis throw the error when it doesnt have enough info to
+                        // deduce the type
+                        return Stmt::new(
+                            self.next_node_id(),
+                            VarDecl(identifier, None, None),
+                            start_span.join(end_span),
+                        );
+                    }
+                }
+            }
+            TokenKind::Equal => {
+                self.advance();
+
+                let init = self.parse_expression();
+
+                if self.peek().kind != TokenKind::Semicolon {
+                    self.error(
+                        "expected ';' after expression",
+                        start_span.join(self.peek().span),
+                    );
+                    return Stmt::new(
+                        self.next_node_id(),
+                        StmtKind::Error,
+                        start_span.join(self.peek().span),
+                    );
+                }
+
+                return Stmt::new(
+                    self.next_node_id(),
+                    StmtKind::VarDecl(identifier, None, Some(init)),
+                    start_span.join(self.peek().span),
+                );
+            }
+            _ => {
+                self.error(
+                    "expected assignment expression",
+                    start_span.join(self.peek().span),
+                );
+                return Stmt::new(
+                    self.next_node_id(),
+                    StmtKind::Error,
+                    start_span.join(self.peek().span),
+                );
             }
         }
     }

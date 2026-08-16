@@ -1,3 +1,4 @@
+use crate::analysis::hir::Type;
 use crate::parse::node_id::NodeId;
 use crate::span::{Span, Spanned};
 
@@ -36,6 +37,19 @@ pub enum ExprKind {
     // a unary operation like  `-1`
     UnaryOp(UnaryOp, Box<Expr>),
 
+    // usage of a variable in an expression
+    // e.g. print(x);
+    //            ^
+    // Vec<u8> being the name of the identifier
+    Variable(Vec<u8>),
+
+    // a variable assignment
+    // e.g. x = 5;
+    // the expression evaluates to the value that was assigned
+    // the first box being the target and the second one being the value
+    // that was assigned
+    VarAssign(Box<Expr>, Box<Expr>),
+
     // this error node represents a recoverable error. this
     // node exists so that when the parser encounters an error
     // e.g. an unexpected token, it can create an error node, return it
@@ -70,6 +84,13 @@ pub enum StmtKind {
 
     // expression statement
     ExprStmt(Box<Expr>),
+
+    // a variable declaration
+    //
+    // Vec<u8> is the name of the identifier being declared
+    // Option<Type> is optional type annotation
+    // Option<Expr> is an optional init expression to initialise the variable
+    VarDecl(Vec<u8>, Option<Type>, Option<Expr>),
 
     // an error node to represent a recoverable error this node exists
     // so that the parser can recover from a parsing function. Before the

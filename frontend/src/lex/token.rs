@@ -66,7 +66,7 @@ pub enum TokenKind {
     // a colon ':'
     Colon,
 
-    // the type 'int' 
+    // the type 'int'
     // not to be confused with IntegerLiteral
     Int,
 
@@ -76,6 +76,12 @@ pub enum TokenKind {
 
     // an identifier
     Identifier,
+
+    // '{'
+    OpenBrace,
+
+    // '}'
+    CloseBrace,
 
     // end of the file
     Eof,
