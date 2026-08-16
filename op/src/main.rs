@@ -23,7 +23,7 @@ fn main() {
         Err(diags) => {
             let fmtter = DiagnosticFormatter::new(&file);
             for diag in &diags {
-                fmtter.format(diag);
+                println!("{}", fmtter.format(diag));
             }
             println!(
                 "\n {} {} generated.",

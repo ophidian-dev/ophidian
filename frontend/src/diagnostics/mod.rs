@@ -44,7 +44,7 @@ impl<'a> DiagnosticFormatter<'a> {
         fmt.push_str(&format!(
             "{} | {}\n",
             line,
-            String::from_utf8_lossy(Span::retrieve_slice(self.source, &diagnostic.span))
+            String::from_utf8_lossy(self.get_line(&diagnostic.span))
         ));
 
         for _ in 0..line.to_string().len() + 1 {
@@ -60,6 +60,21 @@ impl<'a> DiagnosticFormatter<'a> {
         ));
 
         fmt
+    }
+
+    fn get_line(&self, span: &Span) -> &[u8] {
+        let mut start = span.offset();
+        let mut finish = span.end();
+
+        while start > 0 && self.source[start - 1] != b'\n' {
+            start -= 1;
+        }
+
+        while finish < self.source.len() && self.source[finish] != b'\n' {
+            finish += 1;
+        }
+
+        &self.source[start..finish]
     }
 
     fn get_line_col(&self, span: &Span) -> (usize, usize) {
