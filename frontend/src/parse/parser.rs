@@ -1,7 +1,6 @@
 use crate::analysis::hir::Type;
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::lex::token::{Token, TokenKind, TokenStream};
-use crate::parse::ast::StmtKind::VarDecl;
 use crate::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Program, Stmt, StmtKind, UnaryOpKind};
 use crate::parse::node_id::NodeId;
 use crate::span::{Span, Spanned};
@@ -113,7 +112,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         let start_span = self.advance().span;
 
         if self.peek().kind != TokenKind::Identifier {
-            self.error("expected identier", start_span);
+            self.error("expected identifer", start_span);
             return Stmt::new(self.next_node_id(), StmtKind::Error, start_span);
         }
 
@@ -127,15 +126,17 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 self.advance();
 
                 let var_type = match self.peek().kind {
-                    TokenKind::Int => Type::Int,
+                    TokenKind::Int => {
+                        self.advance();
+                        Type::Int
+                    },
                     _ => {
                         // not a valid variable type
-                        self.error("expected a type annotation", self.peek().span);
-                        return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+                        let end_span = self.advance().span;
+                        self.error("expected a type annotation", end_span);
+                        return Stmt::new(self.next_node_id(), StmtKind::Error, end_span);
                     }
                 };
-
-                self.advance();
 
                 match self.peek().kind {
                     TokenKind::Equal => {
@@ -143,11 +144,12 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                         let init = self.parse_expression();
 
                         if self.peek().kind != TokenKind::Semicolon {
-                            self.error("expected ';' after variable declaration", self.peek().span);
+                            let end_span = self.advance().span;
+                            self.error("expected ';' after variable declaration", end_span);
                             return Stmt::new(
                                 self.next_node_id(),
                                 StmtKind::Error,
-                                self.peek().span,
+                                end_span,
                             );
                         }
 
@@ -169,18 +171,13 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                         );
                     }
                     _ => {
-                        let end_span = self.advance().span;
-                        if self.peek().kind != TokenKind::Semicolon {
-                            self.error("expected ';'", start_span.join(end_span));
-                        }
+                        let end_span = self.peek().span;
 
-                        // technically this shouldnt be allowed since we need either an init expr so we can
-                        // infer the type later or an explicit type, but we will allow this for now
-                        // and let semantic analysis throw the error when it doesnt have enough info to
-                        // deduce the type
+                        self.error("expected '=' or ';'", end_span);
+
                         return Stmt::new(
                             self.next_node_id(),
-                            VarDecl(identifier, None, None),
+                            StmtKind::Error,
                             start_span.join(end_span),
                         );
                     }
@@ -192,26 +189,29 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 let init = self.parse_expression();
 
                 if self.peek().kind != TokenKind::Semicolon {
+                    let end_span = self.advance().span;
                     self.error(
                         "expected ';' after expression",
-                        start_span.join(self.peek().span),
+                        start_span.join(end_span),
                     );
                     return Stmt::new(
                         self.next_node_id(),
                         StmtKind::Error,
-                        start_span.join(self.peek().span),
+                        start_span.join(end_span),
                     );
                 }
+
+                let end_span = self.advance().span;
 
                 return Stmt::new(
                     self.next_node_id(),
                     StmtKind::VarDecl(identifier, None, Some(init)),
-                    start_span.join(self.peek().span),
+                    start_span.join(end_span),
                 );
             }
             _ => {
                 self.error(
-                    "expected assignment expression",
+                    "expected '=' or ';'",
                     start_span.join(self.peek().span),
                 );
                 return Stmt::new(
