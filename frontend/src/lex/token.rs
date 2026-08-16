@@ -60,6 +60,20 @@ pub enum TokenKind {
     // i.e. ';'
     Semicolon,
 
+    // keyword used to declare a binding for a mutable variable
+    Let,
+
+    // a colon ':'
+    Colon,
+
+    // the type 'int' 
+    // not to be confused with IntegerLiteral
+    Int,
+
+    // assignment operator
+    // i.e. '='
+    Equal,
+
     // end of the file
     Eof,
 }

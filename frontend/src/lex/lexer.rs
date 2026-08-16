@@ -68,6 +68,8 @@ impl<'src> Lexer<'src> {
     fn get_identifier_type(&self, ident: &[u8]) -> TokenKind {
         match ident {
             b"print" => TokenKind::Print,
+            b"int" => TokenKind::Int,
+            b"let" => TokenKind::Let,
             _ => {
                 unreachable!("unknown: {:?}", ident);
             }
@@ -127,6 +129,14 @@ impl<'src> TokenStream for Lexer<'src> {
             b';' => {
                 self.advance();
                 return self.create_token(TokenKind::Semicolon);
+            }
+            b'=' => {
+                self.advance();
+                return self.create_token(TokenKind::Equal);
+            }
+            b':' => {
+                self.advance();
+                return self.create_token(TokenKind::Colon);
             }
             _ => {
                 if c.is_ascii_digit() {
