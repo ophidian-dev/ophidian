@@ -1,5 +1,6 @@
+use crate::diagnostics::{Diagnostic, Severity};
 use crate::parse::ast::{Expr, ExprKind, NodeId, Program, Stmt, StmtKind};
-use crate::diagnostics::Diagnostic;
+use crate::span::Span;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,9 +25,9 @@ impl From<usize> for VarId {
     }
 }
 
-impl std::ops::AddAssign for VarId {
-    fn add_assign(&mut self, rhs: Self) {
-        self.0 += rhs.0
+impl std::ops::AddAssign<usize> for VarId {
+    fn add_assign(&mut self, rhs: usize) {
+        self.0 += rhs
     }
 }
 
@@ -48,9 +49,7 @@ impl Scope {
 
 impl<'diag> SemanticAnalyzer<'diag> {
     pub fn new(diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
-        Self {
-            diagnostics,
-        }
+        Self { diagnostics }
     }
 
     pub fn analyze(&mut self, program: &Program) -> AnalysisResult {
@@ -69,13 +68,14 @@ struct Resolver<'diag> {
 }
 
 impl<'diag> Resolver<'diag> {
-    fn new(diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
+    pub fn new(diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
         Self {
             curr_var_id: VarId::from(0),
             diagnostics,
         }
     }
-    fn resolve(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
+
+    pub fn resolve(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
         self.enter_scope(ctx);
 
         for stmt in &program.body {
@@ -85,6 +85,11 @@ impl<'diag> Resolver<'diag> {
         self.exit_scope(ctx);
     }
 
+    fn error<T: Into<String>>(&mut self, message: T, span: Span) {
+        self.diagnostics
+            .push(Diagnostic::new(message.into(), span, Severity::Error));
+    }
+
     fn resolve_stmt(&mut self, stmt: &Stmt, ctx: &mut AnalysisCtx) {
         match &stmt.kind {
             StmtKind::VarDecl(name, .., init) => {
@@ -92,7 +97,7 @@ impl<'diag> Resolver<'diag> {
                     self.resolve_expr(initializer, ctx);
                 }
 
-                let varid = self.declare_var(name, ctx);
+                let varid = self.declare_var(name, ctx, stmt.span);
 
                 ctx.variables.insert(stmt.id, varid);
             }
@@ -119,28 +124,47 @@ impl<'diag> Resolver<'diag> {
 
     fn resolve_expr(&mut self, expr: &Expr, ctx: &mut AnalysisCtx) {
         match &expr.kind {
-            ExprKind::VarAssign(target, expr) => {}
-            ExprKind::Variable(name) => {
-                match self.lookup_var(name, ctx) {
-                    Some(id) => {
-
-                    }
-                    None => {
-
-                    }
+            ExprKind::VarAssign(target, expr) => {
+                self.resolve_expr(expr, ctx);
+                self.resolve_expr(target, ctx);
+            }
+            ExprKind::Variable(name) => match self.lookup_var(name, ctx) {
+                Some(id) => {
+                    ctx.variables.insert(expr.id, id);
                 }
+                None => {
+                    self.error(
+                        format!(
+                            "use of undeclared identifer: '{}'",
+                            std::str::from_utf8(name).unwrap()
+                        ),
+                        expr.span,
+                    );
+                }
+            },
+            ExprKind::BinaryOp(.., left, right) => {
+                self.resolve_expr(left, ctx);
+                self.resolve_expr(right, ctx);
+            }
+            ExprKind::UnaryOp(.., right) => {
+                self.resolve_expr(right, ctx);
             }
             _ => return,
         }
     }
 
-    fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx) -> VarId {
+    fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx, span: Span) -> VarId {
+        if ctx.scopes.last().unwrap().vars.contains_key(name) {
+            self.error(format!("redeclaration of identifer '{}'", std::str::from_utf8(name).unwrap()), span);
+        }
+
         let id = self.curr_var_id;
         ctx.scopes
             .last_mut()
             .unwrap()
             .vars
             .insert(name.to_vec(), id);
+        self.curr_var_id += 1;
         id
     }
 
@@ -177,8 +201,8 @@ impl AnalysisCtx {
 }
 
 pub struct AnalysisResult {
-    types: HashMap<NodeId, Type>,
-    variables: HashMap<NodeId, VarId>,
+    pub types: HashMap<NodeId, Type>,
+    pub variables: HashMap<NodeId, VarId>,
 }
 
 impl From<AnalysisCtx> for AnalysisResult {
