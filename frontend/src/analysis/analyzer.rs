@@ -16,7 +16,7 @@ pub enum Type {
 pub struct VarId(pub usize);
 
 impl VarId {
-    pub const ERROR: usize = usize::MAX;
+    pub const ERROR: Self = Self(usize::MAX);
 }
 
 impl From<usize> for VarId {
@@ -156,6 +156,7 @@ impl<'diag> Resolver<'diag> {
     fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx, span: Span) -> VarId {
         if ctx.scopes.last().unwrap().vars.contains_key(name) {
             self.error(format!("redeclaration of identifer '{}'", std::str::from_utf8(name).unwrap()), span);
+            return VarId::ERROR;
         }
 
         let id = self.curr_var_id;
@@ -188,6 +189,7 @@ struct AnalysisCtx {
     scopes: Vec<Scope>,
     types: HashMap<NodeId, Type>,
     variables: HashMap<NodeId, VarId>,
+    var_types: HashMap<VarId, Type>,
 }
 
 impl AnalysisCtx {
@@ -196,6 +198,7 @@ impl AnalysisCtx {
             scopes: Vec::new(),
             types: HashMap::new(),
             variables: HashMap::new(),
+            var_types: HashMap::new(),
         }
     }
 }
@@ -203,6 +206,7 @@ impl AnalysisCtx {
 pub struct AnalysisResult {
     pub types: HashMap<NodeId, Type>,
     pub variables: HashMap<NodeId, VarId>,
+    pub var_types: HashMap<VarId, Type>,
 }
 
 impl From<AnalysisCtx> for AnalysisResult {
@@ -210,6 +214,7 @@ impl From<AnalysisCtx> for AnalysisResult {
         Self {
             variables: value.variables,
             types: value.types,
+            var_types: value.var_types,
         }
     }
 }

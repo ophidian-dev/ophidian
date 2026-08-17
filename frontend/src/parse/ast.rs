@@ -5,7 +5,7 @@ use crate::span::{Span, Spanned};
 pub struct NodeId(pub usize);
 
 impl NodeId {
-    pub const ERROR: usize = usize::MAX;
+    pub const ERROR: Self = Self(usize::MAX);
 
     pub fn increment(&mut self) {
         *self += 1
