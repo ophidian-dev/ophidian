@@ -1,1 +1,1 @@
-pub mod hir;
+pub mod analyzer;

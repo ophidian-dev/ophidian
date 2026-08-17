@@ -1,6 +1,26 @@
-use crate::analysis::hir::Type;
-use crate::parse::node_id::NodeId;
+use crate::analysis::analyzer::Type;
 use crate::span::{Span, Spanned};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NodeId(pub usize);
+
+impl NodeId {
+    pub const ERROR: usize = usize::MAX;
+
+    pub fn increment(&mut self) {
+        *self += 1
+    }
+}
+
+impl std::ops::AddAssign<usize> for NodeId {
+    fn add_assign(&mut self, rhs: usize) {
+        if self.0 + rhs > usize::MAX {
+            self.0 = usize::MAX;
+        } else {
+            self.0 += rhs;
+        }
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub enum LitKind {
@@ -91,6 +111,10 @@ pub enum StmtKind {
     // Option<Type> is optional type annotation
     // Option<Expr> is an optional init expression to initialise the variable
     VarDecl(Vec<u8>, Option<Type>, Option<Expr>),
+
+    // a block (scope)
+    // opened with a '{' and closed with '}'
+    Block(Vec<Stmt>),
 
     // an error node to represent a recoverable error this node exists
     // so that the parser can recover from a parsing function. Before the

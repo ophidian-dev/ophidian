@@ -1,8 +1,9 @@
-use crate::analysis::hir::Type;
+use crate::analysis::analyzer::Type;
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::lex::token::{Token, TokenKind, TokenStream};
-use crate::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Program, Stmt, StmtKind, UnaryOpKind};
-use crate::parse::node_id::NodeId;
+use crate::parse::ast::{
+    BinOpKind, Expr, ExprKind, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind,
+};
 use crate::span::{Span, Spanned};
 
 pub struct Parser<'src, 'diag, T>
@@ -102,10 +103,37 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             TokenKind::Print => self.parse_print(),
             TokenKind::IntegerLiteral | TokenKind::OpenParen => self.parse_exprstmt(),
             TokenKind::Let => self.parse_var_decl(),
+            TokenKind::OpenBrace => self.parse_block(),
             _ => {
-                todo!()
+                panic!("unexpected token at statement start")
             }
         }
+    }
+
+    fn parse_block(&mut self) -> Stmt {
+        let start_span = self.advance().span;
+
+        let mut stmts = Vec::<Stmt>::new();
+
+        while self.peek().kind != TokenKind::Eof {
+            if self.peek().kind == TokenKind::CloseBrace {
+                break;
+            }
+            stmts.push(self.parse_statement());
+        }
+
+        let end_token = self.advance();
+
+        if end_token.kind != TokenKind::CloseBrace {
+            self.error("unterminated block", end_token.span);
+            return Stmt::new(self.next_node_id(), StmtKind::Error, end_token.span);
+        }
+
+        Stmt::new(
+            self.next_node_id(),
+            StmtKind::Block(stmts),
+            start_span.join(end_token.span),
+        )
     }
 
     fn parse_var_decl(&mut self) -> Stmt {

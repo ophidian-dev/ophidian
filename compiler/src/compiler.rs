@@ -1,3 +1,4 @@
+use frontend::analysis::analyzer::{AnalysisResult, SemanticAnalyzer};
 use frontend::diagnostics::Diagnostic;
 use frontend::lex::Lexer;
 use frontend::parse::Parser;
@@ -19,7 +20,14 @@ impl Compiler {
         let lexer = Lexer::new(source);
         let mut parser = Parser::new(lexer, &mut diagnostics, source);
 
-        let unchecked_program = parser.parse();
+        let program = parser.parse();
+
+        if !diagnostics.is_empty() {
+            return Err(diagnostics);
+        }
+
+        let mut analyzer = SemanticAnalyzer::new(&mut diagnostics);
+        let metadata = analyzer.analyze(&program);
 
         if !diagnostics.is_empty() {
             return Err(diagnostics);
@@ -27,8 +35,8 @@ impl Compiler {
 
         let mut chunk = Chunk::new();
 
-        for stmt in &unchecked_program.body {
-            self.compile_stmt(stmt, &mut chunk);
+        for stmt in &program.body {
+            self.compile_stmt(stmt, &mut chunk, &metadata);
         }
 
         chunk.write(OpCode::LoadConst as u8);
@@ -40,25 +48,27 @@ impl Compiler {
         Ok(chunk)
     }
 
-    fn compile_stmt(&mut self, stmt: &Stmt, chunk: &mut Chunk) {
+    fn compile_stmt(&mut self, stmt: &Stmt, chunk: &mut Chunk, metadata: &AnalysisResult) {
         match &stmt.kind {
             StmtKind::ExprStmt(expr) => {
-                self.compile_expr(expr, chunk);
+                self.compile_expr(expr, chunk, metadata);
 
                 chunk.write(OpCode::Pop as u8);
             }
             StmtKind::Print(expr) => {
-                self.compile_expr(expr, chunk);
+                self.compile_expr(expr, chunk, metadata);
 
                 chunk.write(OpCode::IPrint as u8);
             }
+            StmtKind::VarDecl(name, type_annotation, initialiser) => {}
             StmtKind::Error => {
                 unreachable!()
             }
+            _ => todo!(),
         }
     }
 
-    fn compile_expr(&mut self, expr: &Expr, chunk: &mut Chunk) {
+    fn compile_expr(&mut self, expr: &Expr, chunk: &mut Chunk, metadata: &AnalysisResult) {
         match &expr.kind {
             ExprKind::Literal(litkind) => {
                 match litkind {
@@ -73,8 +83,8 @@ impl Compiler {
                 }
             }
             ExprKind::BinaryOp(op, left, right) => {
-                self.compile_expr(&left, chunk);
-                self.compile_expr(&right, chunk);
+                self.compile_expr(&left, chunk, metadata);
+                self.compile_expr(&right, chunk, metadata);
                 let opcode = match op.node {
                     // only type int exists rn so we dont needa
                     // check for different types
@@ -87,7 +97,7 @@ impl Compiler {
                 chunk.write(opcode as u8);
             }
             ExprKind::UnaryOp(op, right) => {
-                self.compile_expr(&right, chunk);
+                self.compile_expr(&right, chunk, metadata);
 
                 let opcode = match op.node {
                     // only type int exists for now so no type checks
@@ -100,6 +110,7 @@ impl Compiler {
             ExprKind::Error => {
                 unreachable!()
             }
+            _ => todo!(),
         }
     }
 }
