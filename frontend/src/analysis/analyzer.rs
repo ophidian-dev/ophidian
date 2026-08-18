@@ -247,19 +247,22 @@ impl<'diag> TypeChecker<'diag> {
                     Some(annotation) => {
                         // unwrap because name resolution has already checked
                         let varid = *ctx.variables.get(&stmt.id).unwrap();
-                        if initializer.is_none() {
 
-                            ctx.var_types.insert(varid, *annotation);
+                        match initializer {
+                            Some(init) => {
+                                let initializer_type = self.check_expr(init, ctx);
+
+                                if !self.can_assign(initializer_type, *annotation) {
+                                    self.error("mismatched types", stmt.span);
+                                }
+
+                                ctx.var_types.insert(varid, *annotation);
+                            }
+                            None => {
+                                ctx.var_types.insert(varid, *annotation);
+                            }
                         }
 
-                        // unwrap because initializer is guarenteed to be Some here
-                        let initializer_type = self.check_expr(initializer.as_ref().unwrap(), ctx);
-                        if !self.can_assign(initializer_type, *annotation) {
-                            self.error("mismatched types", stmt.span);
-                            return;
-                        }
-
-                        ctx.var_types.insert(varid, *annotation);
                     }
                     None => {
                         match initializer {
@@ -283,7 +286,7 @@ impl<'diag> TypeChecker<'diag> {
     }
 
     fn check_expr(&mut self, expr: &Expr, ctx: &mut AnalysisCtx) -> Type {
-        match &expr.kind {
+        let ty = match &expr.kind {
             ExprKind::BinaryOp(op, left, right) => {
                 let left_type = self.check_expr(left, ctx);
                 let right_type = self.check_expr(right, ctx);
@@ -291,7 +294,9 @@ impl<'diag> TypeChecker<'diag> {
                 self.binary_result_type(op.node, left_type, right_type)
             }
             ExprKind::Literal(lit) => match lit {
-                LitKind::Int(_) => Type::Int,
+                LitKind::Int(_) => {
+                    Type::Int
+                },
             },
             ExprKind::UnaryOp(op, right) => {
                 let expr_type = self.check_expr(right, ctx);
@@ -304,15 +309,13 @@ impl<'diag> TypeChecker<'diag> {
 
                 if !self.can_assign(rhs_type, target_type) {
                     self.error("mismatched types", expr.span);
-                    return Type::Error;
-                }
-
-                if !self.is_lvalue(target) {
+                    Type::Error
+                } else if !self.is_lvalue(target) {
                     self.error("cannot assign to non-lvalue", expr.span);
-                    return Type::Error;
+                    Type::Error
+                } else {
+                    target_type
                 }
-
-                target_type
             }
             ExprKind::Variable(..) => {
                 // unwrap because we already know the variable exists
@@ -324,7 +327,11 @@ impl<'diag> TypeChecker<'diag> {
             ExprKind::Error => {
                 unreachable!()
             }
-        }
+        };
+
+        ctx.types.insert(expr.id, ty);
+
+        ty
     }
 
     fn is_lvalue(&self, node: &Expr) -> bool {
@@ -351,6 +358,9 @@ impl<'diag> TypeChecker<'diag> {
     }
 
     fn unary_result_type(&self, op: UnaryOpKind, rhs: Type) -> Type {
+        if rhs == Type::Error {
+            return Type::Error;
+        }
         match (op, rhs) {
             (UnaryOpKind::Negate, Type::Int) => Type::Int,
             _ => Type::Error,
@@ -358,6 +368,9 @@ impl<'diag> TypeChecker<'diag> {
     }
 
     fn binary_result_type(&self, op: BinOpKind, lhs: Type, rhs: Type) -> Type {
+        if lhs == Type::Error || rhs == Type::Error {
+            return Type::Error;
+        }
         match (op, lhs, rhs) {
             (BinOpKind::Add, Type::Int, Type::Int) => Type::Int,
             (BinOpKind::Sub, Type::Int, Type::Int) => Type::Int,
