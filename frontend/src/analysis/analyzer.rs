@@ -314,7 +314,7 @@ impl<'diag> TypeChecker<'diag> {
                     self.error("cannot assign to non-lvalue", expr.span);
                     Type::Error
                 } else {
-                    target_type
+                    rhs_type
                 }
             }
             ExprKind::Variable(..) => {
