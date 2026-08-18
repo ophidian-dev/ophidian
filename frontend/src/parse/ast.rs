@@ -27,7 +27,7 @@ pub enum LitKind {
     Int(u128),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum BinOpKind {
     Add,
     Sub,
@@ -35,7 +35,7 @@ pub enum BinOpKind {
     Div,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum UnaryOpKind {
     Negate,
 }

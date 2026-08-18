@@ -1,5 +1,7 @@
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::parse::ast::{Expr, ExprKind, NodeId, Program, Stmt, StmtKind};
+use crate::parse::ast::{
+    BinOpKind, Expr, ExprKind, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind,
+};
 use crate::span::Span;
 use std::collections::HashMap;
 
@@ -52,13 +54,20 @@ impl<'diag> SemanticAnalyzer<'diag> {
         Self { diagnostics }
     }
 
-    pub fn analyze(&mut self, program: &Program) -> AnalysisResult {
+    pub fn analyze(&mut self, program: &Program) -> Result<AnalysisResult, ()> {
         let mut ctx = AnalysisCtx::new();
 
         let mut resolver = Resolver::new(self.diagnostics);
         resolver.resolve(program, &mut ctx);
 
-        AnalysisResult::from(ctx)
+        if !self.diagnostics.is_empty() {
+            return Err(());
+        }
+
+        let mut typechecker = TypeChecker::new(self.diagnostics);
+        typechecker.check(program, &mut ctx);
+
+        Ok(AnalysisResult::from(ctx))
     }
 }
 
@@ -155,7 +164,13 @@ impl<'diag> Resolver<'diag> {
 
     fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx, span: Span) -> VarId {
         if ctx.scopes.last().unwrap().vars.contains_key(name) {
-            self.error(format!("redeclaration of identifer '{}'", std::str::from_utf8(name).unwrap()), span);
+            self.error(
+                format!(
+                    "redeclaration of identifer '{}'",
+                    std::str::from_utf8(name).unwrap()
+                ),
+                span,
+            );
             return VarId::ERROR;
         }
 
@@ -182,6 +197,174 @@ impl<'diag> Resolver<'diag> {
 
     fn exit_scope(&self, ctx: &mut AnalysisCtx) {
         ctx.scopes.pop();
+    }
+}
+
+struct TypeChecker<'diag> {
+    diagnostics: &'diag mut Vec<Diagnostic>,
+}
+
+impl<'diag> TypeChecker<'diag> {
+    pub fn new(diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
+        Self { diagnostics }
+    }
+
+    pub fn check(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
+        for stmt in &program.body {
+            self.check_stmt(stmt, ctx);
+        }
+    }
+
+    fn error<T: Into<String>>(&mut self, message: T, span: Span) {
+        self.diagnostics
+            .push(Diagnostic::new(message.into(), span, Severity::Error));
+    }
+
+    fn check_stmt(&mut self, stmt: &Stmt, ctx: &mut AnalysisCtx) {
+        match &stmt.kind {
+            StmtKind::Block(body) => {
+                for stmt in body {
+                    self.check_stmt(stmt, ctx);
+                }
+            }
+            StmtKind::ExprStmt(expr) => {
+                self.check_expr(expr, ctx);
+            }
+            StmtKind::Print(expr) => {
+                let expr_type = self.check_expr(expr, ctx);
+
+                // builtin checking for the types that print supports
+                // because print is not a function yet
+                match expr_type {
+                    Type::Error => {
+                        return;
+                    }
+                    Type::Int => {}
+                }
+            }
+            StmtKind::VarDecl(.., type_annotation, initializer) => {
+                match type_annotation {
+                    Some(annotation) => {
+                        // unwrap because name resolution has already checked
+                        let varid = *ctx.variables.get(&stmt.id).unwrap();
+                        if initializer.is_none() {
+
+                            ctx.var_types.insert(varid, *annotation);
+                        }
+
+                        // unwrap because initializer is guarenteed to be Some here
+                        let initializer_type = self.check_expr(initializer.as_ref().unwrap(), ctx);
+                        if !self.can_assign(initializer_type, *annotation) {
+                            self.error("mismatched types", stmt.span);
+                            return;
+                        }
+
+                        ctx.var_types.insert(varid, *annotation);
+                    }
+                    None => {
+                        match initializer {
+                            Some(init) => {
+                                let initializer_type = self.check_expr(init, ctx);
+
+                                let varid = *ctx.variables.get(&stmt.id).unwrap();
+                                ctx.var_types.insert(varid, initializer_type);
+                            }
+                            None => {
+                                self.error("type annotation required", stmt.span);
+                            }
+                        }
+                    }
+                }
+            } 
+            StmtKind::Error => {
+                unreachable!()
+            }
+        }
+    }
+
+    fn check_expr(&mut self, expr: &Expr, ctx: &mut AnalysisCtx) -> Type {
+        match &expr.kind {
+            ExprKind::BinaryOp(op, left, right) => {
+                let left_type = self.check_expr(left, ctx);
+                let right_type = self.check_expr(right, ctx);
+
+                self.binary_result_type(op.node, left_type, right_type)
+            }
+            ExprKind::Literal(lit) => match lit {
+                LitKind::Int(_) => Type::Int,
+            },
+            ExprKind::UnaryOp(op, right) => {
+                let expr_type = self.check_expr(right, ctx);
+
+                self.unary_result_type(op.node, expr_type)
+            }
+            ExprKind::VarAssign(target, rhs) => {
+                let rhs_type = self.check_expr(rhs, ctx);
+                let target_type = self.check_expr(target, ctx);
+
+                if !self.can_assign(rhs_type, target_type) {
+                    self.error("mismatched types", expr.span);
+                    return Type::Error;
+                }
+
+                if !self.is_lvalue(target) {
+                    self.error("cannot assign to non-lvalue", expr.span);
+                    return Type::Error;
+                }
+
+                target_type
+            }
+            ExprKind::Variable(..) => {
+                // unwrap because we already know the variable exists
+                // after name resolution
+                let varid = ctx.variables.get(&expr.id).unwrap();
+                // unwrap here because we know that this variable is already declared
+                *ctx.var_types.get(varid).unwrap()
+            }
+            ExprKind::Error => {
+                unreachable!()
+            }
+        }
+    }
+
+    fn is_lvalue(&self, node: &Expr) -> bool {
+        match node.kind {
+            ExprKind::Variable(..) => true,
+            _ => false,
+        }
+    }
+
+    fn can_assign(&self, from: Type, to: Type) -> bool {
+        if from == to {
+            return true;
+        }
+
+        match (from, to) {
+            (Type::Error, _) | (_, Type::Error) => {
+                return true;
+            }
+
+            _ => {
+                return false;
+            }
+        }
+    }
+
+    fn unary_result_type(&self, op: UnaryOpKind, rhs: Type) -> Type {
+        match (op, rhs) {
+            (UnaryOpKind::Negate, Type::Int) => Type::Int,
+            _ => Type::Error,
+        }
+    }
+
+    fn binary_result_type(&self, op: BinOpKind, lhs: Type, rhs: Type) -> Type {
+        match (op, lhs, rhs) {
+            (BinOpKind::Add, Type::Int, Type::Int) => Type::Int,
+            (BinOpKind::Sub, Type::Int, Type::Int) => Type::Int,
+            (BinOpKind::Mul, Type::Int, Type::Int) => Type::Int,
+            (BinOpKind::Div, Type::Int, Type::Int) => Type::Int,
+            _ => Type::Error,
+        }
     }
 }
 

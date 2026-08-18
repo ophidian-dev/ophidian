@@ -33,6 +33,8 @@ impl Compiler {
             return Err(diagnostics);
         }
 
+        let metadata = metadata.unwrap();
+
         let mut chunk = Chunk::new();
 
         for stmt in &program.body {
