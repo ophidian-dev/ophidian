@@ -101,7 +101,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     pub fn parse_statement(&mut self) -> Stmt {
         match self.peek().kind {
             TokenKind::Print => self.parse_print(),
-            TokenKind::IntegerLiteral | TokenKind::OpenParen => self.parse_exprstmt(),
+            TokenKind::IntegerLiteral | TokenKind::OpenParen | TokenKind::Identifier => self.parse_exprstmt(),
             TokenKind::Let => self.parse_var_decl(),
             TokenKind::OpenBrace => self.parse_block(),
             _ => {
@@ -303,10 +303,10 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     fn parse_assignment(&mut self) -> Expr {
         let left = self.parse_term();
 
-        while self.peek().kind != TokenKind::Eof && self.peek().kind == TokenKind::Equal {
+        if self.peek().kind == TokenKind::Equal {
             self.advance();
 
-            let right = self.parse_term();
+            let right = self.parse_assignment();
 
             let span = left.span.join(right.span);
 

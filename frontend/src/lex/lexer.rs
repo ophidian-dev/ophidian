@@ -43,23 +43,25 @@ impl<'src> Lexer<'src> {
     // return None at EOF
     fn advance(&mut self) -> Option<u8> {
         let c = self.peek();
+
         match c {
             Some(c) => {
+                self.current += 1;
+
                 if c == b'\n' {
                     self.column = 0;
-                    self.line += 1
+                    self.line += 1;
                 } else {
                     self.column += 1;
-                    self.current += 1;
                 }
             }
             None => {
-                return c;
+                return None;
             }
         }
+
         c
     }
-
     fn create_token(&self, kind: TokenKind) -> Token {
         let span = Span::new(self.start, self.current - self.start);
         Token::new(kind, span, self.line, self.start_column)

@@ -26,6 +26,7 @@ impl Compiler {
             return Err(diagnostics);
         }
 
+
         let mut analyzer = SemanticAnalyzer::new(&mut diagnostics);
         let metadata = analyzer.analyze(&program);
 
