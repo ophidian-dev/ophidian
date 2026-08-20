@@ -8,7 +8,14 @@ use runtime::opcodes::OpCode;
 use runtime::value::Value;
 use std::collections::HashMap;
 
+#[derive(Debug, Clone, Copy)]
 pub struct LocalSlot(usize);
+
+impl From<LocalSlot> for u32 {
+    fn from(value: LocalSlot) -> Self {
+        value.0.try_into().expect("idk bro")
+    }
+}
 
 pub struct Compiler {
     locals: HashMap<VarId, LocalSlot>,
@@ -70,7 +77,7 @@ impl Compiler {
 
                 chunk.write(OpCode::IPrint as u8);
             }
-            StmtKind::VarDecl(name, type_annotation, initialiser) => {
+            StmtKind::VarDecl(_name, _type_annotation, initialiser) => {
                 match initialiser {
                     Some(init) => {
                         self.compile_expr(init, chunk, metadata);
@@ -90,7 +97,20 @@ impl Compiler {
                         }
                     }
                     None => {
+                        // use of a variable before its given a value is UB
+                        let varid = *metadata.variables.get(&stmt.id).unwrap();
 
+                        self.locals.insert(varid, LocalSlot(varid.0));
+
+                        match metadata.var_types.get(&varid).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::IStoreLocal as u8);
+                                chunk.write_u24(0xFF_FF_FE);
+                            }
+                            Type::Error => {
+                                unreachable!()
+                            }
+                        }
                     }
                 }
             }
@@ -192,10 +212,26 @@ impl Compiler {
                 unreachable!()
             }
             ExprKind::VarAssign(target, value) => {
-                
-            }
-            ExprKind::Variable(name) => {
+                    self.compile_expr(value, chunk, metadata);
 
+                    let varid = match target.kind {
+                        ExprKind::Variable(..) => {
+                            metadata.variables.get(&expr.id).unwrap()
+                        }
+                        _ => unreachable!("non lvalue?")
+                    };
+
+                    match metadata.var_types.get(varid).unwrap() {
+                        Type::Int => {
+                            chunk.write(OpCode::IStoreLocal as u8);
+                            chunk.write_u24((*self.locals.get(varid).unwrap()).try_into().expect("idk"));
+                        }
+                        Type::Error => unreachable!()
+                    }
+            }
+            ExprKind::Variable(_name) => {
+                chunk.write(OpCode::ILoadLocal as u8);
+                chunk.write_u24((*self.locals.get(metadata.variables.get(&expr.id).unwrap()).unwrap()).try_into().expect("overflow"));
             }
         }
     }
