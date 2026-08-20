@@ -110,6 +110,7 @@ impl VirtualMachine {
                     let int = unsafe { v.data.integer };
                     println!("{}", int);
                 }
+                _ => todo!()
             }
         }
     }

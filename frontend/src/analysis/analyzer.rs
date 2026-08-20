@@ -294,8 +294,14 @@ impl<'diag> TypeChecker<'diag> {
                 self.binary_result_type(op.node, left_type, right_type)
             }
             ExprKind::Literal(lit) => match lit {
-                LitKind::Int(_) => {
-                    Type::Int
+                LitKind::Int(i) => {
+                    // TODO: because i32::MAX is less than i32::min when the sign is ignored,
+                    // we need to somehow account for the +1 that a negative literal needs
+                    if *i <= i32::MAX as u128 {
+                        Type::Int
+                    } else {
+                        unimplemented!("larger integer types not yet implemented")
+                    }
                 },
             },
             ExprKind::UnaryOp(op, right) => {

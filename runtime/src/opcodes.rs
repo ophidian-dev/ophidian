@@ -26,6 +26,12 @@ pub enum OpCode {
 
     // pops a value from the stack and discards it
     Pop = 0x08,
+
+    // takes a 3 byte operand and indexes into local pool and pushes the value at index operand
+    ILoadLocal = 0x09,
+
+    // takes a 3 byte operand, then pops an int off the stack then adds the value into local pool at index
+    IStoreLocal = 0x0a,
 }
 
 impl TryFrom<u8> for OpCode {
@@ -42,6 +48,8 @@ impl TryFrom<u8> for OpCode {
             6 => Ok(Self::LoadConst),
             7 => Ok(Self::IPrint),
             8 => Ok(Self::Pop),
+            9 => Ok(Self::ILoadLocal),
+            10 => Ok(Self::IStoreLocal),
             _ => Err(()),
         }
     }

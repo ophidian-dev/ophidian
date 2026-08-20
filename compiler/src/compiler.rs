@@ -1,4 +1,4 @@
-use frontend::analysis::analyzer::{AnalysisResult, SemanticAnalyzer};
+use frontend::analysis::analyzer::{AnalysisResult, SemanticAnalyzer, Type, VarId};
 use frontend::diagnostics::Diagnostic;
 use frontend::lex::Lexer;
 use frontend::parse::Parser;
@@ -6,12 +6,19 @@ use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Stmt, StmtKind, U
 use runtime::chunk::Chunk;
 use runtime::opcodes::OpCode;
 use runtime::value::Value;
+use std::collections::HashMap;
 
-pub struct Compiler {}
+pub struct LocalSlot(usize);
+
+pub struct Compiler {
+    locals: HashMap<VarId, LocalSlot>,
+}
 
 impl Compiler {
-    pub const fn new() -> Self {
-        Self {}
+    pub fn new() -> Self {
+        Self {
+            locals: HashMap::new(),
+        }
     }
 
     #[must_use]
@@ -63,11 +70,38 @@ impl Compiler {
 
                 chunk.write(OpCode::IPrint as u8);
             }
-            StmtKind::VarDecl(name, type_annotation, initialiser) => {}
+            StmtKind::VarDecl(name, type_annotation, initialiser) => {
+                match initialiser {
+                    Some(init) => {
+                        self.compile_expr(init, chunk, metadata);
+
+                        let varid = *metadata.variables.get(&stmt.id).unwrap();
+
+                        self.locals.insert(varid, LocalSlot(varid.0));
+
+                        match metadata.var_types.get(&varid).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::IStoreLocal as u8);
+                                chunk.write_u24(varid.0.try_into().expect("hopefully this doesnt happen"));
+                            }
+                            Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    }
+                    None => {
+
+                    }
+                }
+            }
+            StmtKind::Block(body) => {
+                for stmt in body {
+                    self.compile_stmt(stmt, chunk, metadata);
+                }
+            }
             StmtKind::Error => {
                 unreachable!()
             }
-            _ => todo!(),
         }
     }
 
@@ -76,8 +110,7 @@ impl Compiler {
             ExprKind::Literal(litkind) => {
                 match litkind {
                     LitKind::Int(i) => {
-                        // we convert to i32 here because we have not implemented
-                        // a type checker and hir yet
+                        // we convert to i32 here because Int means i32
                         let value = Value::new_int(*i as i32);
                         chunk.write(OpCode::LoadConst as u8);
                         let idx = chunk.write_constant(value);
@@ -91,10 +124,46 @@ impl Compiler {
                 let opcode = match op.node {
                     // only type int exists rn so we dont needa
                     // check for different types
-                    BinOpKind::Add => OpCode::IAdd,
-                    BinOpKind::Sub => OpCode::ISub,
-                    BinOpKind::Mul => OpCode::IMul,
-                    BinOpKind::Div => OpCode::IDiv,
+                    BinOpKind::Add => {
+                        match metadata.types.get(&expr.id).unwrap() {
+                            Type::Int => {
+                                OpCode::IAdd
+                            }
+                            Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    },
+                    BinOpKind::Sub => {
+                        match metadata.types.get(&expr.id).unwrap() {
+                            Type::Int => {
+                                OpCode::ISub
+                            }
+                            Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    }
+                    BinOpKind::Mul => {
+                        match metadata.types.get(&expr.id).unwrap() {
+                            Type::Int => {
+                                OpCode::IMul
+                            }
+                            Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    }
+                    BinOpKind::Div =>  {
+                        match metadata.types.get(&expr.id).unwrap() {
+                            Type::Int => {
+                                OpCode::IDiv
+                            }
+                            Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    }
                 };
 
                 chunk.write(opcode as u8);
@@ -105,7 +174,16 @@ impl Compiler {
                 let opcode = match op.node {
                     // only type int exists for now so no type checks
                     // are necessary
-                    UnaryOpKind::Negate => OpCode::INegate,
+                    UnaryOpKind::Negate => {
+                        match metadata.types.get(&expr.id).unwrap() {
+                            Type::Int => {
+                                OpCode::INegate
+                            }
+                            Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    }
                 };
 
                 chunk.write(opcode as u8);
@@ -113,7 +191,12 @@ impl Compiler {
             ExprKind::Error => {
                 unreachable!()
             }
-            _ => todo!(),
+            ExprKind::VarAssign(target, value) => {
+                
+            }
+            ExprKind::Variable(name) => {
+
+            }
         }
     }
 }
