@@ -300,6 +300,9 @@ impl<'diag> TypeChecker<'diag> {
                         unimplemented!("larger integer types not yet implemented")
                     }
                 }
+                LitKind::Bool(b) => {
+                    todo!()
+                }
             },
             ExprKind::UnaryOp(op, right) => {
                 let expr_type = self.check_expr(right, ctx);

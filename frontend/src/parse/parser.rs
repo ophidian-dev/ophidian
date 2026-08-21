@@ -517,6 +517,9 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             let name = Span::retrieve_slice(self.source, &self.peek().span).to_vec();
             let span = self.advance().span;
             return Expr::new(self.next_node_id(), ExprKind::Variable(name), span);
+        } else if matches!(self.peek().kind, TokenKind::True | TokenKind::False) {
+            self.advance();
+            return Expr::new(self.next_node_id(), ExprKind::Literal(LitKind::Bool(self.prev.kind.into())), self.prev.span);
         } else {
             let span = self.peek().span;
             self.error(

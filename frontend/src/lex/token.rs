@@ -113,6 +113,22 @@ pub enum TokenKind {
     Eof,
 }
 
+impl From<TokenKind> for bool {
+    fn from(value: TokenKind) -> Self {
+        match value {
+            TokenKind::True => {
+                true
+            }
+            TokenKind::False => {
+                false
+            }
+            _ => {
+                panic!("tried to convert non boolean literal to bool")
+            }
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Token {
     // type of token

@@ -145,6 +145,9 @@ impl Compiler {
                         let idx = chunk.write_constant(value);
                         chunk.write_u24(idx as u32);
                     }
+                    LitKind::Bool(b) => {
+                        todo!()
+                    }
                 }
             }
             ExprKind::BinaryOp(op, left, right) => {
