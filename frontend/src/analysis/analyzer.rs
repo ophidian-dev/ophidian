@@ -262,23 +262,20 @@ impl<'diag> TypeChecker<'diag> {
                                 ctx.var_types.insert(varid, *annotation);
                             }
                         }
-
                     }
-                    None => {
-                        match initializer {
-                            Some(init) => {
-                                let initializer_type = self.check_expr(init, ctx);
+                    None => match initializer {
+                        Some(init) => {
+                            let initializer_type = self.check_expr(init, ctx);
 
-                                let varid = *ctx.variables.get(&stmt.id).unwrap();
-                                ctx.var_types.insert(varid, initializer_type);
-                            }
-                            None => {
-                                self.error("type annotation required", stmt.span);
-                            }
+                            let varid = *ctx.variables.get(&stmt.id).unwrap();
+                            ctx.var_types.insert(varid, initializer_type);
                         }
-                    }
+                        None => {
+                            self.error("type annotation required", stmt.span);
+                        }
+                    },
                 }
-            } 
+            }
             StmtKind::Error => {
                 unreachable!()
             }
@@ -302,7 +299,7 @@ impl<'diag> TypeChecker<'diag> {
                     } else {
                         unimplemented!("larger integer types not yet implemented")
                     }
-                },
+                }
             },
             ExprKind::UnaryOp(op, right) => {
                 let expr_type = self.check_expr(right, ctx);

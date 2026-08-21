@@ -46,7 +46,7 @@ impl VirtualMachine {
             ip: std::ptr::null_mut(),
             locals: Vec::new(),
         };
-        
+
         for _ in 0..LOCAL_MAX {
             s.locals.push(Value::UNINITIALIZED);
         }
@@ -60,7 +60,8 @@ impl VirtualMachine {
             // we unwrap here because we assume that the bytecode is correct
             // remember to add new match cases to OpCode::try_from() when adding
             // new opcodes
-            let opcode = OpCode::try_from(self.read_byte()).expect("try checking the try_from() function for Opcode in opcode.rs");
+            let opcode = OpCode::try_from(self.read_byte())
+                .expect("try checking the try_from() function for Opcode in opcode.rs");
             match opcode {
                 OpCode::Halt => {
                     let exit_code = self.pop();

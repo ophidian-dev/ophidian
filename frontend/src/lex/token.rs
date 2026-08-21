@@ -83,14 +83,14 @@ pub enum TokenKind {
     // equality operator
     // i.e. '=='
     EqualEqual,
-    
+
     // not equal
     // i.e. '!='
     BangEqual,
 
     // greatar than '>'
     GreaterThan,
-    
+
     // less than '<'
     LessThan,
 

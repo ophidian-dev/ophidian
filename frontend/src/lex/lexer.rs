@@ -185,7 +185,7 @@ impl<'src> TokenStream for Lexer<'src> {
                     if d == b'=' {
                         self.advance();
                         return self.create_token(TokenKind::LessEq);
-                    } 
+                    }
                 }
                 return self.create_token(TokenKind::LessThan);
             }

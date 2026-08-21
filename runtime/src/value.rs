@@ -49,7 +49,12 @@ impl Value {
     }
 
     const fn new_uninitialized() -> Self {
-        Self { kind: ValueKind::Uninitialized, data: ValueData { unitialized: std::ptr::null() } }
+        Self {
+            kind: ValueKind::Uninitialized,
+            data: ValueData {
+                unitialized: std::ptr::null(),
+            },
+        }
     }
 
     pub const UNINITIALIZED: Self = Self::new_uninitialized();

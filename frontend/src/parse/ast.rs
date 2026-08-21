@@ -1,4 +1,5 @@
 use crate::analysis::analyzer::Type;
+use crate::lex::token::{Token, TokenKind};
 use crate::span::{Span, Spanned};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -33,6 +34,31 @@ pub enum BinOpKind {
     Sub,
     Mul,
     Div,
+
+    EqEq,
+    BangEq,
+    LessThan,
+    GreaterThan,
+    LessEq,
+    GreaterEq,
+}
+
+impl From<Token> for BinOpKind {
+    fn from(value: Token) -> Self {
+        match value.kind {
+            TokenKind::Plus => Self::Add,
+            TokenKind::Minus => Self::Sub,
+            TokenKind::Star => Self::Mul,
+            TokenKind::Slash => Self::Div,
+            TokenKind::EqualEqual => Self::EqEq,
+            TokenKind::BangEqual => Self::BangEq,
+            TokenKind::LessThan => Self::LessThan,
+            TokenKind::GreaterThan => Self::GreaterThan,
+            TokenKind::LessEq => Self::LessEq,
+            TokenKind::GreaterEq => Self::GreaterEq,
+            _ => panic!("not a binary operation"),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]

@@ -101,11 +101,13 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     pub fn parse_statement(&mut self) -> Stmt {
         match self.peek().kind {
             TokenKind::Print => self.parse_print(),
-            TokenKind::IntegerLiteral | TokenKind::OpenParen | TokenKind::Identifier => self.parse_exprstmt(),
+            TokenKind::IntegerLiteral | TokenKind::OpenParen | TokenKind::Identifier => {
+                self.parse_exprstmt()
+            }
             TokenKind::Let => self.parse_var_decl(),
             TokenKind::OpenBrace => self.parse_block(),
             _ => {
-                panic!("unexpected token at statement start")
+                panic!("unexpected token at statement start: {:?}", self.peek())
             }
         }
     }
@@ -301,7 +303,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     }
 
     fn parse_assignment(&mut self) -> Expr {
-        let left = self.parse_term();
+        let left = self.parse_equality();
 
         if self.peek().kind == TokenKind::Equal {
             self.advance();
@@ -314,6 +316,61 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 self.next_node_id(),
                 ExprKind::VarAssign(Box::new(left), Box::new(right)),
                 span,
+            );
+        }
+
+        left
+    }
+
+    fn parse_equality(&mut self) -> Expr {
+        let mut left = self.parse_comparison();
+        let start_span = left.span;
+        while matches!(
+            self.peek().kind,
+            TokenKind::BangEqual | TokenKind::EqualEqual
+        ) {
+            let op = self.peek();
+            self.advance();
+
+            let right = self.parse_comparison();
+
+            let right_span = right.span;
+
+            left = Expr::new(
+                self.next_node_id(),
+                ExprKind::BinaryOp(
+                    Spanned::new(op.into(), op.span),
+                    Box::new(left),
+                    Box::new(right),
+                ),
+                start_span.join(right_span),
+            );
+        }
+
+        left
+    }
+
+    fn parse_comparison(&mut self) -> Expr {
+        let mut left = self.parse_term();
+        let start_span = left.span;
+
+        while matches!(
+            self.peek().kind,
+            TokenKind::LessThan | TokenKind::GreaterThan | TokenKind::GreaterEq | TokenKind::LessEq
+        ) {
+            let op = self.peek();
+            self.advance();
+            let right = self.parse_term();
+            let right_span = right.span;
+
+            left = Expr::new(
+                self.next_node_id(),
+                ExprKind::BinaryOp(
+                    Spanned::new(op.into(), op.span),
+                    Box::new(left),
+                    Box::new(right),
+                ),
+                start_span.join(right_span),
             );
         }
 

@@ -13,7 +13,10 @@ pub struct LocalSlot(usize);
 
 impl From<LocalSlot> for u32 {
     fn from(value: LocalSlot) -> Self {
-        value.0.try_into().expect("local slot index exceeds u32::MAX")
+        value
+            .0
+            .try_into()
+            .expect("local slot index exceeds u32::MAX")
     }
 }
 
@@ -39,7 +42,6 @@ impl Compiler {
         if !diagnostics.is_empty() {
             return Err(diagnostics);
         }
-
 
         let mut analyzer = SemanticAnalyzer::new(&mut diagnostics);
         let metadata = analyzer.analyze(&program);
@@ -89,7 +91,9 @@ impl Compiler {
                         match metadata.var_types.get(&varid).unwrap() {
                             Type::Int => {
                                 chunk.write(OpCode::IStoreLocal as u8);
-                                chunk.write_u24(varid.0.try_into().expect("hopefully this doesnt happen"));
+                                chunk.write_u24(
+                                    varid.0.try_into().expect("hopefully this doesnt happen"),
+                                );
                             }
                             Type::Error => {
                                 unreachable!()
@@ -109,7 +113,8 @@ impl Compiler {
                         match metadata.var_types.get(&varid).unwrap() {
                             Type::Int => {
                                 chunk.write(OpCode::IStoreLocal as u8);
-                                chunk.write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
+                                chunk
+                                    .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Error => {
                                 unreachable!()
@@ -148,46 +153,31 @@ impl Compiler {
                 let opcode = match op.node {
                     // only type int exists rn so we dont needa
                     // check for different types
-                    BinOpKind::Add => {
-                        match metadata.types.get(&expr.id).unwrap() {
-                            Type::Int => {
-                                OpCode::IAdd
-                            }
-                            Type::Error => {
-                                unreachable!()
-                            }
+                    BinOpKind::Add => match metadata.types.get(&expr.id).unwrap() {
+                        Type::Int => OpCode::IAdd,
+                        Type::Error => {
+                            unreachable!()
                         }
                     },
-                    BinOpKind::Sub => {
-                        match metadata.types.get(&expr.id).unwrap() {
-                            Type::Int => {
-                                OpCode::ISub
-                            }
-                            Type::Error => {
-                                unreachable!()
-                            }
+                    BinOpKind::Sub => match metadata.types.get(&expr.id).unwrap() {
+                        Type::Int => OpCode::ISub,
+                        Type::Error => {
+                            unreachable!()
                         }
-                    }
-                    BinOpKind::Mul => {
-                        match metadata.types.get(&expr.id).unwrap() {
-                            Type::Int => {
-                                OpCode::IMul
-                            }
-                            Type::Error => {
-                                unreachable!()
-                            }
+                    },
+                    BinOpKind::Mul => match metadata.types.get(&expr.id).unwrap() {
+                        Type::Int => OpCode::IMul,
+                        Type::Error => {
+                            unreachable!()
                         }
-                    }
-                    BinOpKind::Div =>  {
-                        match metadata.types.get(&expr.id).unwrap() {
-                            Type::Int => {
-                                OpCode::IDiv
-                            }
-                            Type::Error => {
-                                unreachable!()
-                            }
+                    },
+                    BinOpKind::Div => match metadata.types.get(&expr.id).unwrap() {
+                        Type::Int => OpCode::IDiv,
+                        Type::Error => {
+                            unreachable!()
                         }
-                    }
+                    },
+                    _ => todo!(),
                 };
 
                 chunk.write(opcode as u8);
@@ -198,16 +188,12 @@ impl Compiler {
                 let opcode = match op.node {
                     // only type int exists for now so no type checks
                     // are necessary
-                    UnaryOpKind::Negate => {
-                        match metadata.types.get(&expr.id).unwrap() {
-                            Type::Int => {
-                                OpCode::INegate
-                            }
-                            Type::Error => {
-                                unreachable!()
-                            }
+                    UnaryOpKind::Negate => match metadata.types.get(&expr.id).unwrap() {
+                        Type::Int => OpCode::INegate,
+                        Type::Error => {
+                            unreachable!()
                         }
-                    }
+                    },
                 };
 
                 chunk.write(opcode as u8);
@@ -216,28 +202,33 @@ impl Compiler {
                 unreachable!()
             }
             ExprKind::VarAssign(target, value) => {
-                    self.compile_expr(value, chunk, metadata);
+                self.compile_expr(value, chunk, metadata);
 
-                    let varid = match target.kind {
-                        ExprKind::Variable(..) => {
-                            metadata.variables.get(&target.id).unwrap()
-                        }
-                        _ => unreachable!("non lvalue?")
-                    };
+                let varid = match target.kind {
+                    ExprKind::Variable(..) => metadata.variables.get(&target.id).unwrap(),
+                    _ => unreachable!("non lvalue?"),
+                };
 
-                    match metadata.var_types.get(varid).unwrap() {
-                        Type::Int => {
-                            chunk.write(OpCode::IStoreLocal as u8);
-                            chunk.write_u24((*self.locals.get(varid).unwrap()).into());
-                            // leave the assigned value on the stack
-                            self.compile_expr(value, chunk, metadata);
-                        }
-                        Type::Error => unreachable!()
+                match metadata.var_types.get(varid).unwrap() {
+                    Type::Int => {
+                        chunk.write(OpCode::IStoreLocal as u8);
+                        chunk.write_u24((*self.locals.get(varid).unwrap()).into());
+                        // leave the assigned value on the stack
+                        self.compile_expr(value, chunk, metadata);
                     }
+                    Type::Error => unreachable!(),
+                }
             }
             ExprKind::Variable(_name) => {
                 chunk.write(OpCode::ILoadLocal as u8);
-                chunk.write_u24((*self.locals.get(metadata.variables.get(&expr.id).unwrap()).unwrap()).try_into().expect("overflow"));
+                chunk.write_u24(
+                    (*self
+                        .locals
+                        .get(metadata.variables.get(&expr.id).unwrap())
+                        .unwrap())
+                    .try_into()
+                    .expect("overflow"),
+                );
             }
         }
     }
