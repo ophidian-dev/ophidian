@@ -28,6 +28,12 @@ pub enum TokenKind {
     // e.g. '10'
     IntegerLiteral,
 
+    // a boolean literal representing true
+    True,
+
+    // a boolean literal representing false
+    False,
+
     // plus character
     // i.e. '+'
     Plus,
@@ -73,6 +79,26 @@ pub enum TokenKind {
     // assignment operator
     // i.e. '='
     Equal,
+
+    // equality operator
+    // i.e. '=='
+    EqualEqual,
+    
+    // not equal
+    // i.e. '!='
+    BangEqual,
+
+    // greatar than '>'
+    GreaterThan,
+    
+    // less than '<'
+    LessThan,
+
+    // greater or equal '>='
+    GreaterEq,
+
+    // less or equal '<='
+    LessEq,
 
     // an identifier
     Identifier,

@@ -39,6 +39,11 @@ impl<'src> Lexer<'src> {
         return self.source.get(self.current).cloned();
     }
 
+    // same as peek but returns peek + n index
+    fn peekn(&self, n: usize) -> Option<u8> {
+        return self.source.get(self.current + n).cloned();
+    }
+
     // advances the lexer cursor
     // return None at EOF
     fn advance(&mut self) -> Option<u8> {
@@ -72,6 +77,8 @@ impl<'src> Lexer<'src> {
             b"print" => TokenKind::Print,
             b"int" => TokenKind::Int,
             b"let" => TokenKind::Let,
+            b"true" => TokenKind::True,
+            b"false" => TokenKind::False,
             _ => TokenKind::Identifier,
         }
     }
@@ -132,6 +139,12 @@ impl<'src> TokenStream for Lexer<'src> {
             }
             b'=' => {
                 self.advance();
+                if let Some(d) = self.peekn(1) {
+                    if d == b'=' {
+                        self.advance();
+                        return self.create_token(TokenKind::EqualEqual);
+                    }
+                }
                 return self.create_token(TokenKind::Equal);
             }
             b':' => {
@@ -145,6 +158,36 @@ impl<'src> TokenStream for Lexer<'src> {
             b'}' => {
                 self.advance();
                 return self.create_token(TokenKind::CloseBrace);
+            }
+            b'!' => {
+                self.advance();
+                if let Some(d) = self.peekn(1) {
+                    if d == b'=' {
+                        self.advance();
+                        return self.create_token(TokenKind::BangEqual);
+                    }
+                }
+                unimplemented!("logical not a.k.a. '!'")
+            }
+            b'>' => {
+                self.advance();
+                if let Some(d) = self.peekn(1) {
+                    if d == b'=' {
+                        self.advance();
+                        return self.create_token(TokenKind::GreaterEq);
+                    }
+                }
+                return self.create_token(TokenKind::GreaterThan);
+            }
+            b'<' => {
+                self.advance();
+                if let Some(d) = self.peekn(1) {
+                    if d == b'=' {
+                        self.advance();
+                        return self.create_token(TokenKind::LessEq);
+                    } 
+                }
+                return self.create_token(TokenKind::LessThan);
             }
             _ => {
                 if c.is_ascii_digit() {
