@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct Value {
     pub kind: ValueKind,
     pub data: ValueData,
@@ -55,7 +55,7 @@ impl Value {
     pub const UNINITIALIZED: Self = Self::new_uninitialized();
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValueKind {
     Integer,
     Uninitialized,

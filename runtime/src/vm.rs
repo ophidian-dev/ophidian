@@ -1,6 +1,6 @@
 use crate::chunk::Chunk;
 use crate::opcodes::OpCode;
-use crate::value::Value;
+use crate::value::{Value, ValueKind};
 
 pub type VMExitCode = i32;
 
@@ -27,19 +27,30 @@ impl<T> Stack<T> {
     }
 }
 
+// temporary max no. of locals because call frames dont exist yet
+const LOCAL_MAX: usize = 2048;
+
 pub struct VirtualMachine {
     // stack that bytecode operates on
     stack: Stack<Value>,
     // pointer to instruction to be executed
     ip: *const u8,
+
+    locals: Vec<Value>,
 }
 
 impl VirtualMachine {
     pub fn new() -> Self {
-        Self {
+        let mut s = Self {
             stack: Stack::new(),
             ip: std::ptr::null_mut(),
+            locals: Vec::new(),
+        };
+        
+        for _ in 0..LOCAL_MAX {
+            s.locals.push(Value::UNINITIALIZED);
         }
+        s
     }
 
     pub fn execute(&mut self, chunk: &Chunk) -> VMExitCode {
@@ -49,7 +60,7 @@ impl VirtualMachine {
             // we unwrap here because we assume that the bytecode is correct
             // remember to add new match cases to OpCode::try_from() when adding
             // new opcodes
-            let opcode = OpCode::try_from(self.read_byte()).unwrap();
+            let opcode = OpCode::try_from(self.read_byte()).expect("try checking the try_from() function for Opcode in opcode.rs");
             match opcode {
                 OpCode::Halt => {
                     let exit_code = self.pop();
@@ -110,7 +121,25 @@ impl VirtualMachine {
                     let int = unsafe { v.data.integer };
                     println!("{}", int);
                 }
-                _ => todo!()
+                OpCode::ILoadLocal => {
+                    let b0 = self.read_byte();
+                    let b1 = self.read_byte();
+                    let b2 = self.read_byte();
+                    let idx = decode_u24_le([b0, b1, b2]);
+                    let value = *self.locals.get(idx as usize).expect("shouldnt happen");
+                    self.push(value);
+                }
+                OpCode::IStoreLocal => {
+                    let value = self.pop();
+                    if value.kind == ValueKind::Uninitialized {
+                        panic!("use of unitialized variable");
+                    }
+                    let b0 = self.read_byte();
+                    let b1 = self.read_byte();
+                    let b2 = self.read_byte();
+                    let idx = decode_u24_le([b0, b1, b2]);
+                    *self.locals.get_mut(idx as usize).unwrap() = value;
+                }
             }
         }
     }

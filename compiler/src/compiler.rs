@@ -229,6 +229,8 @@ impl Compiler {
                         Type::Int => {
                             chunk.write(OpCode::IStoreLocal as u8);
                             chunk.write_u24((*self.locals.get(varid).unwrap()).into());
+                            // leave the assigned value on the stack
+                            self.compile_expr(value, chunk, metadata);
                         }
                         Type::Error => unreachable!()
                     }
