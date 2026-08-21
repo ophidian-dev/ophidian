@@ -13,7 +13,7 @@ pub struct LocalSlot(usize);
 
 impl From<LocalSlot> for u32 {
     fn from(value: LocalSlot) -> Self {
-        value.0.try_into().expect("idk bro")
+        value.0.try_into().expect("local slot index exceeds u32::MAX")
     }
 }
 
@@ -102,10 +102,14 @@ impl Compiler {
 
                         self.locals.insert(varid, LocalSlot(varid.0));
 
+                        chunk.write(OpCode::LoadConst as u8);
+                        let idx = chunk.write_constant(Value::UNINITIALIZED);
+                        chunk.write_u24(idx as u32);
+
                         match metadata.var_types.get(&varid).unwrap() {
                             Type::Int => {
                                 chunk.write(OpCode::IStoreLocal as u8);
-                                chunk.write_u24(0xFF_FF_FE);
+                                chunk.write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Error => {
                                 unreachable!()
@@ -216,7 +220,7 @@ impl Compiler {
 
                     let varid = match target.kind {
                         ExprKind::Variable(..) => {
-                            metadata.variables.get(&expr.id).unwrap()
+                            metadata.variables.get(&target.id).unwrap()
                         }
                         _ => unreachable!("non lvalue?")
                     };
@@ -224,7 +228,7 @@ impl Compiler {
                     match metadata.var_types.get(varid).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::IStoreLocal as u8);
-                            chunk.write_u24((*self.locals.get(varid).unwrap()).try_into().expect("idk"));
+                            chunk.write_u24((*self.locals.get(varid).unwrap()).into());
                         }
                         Type::Error => unreachable!()
                     }
