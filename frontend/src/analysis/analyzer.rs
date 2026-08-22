@@ -133,7 +133,6 @@ impl<'diag> Resolver<'diag> {
                 if let Some(e) = else_body {
                     self.resolve_stmt(e, ctx);
                 }
-
             }
             StmtKind::Error => {
                 unreachable!()
