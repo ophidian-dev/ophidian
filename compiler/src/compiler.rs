@@ -156,7 +156,23 @@ impl Compiler {
                 }
             }
             StmtKind::If(cond, body, else_body) => {
-                todo!()
+                self.compile_expr(cond, chunk, metadata);
+
+                let pos = chunk.write_jump(OpCode::JmpFalse);
+
+                self.compile_stmt(body, chunk, metadata);
+
+                if let Some(else_body) = else_body {
+                    let end_jump = chunk.write_jump(OpCode::Jmp);
+
+                    chunk.patch_jump(pos);
+
+                    self.compile_stmt(else_body, chunk, metadata);
+
+                    chunk.patch_jump(end_jump);
+                } else {
+                    chunk.patch_jump(pos);
+                }
             }
             StmtKind::Error => {
                 unreachable!()
