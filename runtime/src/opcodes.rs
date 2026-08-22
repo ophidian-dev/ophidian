@@ -59,8 +59,11 @@ pub enum OpCode {
     // jumps
     // these jumps take a FOUR byte operand (not to be confused with the 3 bytes used for other opcodes)
     Jmp = 0x16,
-    Jne = 0x17,
-    Je = 0x18,
+    JmpTrue = 0x17,
+    JmpFalse = 0x18,
+
+    // duplicate the value at the top of the stack
+    Dup = 0x19,
 }
 
 impl TryFrom<u8> for OpCode {
@@ -91,8 +94,9 @@ impl TryFrom<u8> for OpCode {
             0x14 => Ok(Self::IGreater),
             0x15 => Ok(Self::IGreaterEq),
             0x16 => Ok(Self::Jmp),
-            0x17 => Ok(Self::Jne),
-            0x18 => Ok(Self::Je),
+            0x17 => Ok(Self::JmpTrue),
+            0x18 => Ok(Self::JmpFalse),
+            0x19 => Ok(Self::Dup),
             _ => Err(()),
         }
     }

@@ -174,70 +174,111 @@ impl Compiler {
                 }
             }
             ExprKind::BinaryOp(op, left, right) => {
-                self.compile_expr(&left, chunk, metadata);
-                self.compile_expr(&right, chunk, metadata);
-                let opcode = match op.node {
+                if !matches!(op.node, BinOpKind::And | BinOpKind::Or) {
+                    self.compile_expr(&left, chunk, metadata);
+                    self.compile_expr(&right, chunk, metadata);
+                }
+
+                match op.node {
                     // only type int exists rn so we dont needa
                     // check for different types
                     BinOpKind::Add => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::IAdd,
+                        Type::Int => {
+                            chunk.write(OpCode::IAdd as u8);
+                        }
                         Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
                     BinOpKind::Sub => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::ISub,
+                        Type::Int => {
+                            chunk.write(OpCode::ISub as u8);
+                        }
                         Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
                     BinOpKind::Mul => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::IMul,
+                        Type::Int => {
+                            chunk.write(OpCode::IMul as u8);
+                        }
                         Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
                     BinOpKind::Div => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::IDiv,
+                        Type::Int => {
+                            chunk.write(OpCode::IDiv as u8);
+                        }
                         Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
                     BinOpKind::BangEq => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::INEqual,
-                        Type::Bool => OpCode::BNEqual,
+                        Type::Int => {
+                            chunk.write(OpCode::INEqual as u8);
+                        }
+                        Type::Bool => {
+                            chunk.write(OpCode::BNEqual as u8);
+                        }
                         Type::Error => unreachable!(),
                     },
                     BinOpKind::EqEq => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::IEqual,
-                        Type::Bool => OpCode::BEqual,
+                        Type::Int => {
+                            chunk.write(OpCode::IEqual as u8);
+                        }
+                        Type::Bool => {
+                            chunk.write(OpCode::BEqual as u8);
+                        }
                         Type::Error => unreachable!(),
                     },
                     BinOpKind::GreaterEq => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::IGreaterEq,
+                        Type::Int => {
+                            chunk.write(OpCode::IGreaterEq as u8);
+                        }
                         Type::Bool | Type::Error => unreachable!(),
                     },
                     BinOpKind::GreaterThan => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::IGreater,
+                        Type::Int => {
+                            chunk.write(OpCode::IGreater as u8);
+                        }
                         Type::Bool | Type::Error => unreachable!(),
                     },
                     BinOpKind::LessEq => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::ILessEq,
+                        Type::Int => {
+                            chunk.write(OpCode::ILessEq as u8);
+                        }
                         Type::Bool | Type::Error => unreachable!(),
                     },
                     BinOpKind::LessThan => match metadata.types.get(&left.id).unwrap() {
-                        Type::Int => OpCode::ILess,
+                        Type::Int => {
+                            chunk.write(OpCode::ILess as u8);
+                        }
                         Type::Bool | Type::Error => unreachable!(),
                     },
                     BinOpKind::And => {
-                        todo!()
+                        self.compile_expr(left, chunk, metadata);
+                        chunk.write(OpCode::Dup as u8);
+                        let pos = chunk.write_jump(OpCode::JmpFalse);
+                        chunk.write(OpCode::Pop as u8);
+                        self.compile_expr(right, chunk, metadata);
+                        chunk.patch_jump(pos);
                     }
                     BinOpKind::Or => {
-                        todo!()
+                        self.compile_expr(left, chunk, metadata);
+
+                        chunk.write(OpCode::Dup as u8);
+
+                        let pos = chunk.write_jump(OpCode::JmpTrue);
+
+                        chunk.write(OpCode::Pop as u8);
+
+                        self.compile_expr(right, chunk, metadata);
+
+                        chunk.patch_jump(pos);
                     }
                 };
 
-                chunk.write(opcode as u8);
             }
             ExprKind::UnaryOp(op, right) => {
                 self.compile_expr(&right, chunk, metadata);

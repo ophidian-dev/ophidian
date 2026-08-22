@@ -223,7 +223,7 @@ impl VirtualMachine {
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
-                OpCode::Je => {
+                OpCode::JmpTrue => {
                     let value = self.pop();
                     let cond = unsafe {
                         value.data.boolean
@@ -249,7 +249,7 @@ impl VirtualMachine {
                         self.jump(offset);
                     }
                 }
-                OpCode::Jne => {
+                OpCode::JmpFalse => {
                     let value = self.pop();
                     let cond = unsafe {
                         value.data.boolean
@@ -265,6 +265,11 @@ impl VirtualMachine {
                             self.jump(offset);
                         }
                     }
+                }
+                OpCode::Dup => {
+                    let v = self.pop();
+                    self.push(v);
+                    self.push(v);
                 }
             }
         }
