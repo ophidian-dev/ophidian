@@ -9,16 +9,6 @@ fn main() {
     let argv: Vec<String> = std::env::args().collect();
     let args = Args::parse();
 
-    // if argv.len() < 2 {
-    //     eprintln!(
-    //         "{}: {} {}",
-    //         argv[0],
-    //         "error:".bright_red().bold(),
-    //         "no input file".bold()
-    //     );
-    //     std::process::exit(1);
-    // }
-
     let file = read_file_as_bytes(&argv[0], &args.input);
 
     let mut compiler = Compiler::new();
