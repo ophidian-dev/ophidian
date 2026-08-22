@@ -160,6 +160,10 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                         self.advance();
                         Type::Int
                     }
+                    TokenKind::Bool => {
+                        self.advance();
+                        Type::Bool
+                    }
                     _ => {
                         // not a valid variable type
                         let end_span = self.advance().span;
