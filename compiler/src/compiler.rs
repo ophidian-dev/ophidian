@@ -107,7 +107,8 @@ impl Compiler {
                             }
                             Type::Bool => {
                                 chunk.write(OpCode::BStoreLocal as u8);
-                                chunk.write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
+                                chunk
+                                    .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Error => {
                                 unreachable!()
@@ -202,43 +203,37 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    BinOpKind::BangEq => {
-                        match metadata.types.get(&left.id).unwrap() {
-                            Type::Int => OpCode::INEqual,
-                            Type::Bool => OpCode::BNEqual,
-                            Type::Error => unreachable!()
-                        }
+                    BinOpKind::BangEq => match metadata.types.get(&left.id).unwrap() {
+                        Type::Int => OpCode::INEqual,
+                        Type::Bool => OpCode::BNEqual,
+                        Type::Error => unreachable!(),
+                    },
+                    BinOpKind::EqEq => match metadata.types.get(&left.id).unwrap() {
+                        Type::Int => OpCode::IEqual,
+                        Type::Bool => OpCode::BEqual,
+                        Type::Error => unreachable!(),
+                    },
+                    BinOpKind::GreaterEq => match metadata.types.get(&left.id).unwrap() {
+                        Type::Int => OpCode::IGreaterEq,
+                        Type::Bool | Type::Error => unreachable!(),
+                    },
+                    BinOpKind::GreaterThan => match metadata.types.get(&left.id).unwrap() {
+                        Type::Int => OpCode::IGreater,
+                        Type::Bool | Type::Error => unreachable!(),
+                    },
+                    BinOpKind::LessEq => match metadata.types.get(&left.id).unwrap() {
+                        Type::Int => OpCode::ILessEq,
+                        Type::Bool | Type::Error => unreachable!(),
+                    },
+                    BinOpKind::LessThan => match metadata.types.get(&left.id).unwrap() {
+                        Type::Int => OpCode::ILess,
+                        Type::Bool | Type::Error => unreachable!(),
+                    },
+                    BinOpKind::And => {
+                        todo!()
                     }
-                    BinOpKind::EqEq => {
-                        match metadata.types.get(&left.id).unwrap() {
-                            Type::Int => OpCode::IEqual,
-                            Type::Bool => OpCode::BEqual,
-                            Type::Error => unreachable!()
-                        }
-                    }
-                    BinOpKind::GreaterEq => {
-                        match metadata.types.get(&left.id).unwrap() {
-                            Type::Int => OpCode::IGreaterEq,
-                            Type::Bool | Type::Error => unreachable!()
-                        }
-                    }
-                    BinOpKind::GreaterThan => {
-                        match metadata.types.get(&left.id).unwrap() {
-                            Type::Int => OpCode::IGreater,
-                            Type::Bool | Type::Error => unreachable!()
-                        }
-                    }
-                    BinOpKind::LessEq => {
-                        match metadata.types.get(&left.id).unwrap() {
-                            Type::Int => OpCode::ILessEq,
-                            Type::Bool | Type::Error => unreachable!()
-                        }
-                    }
-                    BinOpKind::LessThan => {
-                        match metadata.types.get(&left.id).unwrap() {
-                            Type::Int => OpCode::ILess,
-                            Type::Bool | Type::Error => unreachable!()
-                        }
+                    BinOpKind::Or => {
+                        todo!()
                     }
                 };
 

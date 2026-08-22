@@ -126,12 +126,8 @@ pub enum TokenKind {
 impl From<TokenKind> for bool {
     fn from(value: TokenKind) -> Self {
         match value {
-            TokenKind::True => {
-                true
-            }
-            TokenKind::False => {
-                false
-            }
+            TokenKind::True => true,
+            TokenKind::False => false,
             _ => {
                 panic!("tried to convert non boolean literal to bool")
             }

@@ -42,6 +42,9 @@ pub enum BinOpKind {
     GreaterThan,
     LessEq,
     GreaterEq,
+
+    And,
+    Or,
 }
 
 impl From<Token> for BinOpKind {
@@ -57,6 +60,8 @@ impl From<Token> for BinOpKind {
             TokenKind::GreaterThan => Self::GreaterThan,
             TokenKind::LessEq => Self::LessEq,
             TokenKind::GreaterEq => Self::GreaterEq,
+            TokenKind::And => Self::And,
+            TokenKind::Or => Self::Or,
             _ => panic!("not a binary operation"),
         }
     }

@@ -145,9 +145,7 @@ impl VirtualMachine {
                 OpCode::BEqual => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.boolean == b.data.boolean
-                    };
+                    let res = unsafe { a.data.boolean == b.data.boolean };
                     let v = Value::new_bool(res);
                     self.push(v);
                 }
@@ -162,17 +160,13 @@ impl VirtualMachine {
                 OpCode::BNEqual => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.boolean != b.data.boolean
-                    };
+                    let res = unsafe { a.data.boolean != b.data.boolean };
                     let v = Value::new_bool(res);
                     self.push(v);
                 }
                 OpCode::BPrint => {
                     let v = self.pop();
-                    let boolean = unsafe {
-                        v.data.boolean
-                    };
+                    let boolean = unsafe { v.data.boolean };
                     println!("{}", boolean);
                 }
                 OpCode::BStoreLocal => {
@@ -190,54 +184,42 @@ impl VirtualMachine {
                 OpCode::IEqual => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer == b.data.integer
-                    };
+                    let res = unsafe { a.data.integer == b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
                 OpCode::IGreater => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer > b.data.integer
-                    };
+                    let res = unsafe { a.data.integer > b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
                 OpCode::IGreaterEq => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer >= b.data.integer
-                    };
+                    let res = unsafe { a.data.integer >= b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
                 OpCode::ILess => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer < b.data.integer
-                    };
+                    let res = unsafe { a.data.integer < b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
                 OpCode::ILessEq => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer <= b.data.integer
-                    };
+                    let res = unsafe { a.data.integer <= b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
                 OpCode::INEqual => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.integer != b.data.integer
-                    };
+                    let res = unsafe { a.data.integer != b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }

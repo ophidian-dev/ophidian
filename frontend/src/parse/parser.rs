@@ -307,7 +307,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     }
 
     fn parse_assignment(&mut self) -> Expr {
-        let left = self.parse_equality();
+        let left = self.parse_or();
 
         if self.peek().kind == TokenKind::Equal {
             self.advance();
@@ -321,6 +321,48 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 ExprKind::VarAssign(Box::new(left), Box::new(right)),
                 span,
             );
+        }
+
+        left
+    }
+
+    fn parse_or(&mut self) -> Expr {
+        let mut left = self.parse_and();
+        let start_span = left.span;
+        while self.peek().kind == TokenKind::Or {
+            let op_span = self.advance().span;
+            let right = self.parse_and();
+            let right_span = right.span;
+            left = Expr::new(
+                self.next_node_id(),
+                ExprKind::BinaryOp(
+                    Spanned::new(BinOpKind::Or, op_span),
+                    Box::new(left),
+                    Box::new(right),
+                ),
+                start_span.join(right_span),
+            )
+        }
+
+        left
+    }
+
+    fn parse_and(&mut self) -> Expr {
+        let mut left = self.parse_equality();
+        let start_span = left.span;
+        while self.peek().kind == TokenKind::And {
+            let op_span = self.advance().span;
+            let right = self.parse_equality();
+            let right_span = right.span;
+            left = Expr::new(
+                self.next_node_id(),
+                ExprKind::BinaryOp(
+                    Spanned::new(BinOpKind::And, op_span),
+                    Box::new(left),
+                    Box::new(right),
+                ),
+                start_span.join(right_span),
+            )
         }
 
         left
@@ -523,7 +565,11 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             return Expr::new(self.next_node_id(), ExprKind::Variable(name), span);
         } else if matches!(self.peek().kind, TokenKind::True | TokenKind::False) {
             self.advance();
-            return Expr::new(self.next_node_id(), ExprKind::Literal(LitKind::Bool(self.prev.kind.into())), self.prev.span);
+            return Expr::new(
+                self.next_node_id(),
+                ExprKind::Literal(LitKind::Bool(self.prev.kind.into())),
+                self.prev.span,
+            );
         } else {
             let span = self.peek().span;
             self.error(
