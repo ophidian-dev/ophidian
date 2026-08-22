@@ -391,6 +391,8 @@ impl<'diag> TypeChecker<'diag> {
             (BinOpKind::GreaterThan, Type::Int, Type::Int) => Type::Bool,
             (BinOpKind::LessEq, Type::Int, Type::Int) => Type::Bool,
             (BinOpKind::LessThan, Type::Int, Type::Int) => Type::Bool,
+            (BinOpKind::Or, Type::Bool, Type::Bool) => Type::Bool,
+            (BinOpKind::And, Type::Bool, Type::Bool) => Type::Bool,
             _ => Type::Error,
         }
     }
