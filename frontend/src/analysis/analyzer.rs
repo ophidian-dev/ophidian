@@ -287,7 +287,17 @@ impl<'diag> TypeChecker<'diag> {
                 }
             }
             StmtKind::If(cond, body, else_body) => {
-                todo!()
+                let cond_ty = self.check_expr(cond, ctx);
+
+                if cond_ty != Type::Bool && cond_ty != Type::Error {
+                    self.error("if statement condition must have type 'bool'", cond.span);
+                }
+
+                self.check_stmt(body, ctx);
+
+                if let Some(e) = else_body {
+                    self.check_stmt(e, ctx);
+                }
             }
             StmtKind::Error => {
                 unreachable!()
