@@ -2,23 +2,27 @@ use compiler::Compiler;
 use frontend::diagnostics::DiagnosticFormatter;
 use owo_colors::OwoColorize;
 use runtime::vm::VirtualMachine;
+use cli::parser::Args;
+use clap::Parser;
 
 fn main() {
     let argv: Vec<String> = std::env::args().collect();
-    if argv.len() < 2 {
-        eprintln!(
-            "{}: {} {}",
-            argv[0],
-            "error:".bright_red().bold(),
-            "no input file".bold()
-        );
-        std::process::exit(1);
-    }
+    let args = Args::parse();
 
-    let file = read_file_as_bytes(&argv[0], &argv[1]);
+    // if argv.len() < 2 {
+    //     eprintln!(
+    //         "{}: {} {}",
+    //         argv[0],
+    //         "error:".bright_red().bold(),
+    //         "no input file".bold()
+    //     );
+    //     std::process::exit(1);
+    // }
+
+    let file = read_file_as_bytes(&argv[0], &args.input);
 
     let mut compiler = Compiler::new();
-    let chunk = match compiler.compile(&file) {
+    let chunk = match compiler.compile(&file, args.into()) {
         Ok(chunk) => chunk,
         Err(diags) => {
             let fmtter = DiagnosticFormatter::new(&file);

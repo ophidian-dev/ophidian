@@ -10,6 +10,7 @@ members = [
 
 [workspace.dependencies] 
 owo-colors = "4.3.0"
+clap = { version = "4.6.6", features = ["derive"] }
 frontend = { path = "frontend" }
 compiler = { path = "compiler" }
 runtime = { path = "runtime" }
