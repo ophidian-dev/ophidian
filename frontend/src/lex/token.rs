@@ -128,6 +128,12 @@ pub enum TokenKind {
     // 'while' keyword
     While,
 
+    // 'break' keyword
+    Break,
+
+    // 'continue' keyword
+    Continue,
+
     // end of the file
     Eof,
 }
