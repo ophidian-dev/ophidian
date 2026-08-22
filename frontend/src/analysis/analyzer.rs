@@ -138,6 +138,12 @@ impl<'diag> Resolver<'diag> {
                 self.resolve_expr(cond, ctx);
                 self.resolve_stmt(body, ctx);
             }
+            StmtKind::Break => {
+                todo!()
+            }
+            StmtKind::Continue => {
+                todo!()
+            }
             StmtKind::Error => {
                 unreachable!()
             }
@@ -312,6 +318,12 @@ impl<'diag> TypeChecker<'diag> {
                 }
 
                 self.check_stmt(body, ctx);
+            }
+            StmtKind::Break => {
+                todo!()
+            }
+            StmtKind::Continue => {
+                todo!()
             }
             StmtKind::Error => {
                 unreachable!()

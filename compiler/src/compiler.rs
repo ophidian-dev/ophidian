@@ -187,6 +187,12 @@ impl Compiler {
 
                 chunk.patch_jump(exit_jump);
             }
+            StmtKind::Break => {
+                todo!()
+            }
+            StmtKind::Continue => {
+                todo!()
+            }
             StmtKind::Error => {
                 unreachable!()
             }
