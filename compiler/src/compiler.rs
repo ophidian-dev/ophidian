@@ -77,7 +77,17 @@ impl Compiler {
             StmtKind::Print(expr) => {
                 self.compile_expr(expr, chunk, metadata);
 
-                chunk.write(OpCode::IPrint as u8);
+                match metadata.types.get(&expr.id).unwrap() {
+                    Type::Int => {
+                        chunk.write(OpCode::IPrint as u8);
+                    }
+                    Type::Bool => {
+                        chunk.write(OpCode::BPrint as u8);
+                    }
+                    Type::Error => {
+                        unreachable!()
+                    }
+                }
             }
             StmtKind::VarDecl(_name, _type_annotation, initialiser) => {
                 match initialiser {
@@ -96,7 +106,8 @@ impl Compiler {
                                 );
                             }
                             Type::Bool => {
-                                todo!()
+                                chunk.write(OpCode::BStoreLocal as u8);
+                                chunk.write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Error => {
                                 unreachable!()
@@ -120,7 +131,9 @@ impl Compiler {
                                     .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Bool => {
-                                todo!()
+                                chunk.write(OpCode::BStoreLocal as u8);
+                                chunk
+                                    .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Error => {
                                 unreachable!()
@@ -152,7 +165,10 @@ impl Compiler {
                         chunk.write_u24(idx as u32);
                     }
                     LitKind::Bool(b) => {
-                        todo!()
+                        let value = Value::new_bool(*b);
+                        chunk.write(OpCode::LoadConst as u8);
+                        let idx = chunk.write_constant(value);
+                        chunk.write_u24(idx as u32);
                     }
                 }
             }
@@ -162,37 +178,68 @@ impl Compiler {
                 let opcode = match op.node {
                     // only type int exists rn so we dont needa
                     // check for different types
-                    BinOpKind::Add => match metadata.types.get(&expr.id).unwrap() {
+                    BinOpKind::Add => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => OpCode::IAdd,
-                        Type::Bool => {
-                            todo!()
-                        }
-                        Type::Error => {
+                        Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
-                    BinOpKind::Sub => match metadata.types.get(&expr.id).unwrap() {
+                    BinOpKind::Sub => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => OpCode::ISub,
-                        Type::Bool => todo!(),
-                        Type::Error => {
+                        Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
-                    BinOpKind::Mul => match metadata.types.get(&expr.id).unwrap() {
+                    BinOpKind::Mul => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => OpCode::IMul,
-                        Type::Bool => todo!(),
-                        Type::Error => {
+                        Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
-                    BinOpKind::Div => match metadata.types.get(&expr.id).unwrap() {
+                    BinOpKind::Div => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => OpCode::IDiv,
-                        Type::Bool => todo!(),
-                        Type::Error => {
+                        Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
-                    _ => todo!(),
+                    BinOpKind::BangEq => {
+                        match metadata.types.get(&left.id).unwrap() {
+                            Type::Int => OpCode::INEqual,
+                            Type::Bool => OpCode::BNEqual,
+                            Type::Error => unreachable!()
+                        }
+                    }
+                    BinOpKind::EqEq => {
+                        match metadata.types.get(&left.id).unwrap() {
+                            Type::Int => OpCode::IEqual,
+                            Type::Bool => OpCode::BEqual,
+                            Type::Error => unreachable!()
+                        }
+                    }
+                    BinOpKind::GreaterEq => {
+                        match metadata.types.get(&left.id).unwrap() {
+                            Type::Int => OpCode::IGreaterEq,
+                            Type::Bool | Type::Error => unreachable!()
+                        }
+                    }
+                    BinOpKind::GreaterThan => {
+                        match metadata.types.get(&left.id).unwrap() {
+                            Type::Int => OpCode::IGreater,
+                            Type::Bool | Type::Error => unreachable!()
+                        }
+                    }
+                    BinOpKind::LessEq => {
+                        match metadata.types.get(&left.id).unwrap() {
+                            Type::Int => OpCode::ILessEq,
+                            Type::Bool | Type::Error => unreachable!()
+                        }
+                    }
+                    BinOpKind::LessThan => {
+                        match metadata.types.get(&left.id).unwrap() {
+                            Type::Int => OpCode::ILess,
+                            Type::Bool | Type::Error => unreachable!()
+                        }
+                    }
                 };
 
                 chunk.write(opcode as u8);
@@ -203,10 +250,9 @@ impl Compiler {
                 let opcode = match op.node {
                     // only type int exists for now so no type checks
                     // are necessary
-                    UnaryOpKind::Negate => match metadata.types.get(&expr.id).unwrap() {
+                    UnaryOpKind::Negate => match metadata.types.get(&right.id).unwrap() {
                         Type::Int => OpCode::INegate,
-                        Type::Bool => todo!(),
-                        Type::Error => {
+                        Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
@@ -229,17 +275,27 @@ impl Compiler {
                     Type::Int => {
                         chunk.write(OpCode::IStoreLocal as u8);
                         chunk.write_u24((*self.locals.get(varid).unwrap()).into());
-                        // leave the assigned value on the stack
-                        self.compile_expr(value, chunk, metadata);
                     }
                     Type::Bool => {
-                        todo!()
+                        chunk.write(OpCode::BStoreLocal as u8);
+                        chunk.write_u24((*self.locals.get(varid).unwrap()).into());
                     }
                     Type::Error => unreachable!(),
                 }
             }
             ExprKind::Variable(_name) => {
-                chunk.write(OpCode::ILoadLocal as u8);
+                let varid = *metadata.variables.get(&expr.id).unwrap();
+                match metadata.var_types.get(&varid).unwrap() {
+                    Type::Int => {
+                        chunk.write(OpCode::ILoadLocal as u8);
+                    }
+                    Type::Bool => {
+                        chunk.write(OpCode::BLoadLocal as u8);
+                    }
+                    Type::Error => {
+                        unreachable!()
+                    }
+                }
                 chunk.write_u24(
                     (*self
                         .locals
