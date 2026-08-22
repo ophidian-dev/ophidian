@@ -47,6 +47,29 @@ pub enum BinOpKind {
     Or,
 }
 
+impl std::fmt::Display for BinOpKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let op = match self {
+            BinOpKind::Add => "+",
+            BinOpKind::Sub => "-",
+            BinOpKind::Mul => "*",
+            BinOpKind::Div => "/",
+
+            BinOpKind::EqEq => "==",
+            BinOpKind::BangEq => "!=",
+            BinOpKind::LessThan => "<",
+            BinOpKind::GreaterThan => ">",
+            BinOpKind::LessEq => "<=",
+            BinOpKind::GreaterEq => ">=",
+
+            BinOpKind::And => "&&",
+            BinOpKind::Or => "||",
+        };
+
+        write!(f, "{}", op)
+    }
+}
+
 impl From<Token> for BinOpKind {
     fn from(value: Token) -> Self {
         match value.kind {
