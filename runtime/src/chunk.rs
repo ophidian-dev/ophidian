@@ -53,6 +53,16 @@ impl Chunk {
         pos
     }
 
+    pub fn write_jump_back(&mut self, opcode: OpCode, target: usize) {
+        self.write(opcode as u8);
+
+        let current = self.bytecode.len() + 4;
+
+        let offset = target as isize - current as isize;
+
+        self.write_i32(offset as i32);
+    }
+
     pub fn patch_jump(&mut self, pos: usize) {
         let target = self.bytecode.len();
 

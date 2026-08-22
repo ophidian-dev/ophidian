@@ -175,7 +175,17 @@ impl Compiler {
                 }
             }
             StmtKind::While(cond, body) => {
-                todo!()
+                let loop_start = chunk.bytecode.len();
+
+                self.compile_expr(cond, chunk, metadata);
+
+                let exit_jump = chunk.write_jump(OpCode::JmpFalse);
+
+                self.compile_stmt(body, chunk, metadata);
+
+                chunk.write_jump_back(OpCode::Jmp, loop_start);
+
+                chunk.patch_jump(exit_jump);
             }
             StmtKind::Error => {
                 unreachable!()
