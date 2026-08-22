@@ -55,6 +55,12 @@ pub enum OpCode {
     ILessEq = 0x13,
     IGreater = 0x14,
     IGreaterEq = 0x15,
+
+    // jumps
+    // these jumps take a FOUR byte operand (not to be confused with the 3 bytes used for other opcodes)
+    Jmp = 0x16,
+    Jne = 0x17,
+    Je = 0x18,
 }
 
 impl TryFrom<u8> for OpCode {
@@ -84,6 +90,9 @@ impl TryFrom<u8> for OpCode {
             0x13 => Ok(Self::ILessEq),
             0x14 => Ok(Self::IGreater),
             0x15 => Ok(Self::IGreaterEq),
+            0x16 => Ok(Self::Jmp),
+            0x17 => Ok(Self::Jne),
+            0x18 => Ok(Self::Je),
             _ => Err(()),
         }
     }

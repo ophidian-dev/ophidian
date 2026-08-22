@@ -223,6 +223,49 @@ impl VirtualMachine {
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
+                OpCode::Je => {
+                    let value = self.pop();
+                    let cond = unsafe {
+                        value.data.boolean
+                    };
+                    let b0 = self.read_byte();
+                    let b1 = self.read_byte();
+                    let b2 = self.read_byte();
+                    let b3 = self.read_byte();
+                    if cond {
+                        let offset = i32::from_le_bytes([b0, b1, b2, b3]);
+                        unsafe {
+                            self.jump(offset);
+                        }
+                    }
+                }
+                OpCode::Jmp => {
+                    let b0 = self.read_byte();
+                    let b1 = self.read_byte();
+                    let b2 = self.read_byte();
+                    let b3 = self.read_byte();
+                    let offset = i32::from_le_bytes([b0, b1, b2, b3]);
+                    unsafe {
+                        self.jump(offset);
+                    }
+                }
+                OpCode::Jne => {
+                    let value = self.pop();
+                    let cond = unsafe {
+                        value.data.boolean
+                    };
+                    let b0 = self.read_byte();
+                    let b1 = self.read_byte();
+                    let b2 = self.read_byte();
+                    let b3 = self.read_byte();
+
+                    if !cond {
+                        let offset = i32::from_le_bytes([b0, b1, b2, b3]);
+                        unsafe {
+                            self.jump(offset);
+                        }
+                    }
+                }
             }
         }
     }
@@ -240,6 +283,18 @@ impl VirtualMachine {
             let byte = *self.ip;
             self.ip = self.ip.add(1);
             byte
+        }
+    }
+
+    unsafe fn jump(&mut self, offset: i32) {
+        if offset >= 0 {
+            self.ip = unsafe {
+                self.ip.add(offset as usize)
+            };
+        } else {
+            self.ip = unsafe {
+                self.ip.sub((-offset) as usize)
+            };
         }
     }
 }
