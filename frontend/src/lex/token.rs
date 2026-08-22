@@ -119,6 +119,12 @@ pub enum TokenKind {
     // logical or '||'
     Or,
 
+    // 'if' keyword
+    If,
+
+    // 'else' keyword
+    Else,
+
     // end of the file
     Eof,
 }

@@ -75,6 +75,8 @@ impl<'src> Lexer<'src> {
             b"true" => TokenKind::True,
             b"false" => TokenKind::False,
             b"bool" => TokenKind::Bool,
+            b"if" => TokenKind::If,
+            b"else" => TokenKind::Else,
             _ => TokenKind::Identifier,
         }
     }
