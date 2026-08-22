@@ -127,6 +127,9 @@ impl<'diag> Resolver<'diag> {
             StmtKind::Print(expr) => {
                 self.resolve_expr(expr, ctx);
             }
+            StmtKind::If(cond, body, else_body) => {
+                todo!()
+            }
             StmtKind::Error => {
                 unreachable!()
             }
@@ -277,6 +280,9 @@ impl<'diag> TypeChecker<'diag> {
                         }
                     },
                 }
+            }
+            StmtKind::If(cond, body, else_body) => {
+                todo!()
             }
             StmtKind::Error => {
                 unreachable!()

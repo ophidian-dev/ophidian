@@ -155,6 +155,9 @@ impl Compiler {
                     self.compile_stmt(stmt, chunk, metadata);
                 }
             }
+            StmtKind::If(cond, body, else_body) => {
+                todo!()
+            }
             StmtKind::Error => {
                 unreachable!()
             }

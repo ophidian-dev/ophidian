@@ -171,6 +171,18 @@ pub enum StmtKind {
     // opened with a '{' and closed with '}'
     Block(Vec<Stmt>),
 
+    // an if statement
+    // Box<Expr> represents the condition for the if body to execute
+    // Box<Stmt> represents the if body 
+    // i.e.
+    // if (cond) {   
+    //              <--
+    // }
+    // Option<Box<Stmt>> represents an optional else body
+    // for else if statements simply store another if statement in the else clause 
+    // so it is recursive
+    If(Box<Expr>, Box<Stmt>, Option<Box<Stmt>>),
+
     // an error node to represent a recoverable error this node exists
     // so that the parser can recover from a parsing function. Before the
     // semantic analysis phase begins, if the parser has any error nodes
