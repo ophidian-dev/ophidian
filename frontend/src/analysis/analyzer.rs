@@ -135,7 +135,8 @@ impl<'diag> Resolver<'diag> {
                 }
             }
             StmtKind::While(cond, body) => {
-                todo!()
+                self.resolve_expr(cond, ctx);
+                self.resolve_stmt(body, ctx);
             }
             StmtKind::Error => {
                 unreachable!()
@@ -293,6 +294,7 @@ impl<'diag> TypeChecker<'diag> {
 
                 if cond_ty != Type::Bool && cond_ty != Type::Error {
                     self.error("if statement condition must have type 'bool'", cond.span);
+                    return;
                 }
 
                 self.check_stmt(body, ctx);
@@ -302,7 +304,14 @@ impl<'diag> TypeChecker<'diag> {
                 }
             }
             StmtKind::While(cond, body) => {
-                todo!()
+                let cond_ty = self.check_expr(cond, ctx);
+
+                if cond_ty != Type::Bool && cond_ty != Type::Error {
+                    self.error("while statement condition must have type 'bool'", cond.span);
+                    return;
+                }
+
+                self.check_stmt(body, ctx);
             }
             StmtKind::Error => {
                 unreachable!()
