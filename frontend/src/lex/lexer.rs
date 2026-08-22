@@ -39,11 +39,6 @@ impl<'src> Lexer<'src> {
         return self.source.get(self.current).cloned();
     }
 
-    // same as peek but returns peek + n index
-    fn peekn(&self, n: usize) -> Option<u8> {
-        return self.source.get(self.current + n).cloned();
-    }
-
     // advances the lexer cursor
     // return None at EOF
     fn advance(&mut self) -> Option<u8> {
@@ -140,7 +135,7 @@ impl<'src> TokenStream for Lexer<'src> {
             }
             b'=' => {
                 self.advance();
-                if let Some(d) = self.peekn(1) {
+                if let Some(d) = self.peek() {
                     if d == b'=' {
                         self.advance();
                         return self.create_token(TokenKind::EqualEqual);
@@ -162,7 +157,7 @@ impl<'src> TokenStream for Lexer<'src> {
             }
             b'!' => {
                 self.advance();
-                if let Some(d) = self.peekn(1) {
+                if let Some(d) = self.peek() {
                     if d == b'=' {
                         self.advance();
                         return self.create_token(TokenKind::BangEqual);
@@ -172,7 +167,7 @@ impl<'src> TokenStream for Lexer<'src> {
             }
             b'>' => {
                 self.advance();
-                if let Some(d) = self.peekn(1) {
+                if let Some(d) = self.peek() {
                     if d == b'=' {
                         self.advance();
                         return self.create_token(TokenKind::GreaterEq);
@@ -182,7 +177,7 @@ impl<'src> TokenStream for Lexer<'src> {
             }
             b'<' => {
                 self.advance();
-                if let Some(d) = self.peekn(1) {
+                if let Some(d) = self.peek() {
                     if d == b'=' {
                         self.advance();
                         return self.create_token(TokenKind::LessEq);
