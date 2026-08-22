@@ -128,7 +128,12 @@ impl<'diag> Resolver<'diag> {
                 self.resolve_expr(expr, ctx);
             }
             StmtKind::If(cond, body, else_body) => {
-                todo!()
+                self.resolve_expr(cond, ctx);
+                self.resolve_stmt(body, ctx);
+                if let Some(e) = else_body {
+                    self.resolve_stmt(e, ctx);
+                }
+
             }
             StmtKind::Error => {
                 unreachable!()
