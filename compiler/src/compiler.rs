@@ -95,6 +95,9 @@ impl Compiler {
                                     varid.0.try_into().expect("hopefully this doesnt happen"),
                                 );
                             }
+                            Type::Bool => {
+                                todo!()
+                            }
                             Type::Error => {
                                 unreachable!()
                             }
@@ -115,6 +118,9 @@ impl Compiler {
                                 chunk.write(OpCode::IStoreLocal as u8);
                                 chunk
                                     .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
+                            }
+                            Type::Bool => {
+                                todo!()
                             }
                             Type::Error => {
                                 unreachable!()
@@ -158,24 +164,30 @@ impl Compiler {
                     // check for different types
                     BinOpKind::Add => match metadata.types.get(&expr.id).unwrap() {
                         Type::Int => OpCode::IAdd,
+                        Type::Bool => {
+                            todo!()
+                        }
                         Type::Error => {
                             unreachable!()
                         }
                     },
                     BinOpKind::Sub => match metadata.types.get(&expr.id).unwrap() {
                         Type::Int => OpCode::ISub,
+                        Type::Bool => todo!(),
                         Type::Error => {
                             unreachable!()
                         }
                     },
                     BinOpKind::Mul => match metadata.types.get(&expr.id).unwrap() {
                         Type::Int => OpCode::IMul,
+                        Type::Bool => todo!(),
                         Type::Error => {
                             unreachable!()
                         }
                     },
                     BinOpKind::Div => match metadata.types.get(&expr.id).unwrap() {
                         Type::Int => OpCode::IDiv,
+                        Type::Bool => todo!(),
                         Type::Error => {
                             unreachable!()
                         }
@@ -193,6 +205,7 @@ impl Compiler {
                     // are necessary
                     UnaryOpKind::Negate => match metadata.types.get(&expr.id).unwrap() {
                         Type::Int => OpCode::INegate,
+                        Type::Bool => todo!(),
                         Type::Error => {
                             unreachable!()
                         }
@@ -218,6 +231,9 @@ impl Compiler {
                         chunk.write_u24((*self.locals.get(varid).unwrap()).into());
                         // leave the assigned value on the stack
                         self.compile_expr(value, chunk, metadata);
+                    }
+                    Type::Bool => {
+                        todo!()
                     }
                     Type::Error => unreachable!(),
                 }

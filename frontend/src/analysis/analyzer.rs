@@ -9,6 +9,8 @@ use std::collections::HashMap;
 pub enum Type {
     Int,
 
+    Bool,
+
     // The type that allows analysis to continue if it
     // encounters an error
     Error,
@@ -239,7 +241,7 @@ impl<'diag> TypeChecker<'diag> {
                     Type::Error => {
                         return;
                     }
-                    Type::Int => {}
+                    Type::Int | Type::Bool => {}
                 }
             }
             StmtKind::VarDecl(.., type_annotation, initializer) => {
@@ -300,8 +302,8 @@ impl<'diag> TypeChecker<'diag> {
                         unimplemented!("larger integer types not yet implemented")
                     }
                 }
-                LitKind::Bool(b) => {
-                    todo!()
+                LitKind::Bool(_b) => {
+                    Type::Bool
                 }
             },
             ExprKind::UnaryOp(op, right) => {
@@ -369,7 +371,8 @@ impl<'diag> TypeChecker<'diag> {
         }
         match (op, rhs) {
             (UnaryOpKind::Negate, Type::Int) => Type::Int,
-            _ => Type::Error,
+            (UnaryOpKind::Negate, Type::Bool) => Type::Error,
+            (UnaryOpKind::Negate, Type::Error) => unreachable!(),
         }
     }
 
@@ -382,6 +385,14 @@ impl<'diag> TypeChecker<'diag> {
             (BinOpKind::Sub, Type::Int, Type::Int) => Type::Int,
             (BinOpKind::Mul, Type::Int, Type::Int) => Type::Int,
             (BinOpKind::Div, Type::Int, Type::Int) => Type::Int,
+            (BinOpKind::BangEq, Type::Int, Type::Int) => Type::Bool,
+            (BinOpKind::BangEq, Type::Bool, Type::Bool) => Type::Bool,
+            (BinOpKind::EqEq, Type::Int, Type::Int) => Type::Bool,
+            (BinOpKind::EqEq, Type::Bool, Type::Bool) => Type::Bool,
+            (BinOpKind::GreaterEq, Type::Int, Type::Int) => Type::Bool,
+            (BinOpKind::GreaterThan, Type::Int, Type::Int) => Type::Bool,
+            (BinOpKind::LessEq, Type::Int, Type::Int) => Type::Bool,
+            (BinOpKind::LessThan, Type::Int, Type::Int) => Type::Bool,
             _ => Type::Error,
         }
     }
