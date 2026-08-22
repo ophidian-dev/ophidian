@@ -77,6 +77,7 @@ impl<'src> Lexer<'src> {
             b"bool" => TokenKind::Bool,
             b"if" => TokenKind::If,
             b"else" => TokenKind::Else,
+            b"while" => TokenKind::While,
             _ => TokenKind::Identifier,
         }
     }

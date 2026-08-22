@@ -125,6 +125,9 @@ pub enum TokenKind {
     // 'else' keyword
     Else,
 
+    // 'while' keyword
+    While,
+
     // end of the file
     Eof,
 }
