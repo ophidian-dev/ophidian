@@ -76,6 +76,10 @@ pub enum TokenKind {
     // not to be confused with IntegerLiteral
     Int,
 
+    // the type 'bool'
+    // not to be confused with boolean literals i.e. 'true' and 'false'
+    Bool,
+
     // assignment operator
     // i.e. '='
     Equal,

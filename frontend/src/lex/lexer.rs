@@ -79,6 +79,7 @@ impl<'src> Lexer<'src> {
             b"let" => TokenKind::Let,
             b"true" => TokenKind::True,
             b"false" => TokenKind::False,
+            b"bool" => TokenKind::Bool,
             _ => TokenKind::Identifier,
         }
     }
