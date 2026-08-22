@@ -142,7 +142,105 @@ impl VirtualMachine {
                     *self.locals.get_mut(idx as usize).unwrap() = value;
                     self.push(value);
                 }
-                _ => todo!()
+                OpCode::BEqual => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.boolean == b.data.boolean
+                    };
+                    let v = Value::new_bool(res);
+                    self.push(v);
+                }
+                OpCode::BLoadLocal => {
+                    let b0 = self.read_byte();
+                    let b1 = self.read_byte();
+                    let b2 = self.read_byte();
+                    let idx = decode_u24_le([b0, b1, b2]);
+                    let value = *self.locals.get(idx as usize).unwrap();
+                    self.push(value);
+                }
+                OpCode::BNEqual => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.boolean != b.data.boolean
+                    };
+                    let v = Value::new_bool(res);
+                    self.push(v);
+                }
+                OpCode::BPrint => {
+                    let v = self.pop();
+                    let boolean = unsafe {
+                        v.data.boolean
+                    };
+                    println!("{}", boolean);
+                }
+                OpCode::BStoreLocal => {
+                    let value = self.pop();
+                    if value.kind == ValueKind::Uninitialized {
+                        panic!("use of uninitialized variable");
+                    }
+                    let b0 = self.read_byte();
+                    let b1 = self.read_byte();
+                    let b2 = self.read_byte();
+                    let idx = decode_u24_le([b0, b1, b2]);
+                    *self.locals.get_mut(idx as usize).unwrap() = value;
+                    self.push(value);
+                }
+                OpCode::IEqual => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.integer == b.data.integer
+                    };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::IGreater => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.integer > b.data.integer
+                    };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::IGreaterEq => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.integer >= b.data.integer
+                    };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::ILess => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.integer < b.data.integer
+                    };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::ILessEq => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.integer <= b.data.integer
+                    };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::INEqual => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.integer != b.data.integer
+                    };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
             }
         }
     }
