@@ -76,6 +76,7 @@ impl<'diag> SemanticAnalyzer<'diag> {
 struct Resolver<'diag> {
     curr_var_id: VarId,
     diagnostics: &'diag mut Vec<Diagnostic>,
+    loop_depth: usize,
 }
 
 impl<'diag> Resolver<'diag> {
@@ -83,6 +84,7 @@ impl<'diag> Resolver<'diag> {
         Self {
             curr_var_id: VarId::from(0),
             diagnostics,
+            loop_depth: 0,
         }
     }
 
@@ -136,13 +138,20 @@ impl<'diag> Resolver<'diag> {
             }
             StmtKind::While(cond, body) => {
                 self.resolve_expr(cond, ctx);
+
+                self.loop_depth += 1;
                 self.resolve_stmt(body, ctx);
+                self.loop_depth -= 1;
             }
             StmtKind::Break => {
-                todo!()
+                if self.loop_depth == 0 {
+                    self.error("use of 'break' statement outside loop", stmt.span);
+                } 
             }
             StmtKind::Continue => {
-                todo!()
+                if self.loop_depth == 0 {
+                    self.error("use of continue statement outside loop", stmt.span);
+                }
             }
             StmtKind::Error => {
                 unreachable!()
@@ -320,10 +329,10 @@ impl<'diag> TypeChecker<'diag> {
                 self.check_stmt(body, ctx);
             }
             StmtKind::Break => {
-                todo!()
+                // nothing to type check
             }
             StmtKind::Continue => {
-                todo!()
+                // nothing to type check
             }
             StmtKind::Error => {
                 unreachable!()
