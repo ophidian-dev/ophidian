@@ -183,6 +183,11 @@ pub enum StmtKind {
     // so it is recursive
     If(Box<Expr>, Box<Stmt>, Option<Box<Stmt>>),
 
+    // a while loop
+    // Box<Expr> represents the condition for the while loop
+    // Box<Stmt> is the body of the loop
+    While(Box<Expr>, Box<Stmt>),
+
     // an error node to represent a recoverable error this node exists
     // so that the parser can recover from a parsing function. Before the
     // semantic analysis phase begins, if the parser has any error nodes

@@ -107,11 +107,40 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             TokenKind::Let => self.parse_var_decl(),
             TokenKind::OpenBrace => self.parse_block(),
             TokenKind::If => self.parse_if(),
+            TokenKind::While => self.parse_while(),
             _ => {
                 self.error("unexpected token", self.peek().span);
                 return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
             }
         }
+    }
+
+    fn parse_while(&mut self) -> Stmt {
+        let start_span = self.advance().span;
+
+        if self.peek().kind != TokenKind::OpenParen {
+            self.error("expected '('", self.peek().span);
+            return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+        }
+
+        self.advance();
+        let cond = self.parse_expression();
+
+        if self.peek().kind != TokenKind::CloseParen {
+            self.error("expected ')'", self.peek().span);
+            return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+        }
+
+        self.advance();
+
+        let body = self.parse_statement();
+        let end_span = body.span;
+
+        return Stmt::new(
+            self.next_node_id(),
+            StmtKind::While(Box::new(cond), Box::new(body)),
+            start_span.join(end_span),
+        );
     }
 
     fn parse_if(&mut self) -> Stmt {

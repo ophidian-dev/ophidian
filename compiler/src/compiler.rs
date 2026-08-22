@@ -174,6 +174,9 @@ impl Compiler {
                     chunk.patch_jump(pos);
                 }
             }
+            StmtKind::While(cond, body) => {
+                todo!()
+            }
             StmtKind::Error => {
                 unreachable!()
             }

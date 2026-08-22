@@ -134,6 +134,9 @@ impl<'diag> Resolver<'diag> {
                     self.resolve_stmt(e, ctx);
                 }
             }
+            StmtKind::While(cond, body) => {
+                todo!()
+            }
             StmtKind::Error => {
                 unreachable!()
             }
@@ -297,6 +300,9 @@ impl<'diag> TypeChecker<'diag> {
                 if let Some(e) = else_body {
                     self.check_stmt(e, ctx);
                 }
+            }
+            StmtKind::While(cond, body) => {
+                todo!()
             }
             StmtKind::Error => {
                 unreachable!()
