@@ -113,6 +113,12 @@ pub enum TokenKind {
     // '}'
     CloseBrace,
 
+    // logical and '&&'
+    And,
+
+    // logical or '||'
+    Or,
+
     // end of the file
     Eof,
 }

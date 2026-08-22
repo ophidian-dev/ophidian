@@ -185,6 +185,26 @@ impl<'src> TokenStream for Lexer<'src> {
                 }
                 return self.create_token(TokenKind::LessThan);
             }
+            b'|' => {
+                self.advance();
+                if let Some(d) = self.peek() {
+                    if d == b'|' {
+                        self.advance();
+                        return self.create_token(TokenKind::Or);
+                    }
+                }
+                unimplemented!("bitwise or")
+            }
+            b'&' => {
+                self.advance();
+                if let Some(d) = self.peek() {
+                    if d == b'&' {
+                        self.advance();
+                        return self.create_token(TokenKind::And);
+                    }
+                }
+                unimplemented!("bitwise and")
+            }
             _ => {
                 if c.is_ascii_digit() {
                     while let Some(d) = self.peek() {
