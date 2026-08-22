@@ -1,6 +1,6 @@
+use cli::options::Options;
 use compiler::Compiler;
 use runtime::{chunk::Chunk, value::Value};
-use cli::options::Options;
 
 #[test]
 fn test_compile_stmtexpr() {

@@ -1,9 +1,9 @@
+use clap::Parser;
+use cli::parser::Args;
 use compiler::Compiler;
 use frontend::diagnostics::DiagnosticFormatter;
 use owo_colors::OwoColorize;
 use runtime::vm::VirtualMachine;
-use cli::parser::Args;
-use clap::Parser;
 
 fn main() {
     let argv: Vec<String> = std::env::args().collect();

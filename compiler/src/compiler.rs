@@ -1,13 +1,13 @@
+use cli::options::Options;
 use frontend::analysis::analyzer::{AnalysisResult, SemanticAnalyzer, Type, VarId};
 use frontend::diagnostics::Diagnostic;
 use frontend::lex::Lexer;
 use frontend::parse::Parser;
 use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Stmt, StmtKind, UnaryOpKind};
 use runtime::chunk::Chunk;
+use runtime::disassembler::Disassembler;
 use runtime::opcodes::OpCode;
 use runtime::value::Value;
-use runtime::disassembler::Disassembler;
-use cli::options::Options;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy)]
@@ -69,7 +69,7 @@ impl Compiler {
         if options.dump_bytecode {
             let disassembler = Disassembler::new(&chunk);
             disassembler.disassemble();
-        } 
+        }
 
         Ok(chunk)
     }
@@ -288,7 +288,6 @@ impl Compiler {
                         chunk.patch_jump(pos);
                     }
                 };
-
             }
             ExprKind::UnaryOp(op, right) => {
                 self.compile_expr(&right, chunk, metadata);

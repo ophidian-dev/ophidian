@@ -7,5 +7,5 @@ pub struct Args {
     // whether or not to dump bytecode
     // does not affect execution
     #[arg(short, long)]
-    pub dump: bool 
+    pub dump: bool,
 }

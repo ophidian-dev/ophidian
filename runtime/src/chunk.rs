@@ -1,5 +1,5 @@
-use crate::value::Value;
 use crate::opcodes::OpCode;
+use crate::value::Value;
 
 #[derive(Debug, PartialEq)]
 pub struct Chunk {

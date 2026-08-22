@@ -16,7 +16,7 @@ impl From<Args> for Options {
     fn from(value: Args) -> Self {
         Self {
             input: value.input,
-            dump_bytecode: value.dump
-        } 
+            dump_bytecode: value.dump,
+        }
     }
 }

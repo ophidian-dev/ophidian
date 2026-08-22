@@ -225,9 +225,7 @@ impl VirtualMachine {
                 }
                 OpCode::JmpTrue => {
                     let value = self.pop();
-                    let cond = unsafe {
-                        value.data.boolean
-                    };
+                    let cond = unsafe { value.data.boolean };
                     let b0 = self.read_byte();
                     let b1 = self.read_byte();
                     let b2 = self.read_byte();
@@ -251,9 +249,7 @@ impl VirtualMachine {
                 }
                 OpCode::JmpFalse => {
                     let value = self.pop();
-                    let cond = unsafe {
-                        value.data.boolean
-                    };
+                    let cond = unsafe { value.data.boolean };
                     let b0 = self.read_byte();
                     let b1 = self.read_byte();
                     let b2 = self.read_byte();
@@ -293,13 +289,9 @@ impl VirtualMachine {
 
     unsafe fn jump(&mut self, offset: i32) {
         if offset >= 0 {
-            self.ip = unsafe {
-                self.ip.add(offset as usize)
-            };
+            self.ip = unsafe { self.ip.add(offset as usize) };
         } else {
-            self.ip = unsafe {
-                self.ip.sub((-offset) as usize)
-            };
+            self.ip = unsafe { self.ip.sub((-offset) as usize) };
         }
     }
 }

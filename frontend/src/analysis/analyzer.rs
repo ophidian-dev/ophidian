@@ -296,11 +296,14 @@ impl<'diag> TypeChecker<'diag> {
                 let left_type = self.check_expr(left, ctx);
                 let right_type = self.check_expr(right, ctx);
 
-                let res =self.binary_result_type(op.node, left_type, right_type);
+                let res = self.binary_result_type(op.node, left_type, right_type);
                 if res == Type::Error {
-                    self.error(format!("invalid operands for binary operation: '{}'", op.node), expr.span);
+                    self.error(
+                        format!("invalid operands for binary operation: '{}'", op.node),
+                        expr.span,
+                    );
                 }
-                
+
                 res
             }
             ExprKind::Literal(lit) => match lit {

@@ -173,13 +173,13 @@ pub enum StmtKind {
 
     // an if statement
     // Box<Expr> represents the condition for the if body to execute
-    // Box<Stmt> represents the if body 
+    // Box<Stmt> represents the if body
     // i.e.
-    // if (cond) {   
+    // if (cond) {
     //              <--
     // }
     // Option<Box<Stmt>> represents an optional else body
-    // for else if statements simply store another if statement in the else clause 
+    // for else if statements simply store another if statement in the else clause
     // so it is recursive
     If(Box<Expr>, Box<Stmt>, Option<Box<Stmt>>),
 

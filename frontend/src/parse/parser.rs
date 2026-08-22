@@ -106,9 +106,59 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             }
             TokenKind::Let => self.parse_var_decl(),
             TokenKind::OpenBrace => self.parse_block(),
+            TokenKind::If => self.parse_if(),
             _ => {
-                panic!("unexpected token at statement start: {:?}", self.peek())
+                self.error("unexpected token", self.peek().span);
+                return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
             }
+        }
+    }
+
+    fn parse_if(&mut self) -> Stmt {
+        // advance past the if and get its span
+        let start_span = self.advance().span;
+
+        if self.peek().kind != TokenKind::OpenParen {
+            self.error("expected '('", self.peek().span);
+            return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+        }
+
+        self.advance();
+        let cond = self.parse_expression();
+
+        if self.peek().kind != TokenKind::CloseParen {
+            self.error("expected ')'", self.peek().span);
+            return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+        }
+        self.advance();
+
+        let body = self.parse_statement();
+
+        if self.peek().kind == TokenKind::Else {
+            self.advance();
+            if self.peek().kind == TokenKind::If {
+                let if_stmt = self.parse_if();
+                let end_span = if_stmt.span;
+                return Stmt::new(
+                    self.next_node_id(),
+                    StmtKind::If(Box::new(cond), Box::new(body), Some(Box::new(if_stmt))),
+                    start_span.join(end_span),
+                );
+            }
+            let else_body = self.parse_statement();
+            let end_span = else_body.span;
+            return Stmt::new(
+                self.next_node_id(),
+                StmtKind::If(Box::new(cond), Box::new(body), Some(Box::new(else_body))),
+                start_span.join(end_span),
+            );
+        } else {
+            let end_span = body.span;
+            return Stmt::new(
+                self.next_node_id(),
+                StmtKind::If(Box::new(cond), Box::new(body), None),
+                start_span.join(end_span),
+            );
         }
     }
 

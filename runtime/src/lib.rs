@@ -9,7 +9,7 @@
 // safety i.e. very c style
 
 pub mod chunk;
+pub mod disassembler;
 pub mod opcodes;
 pub mod value;
 pub mod vm;
-pub mod disassembler;
