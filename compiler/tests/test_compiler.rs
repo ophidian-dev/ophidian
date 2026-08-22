@@ -1,10 +1,11 @@
 use compiler::Compiler;
 use runtime::{chunk::Chunk, value::Value};
+use cli::options::Options;
 
 #[test]
 fn test_compile_stmtexpr() {
     let mut compiler = Compiler::new();
-    let chunk = compiler.compile(b"1 + 2 * 3;").unwrap();
+    let chunk = compiler.compile(b"1 + 2 * 3;", Options::default()).unwrap();
     let constants = vec![
         Value::new_int(1),
         Value::new_int(2),

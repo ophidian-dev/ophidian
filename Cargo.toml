@@ -1,9 +1,11 @@
 [workspace]
 resolver = "3"
 members = [
+    "cli",
     "compiler",
     "frontend", 
-    "op", "runtime",
+    "op", 
+    "runtime",
 ]
 
 [workspace.dependencies] 
@@ -11,4 +13,4 @@ owo-colors = "4.3.0"
 frontend = { path = "frontend" }
 compiler = { path = "compiler" }
 runtime = { path = "runtime" }
-
+cli = { path = "cli" }

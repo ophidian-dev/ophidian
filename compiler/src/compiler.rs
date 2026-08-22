@@ -6,6 +6,8 @@ use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Stmt, StmtKind, U
 use runtime::chunk::Chunk;
 use runtime::opcodes::OpCode;
 use runtime::value::Value;
+use runtime::disassembler::Disassembler;
+use cli::options::Options;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy)]
@@ -32,7 +34,7 @@ impl Compiler {
     }
 
     #[must_use]
-    pub fn compile(&mut self, source: &[u8]) -> Result<Chunk, Vec<Diagnostic>> {
+    pub fn compile(&mut self, source: &[u8], options: Options) -> Result<Chunk, Vec<Diagnostic>> {
         let mut diagnostics = Vec::<Diagnostic>::new();
         let lexer = Lexer::new(source);
         let mut parser = Parser::new(lexer, &mut diagnostics, source);
@@ -63,6 +65,11 @@ impl Compiler {
         chunk.write_u24(idx as u32);
 
         chunk.write(OpCode::Halt as u8);
+
+        if options.dump_bytecode {
+            let disassembler = Disassembler::new(&chunk);
+            disassembler.disassemble();
+        } 
 
         Ok(chunk)
     }
