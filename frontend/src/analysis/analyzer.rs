@@ -1,6 +1,6 @@
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parse::ast::{
-    BinOpKind, Expr, ExprKind, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind,
+    BinOpKind, Expr, ExprKind, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind, ForInit
 };
 use crate::span::Span;
 use std::collections::HashMap;
@@ -144,7 +144,45 @@ impl<'diag> Resolver<'diag> {
                 self.loop_depth -= 1;
             }
             StmtKind::For(init, cond, incre, body) => {
-                todo!()
+                self.enter_scope(ctx);
+
+                match init {
+                    Some(init) => {
+                        match &**init {
+                            ForInit::Expr(expr)  => {
+                                self.resolve_expr(&expr, ctx); 
+                            }
+                            ForInit::Decl(decl) => {
+                                self.resolve_stmt(&decl, ctx);
+                            }
+                        }                        
+                    }
+                    None => {
+                        // no name resolution needed here
+                    }
+                }
+
+                match cond {
+                    Some(cond) => {
+                        self.resolve_expr(cond, ctx);
+                    }
+                    None => {
+                        // no name resolution needed here
+                    }
+                }
+
+                match incre {
+                    Some(incre) => {
+                        self.resolve_expr(incre, ctx);
+                    }
+                    None => {
+                        // no name resolution needed here
+                    }
+                }
+
+                self.resolve_stmt(body, ctx);
+
+                self.exit_scope(ctx);
             }
             StmtKind::Break => {
                 if self.loop_depth == 0 {
@@ -338,7 +376,31 @@ impl<'diag> TypeChecker<'diag> {
                 // nothing to type check
             }
             StmtKind::For(init, cond, incre, body) => {
-                todo!()
+                if let Some(init) = init {
+                    match &**init {
+                        ForInit::Decl(decl) => {
+                            self.check_stmt(decl, ctx);
+                        }
+                        ForInit::Expr(expr) => {
+                            self.check_expr(expr, ctx);
+                        }
+                    }
+                }
+
+                if let Some(cond) = cond {
+                    let ty = self.check_expr(cond, ctx);
+
+                    if ty != Type::Bool {
+                        self.error("for loop condition must have type 'bool'", cond.span);
+                        return;
+                    }
+                }
+
+                if let Some(incre) = incre {
+                    self.check_expr(incre, ctx);
+                }
+
+                self.check_stmt(body, ctx);
             }
             StmtKind::Error => {
                 unreachable!()
