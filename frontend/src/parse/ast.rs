@@ -176,7 +176,7 @@ impl Expr {
 pub enum ForInit {
     Expr(Expr),
     // Stmt::StmtKind for this field is guarenteed to have StmtKind::VarDecl
-    Statement(Stmt),
+    Decl(Stmt),
 }
 
 #[derive(Debug, PartialEq)]

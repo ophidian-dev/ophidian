@@ -151,7 +151,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
         let init = if self.peek().kind == TokenKind::Let {
             // parse_statement guarenteed to parse a var decl because of TokenKind::Let
-            Some(Box::new(ForInit::Statement(self.parse_statement())))
+            Some(Box::new(ForInit::Decl(self.parse_statement())))
         } else if self.peek().kind == TokenKind::Semicolon {
             self.advance();
             None
