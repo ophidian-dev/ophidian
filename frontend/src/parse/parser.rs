@@ -152,6 +152,11 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         let init = if self.peek().kind == TokenKind::Let {
             Some(Box::new(self.parse_var_decl()))
         } else {
+            if self.peek().kind != TokenKind::Semicolon {
+                self.error("expected ';'", self.peek().span);
+                return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+            }
+            self.advance();
             None
         };
 
