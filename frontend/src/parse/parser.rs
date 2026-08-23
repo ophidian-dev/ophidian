@@ -117,7 +117,6 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     }
 
     pub fn parse_statement(&mut self) -> Stmt {
-        println!("parse_statement: {:?}", self.peek().kind);
         match self.peek().kind {
             TokenKind::Print => self.parse_print(),
             TokenKind::IntegerLiteral | TokenKind::OpenParen | TokenKind::Identifier => {
