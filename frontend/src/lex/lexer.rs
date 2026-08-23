@@ -113,10 +113,22 @@ impl<'src> TokenStream for Lexer<'src> {
         match c {
             b'+' => {
                 self.advance();
+                if let Some(d) = self.peek() {
+                    if d == b'+' {
+                        self.advance();
+                        return self.create_token(TokenKind::PlusPlus);
+                    }
+                }
                 return self.create_token(TokenKind::Plus);
             }
             b'-' => {
                 self.advance();
+                if let Some(d) = self.peek() {
+                    if d == b'-' {
+                        self.advance();
+                        return self.create_token(TokenKind::MinusMinus);
+                    }
+                }
                 return self.create_token(TokenKind::Minus);
             }
             b'*' => {

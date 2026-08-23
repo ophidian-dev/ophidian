@@ -137,6 +137,12 @@ pub enum TokenKind {
     // 'for' keyword
     For,
 
+    // increment operator '++'
+    PlusPlus,
+
+    // decrement operator '--'
+    MinusMinus,
+
     // end of the file
     Eof,
 }
