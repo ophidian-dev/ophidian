@@ -72,6 +72,13 @@ impl Chunk {
         self.bytecode[pos + 1..pos + 5].copy_from_slice(&bytes);
     }
 
+    pub fn patch_jump_to(&mut self, jump: usize, target: usize) {
+        let offset = target as i32 - (jump as i32 + 5);
+
+        let bytes = offset.to_le_bytes();
+        self.bytecode[jump + 1..jump + 5].copy_from_slice(&bytes);
+    }
+
     pub fn write_constant(&mut self, constant: Value) -> usize {
         let idx = self.constants.len();
         self.constants.push(constant);

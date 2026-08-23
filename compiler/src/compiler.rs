@@ -24,7 +24,7 @@ impl From<LocalSlot> for u32 {
 
 #[derive(Debug, Clone)]
 pub struct LoopContext {
-    continue_target: usize,
+    continue_jumps: Vec<usize>,
     break_jumps: Vec<usize>,
 }
 
@@ -190,7 +190,7 @@ impl Compiler {
                 let exit_jump = chunk.write_jump(OpCode::JmpFalse);
 
                 self.loop_stack.push(LoopContext {
-                    continue_target: loop_start,
+                    continue_jumps: Vec::new(),
                     break_jumps: Vec::new(),
                 });
 
@@ -201,6 +201,10 @@ impl Compiler {
                 chunk.patch_jump(exit_jump);
 
                 let loop_context = self.loop_stack.pop().unwrap();
+
+                for jump in loop_context.continue_jumps {
+                    chunk.patch_jump_to(jump, loop_start);
+                }
 
                 for jump in loop_context.break_jumps {
                     chunk.patch_jump(jump);
@@ -227,7 +231,11 @@ impl Compiler {
                     None
                 };
 
+                self.loop_stack.push(LoopContext { continue_jumps: Vec::new(), break_jumps: Vec::new() });
+
                 self.compile_stmt(body, chunk, metadata);
+
+                let continue_jump_pos = chunk.bytecode.len();
 
                 if let Some(incre) = incre {
                     self.compile_expr(incre, chunk, metadata);
@@ -238,13 +246,24 @@ impl Compiler {
                 if let Some(jump_out) = jump_out {
                     chunk.patch_jump(jump_out);
                 }
+
+                let loop_context = self.loop_stack.pop().unwrap();
+
+                for jump in loop_context.break_jumps {
+                    chunk.patch_jump(jump);
+                }
+
+                for jump in loop_context.continue_jumps {
+                    chunk.patch_jump_to(jump, continue_jump_pos);
+                }
             }
             StmtKind::Break => {
                 let jump = chunk.write_jump(OpCode::Jmp);
                 self.loop_stack.last_mut().unwrap().break_jumps.push(jump);
             }
             StmtKind::Continue => {
-                chunk.write_jump_back(OpCode::Jmp, self.loop_stack.last().unwrap().continue_target);
+                let jump = chunk.write_jump(OpCode::Jmp);
+                self.loop_stack.last_mut().unwrap().continue_jumps.push(jump);
             }
             StmtKind::Error => {
                 unreachable!()
