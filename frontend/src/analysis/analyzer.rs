@@ -375,9 +375,15 @@ impl<'diag> TypeChecker<'diag> {
                     UnaryOpKind::Negate => {
                         // do nothin
                     }
-                    UnaryOpKind::PostDecrement | UnaryOpKind::PostIncrement | UnaryOpKind::PreDecrement | UnaryOpKind::PreIncrement => {
+                    UnaryOpKind::PostDecrement
+                    | UnaryOpKind::PostIncrement
+                    | UnaryOpKind::PreDecrement
+                    | UnaryOpKind::PreIncrement => {
                         if !self.is_lvalue(right) {
-                            self.error(format!("cannot apply operator '{}' on non l-value", op.node), expr.span);
+                            self.error(
+                                format!("cannot apply operator '{}' on non l-value", op.node),
+                                expr.span,
+                            );
                             return Type::Error;
                         }
                     }

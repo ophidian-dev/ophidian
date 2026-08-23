@@ -110,7 +110,7 @@ impl std::fmt::Display for UnaryOpKind {
             Self::PostDecrement => "--",
             Self::PostIncrement => "++",
             Self::PreDecrement => "--",
-            Self::PreIncrement => "++"
+            Self::PreIncrement => "++",
         };
 
         write!(f, "{}", op)

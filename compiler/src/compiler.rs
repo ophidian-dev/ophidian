@@ -356,86 +356,77 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    UnaryOpKind::PostDecrement => {
-                        match metadata.types.get(&right.id).unwrap() {
-                            Type::Int => {
-                                chunk.write(OpCode::Dup as u8);
-                                chunk.write(OpCode::LoadConst as u8);
-                                let idx = chunk.write_constant(Value::new_int(1));
+                    UnaryOpKind::PostDecrement => match metadata.types.get(&right.id).unwrap() {
+                        Type::Int => {
+                            chunk.write(OpCode::Dup as u8);
+                            chunk.write(OpCode::LoadConst as u8);
+                            let idx = chunk.write_constant(Value::new_int(1));
 
-                                chunk.write_u24(idx as u32);
+                            chunk.write_u24(idx as u32);
 
-                                chunk.write(OpCode::ISub as u8);
+                            chunk.write(OpCode::ISub as u8);
 
-                                chunk.write(OpCode::IStoreLocal as u8);
-                                let varid = metadata.variables.get(&right.id).unwrap();
-                                let slot = self.locals.get(varid).unwrap();
-                                chunk.write_u24(slot.0 as u32);
-                            }
-                            Type::Bool | Type::Error => {
-                                unreachable!()
-                            }
+                            chunk.write(OpCode::IStoreLocal as u8);
+                            let varid = metadata.variables.get(&right.id).unwrap();
+                            let slot = self.locals.get(varid).unwrap();
+                            chunk.write_u24(slot.0 as u32);
                         }
-                    }
-                    UnaryOpKind::PostIncrement => {
-                        match metadata.types.get(&right.id).unwrap() {
-                            Type::Int => {
-                                chunk.write(OpCode::Dup as u8);
-                                chunk.write(OpCode::LoadConst as u8);
-                                let idx = chunk.write_constant(Value::new_int(1));
-                                chunk.write_u24(idx as u32);
-
-                                chunk.write(OpCode::IAdd as u8);
-
-                                chunk.write(OpCode::IStoreLocal as u8);
-                                let varid = metadata.variables.get(&right.id).unwrap();
-                                let slot = self.locals.get(varid).unwrap();
-                                chunk.write_u24(slot.0 as u32);
-                            }
-                            Type::Bool | Type::Error => {
-                                unreachable!()
-                            }
+                        Type::Bool | Type::Error => {
+                            unreachable!()
                         }
-                    }
-                    UnaryOpKind::PreDecrement => {
-                        match metadata.types.get(&right.id).unwrap() {
-                            Type::Int => {
-                                chunk.write(OpCode::LoadConst as u8);
-                                let idx = chunk.write_constant(Value::new_int(1));
-                                chunk.write_u24(idx as u32);
+                    },
+                    UnaryOpKind::PostIncrement => match metadata.types.get(&right.id).unwrap() {
+                        Type::Int => {
+                            chunk.write(OpCode::Dup as u8);
+                            chunk.write(OpCode::LoadConst as u8);
+                            let idx = chunk.write_constant(Value::new_int(1));
+                            chunk.write_u24(idx as u32);
 
-                                chunk.write(OpCode::ISub as u8);
-                                chunk.write(OpCode::Dup as u8);
-                                chunk.write(OpCode::IStoreLocal as u8);
-                                let varid = metadata.variables.get(&right.id).unwrap();
-                                let slot = self.locals.get(varid).unwrap();
-                                chunk.write_u24(slot.0 as u32);
-                            }
-                            Type::Bool | Type::Error => {
-                                unreachable!()
-                            }
+                            chunk.write(OpCode::IAdd as u8);
+
+                            chunk.write(OpCode::IStoreLocal as u8);
+                            let varid = metadata.variables.get(&right.id).unwrap();
+                            let slot = self.locals.get(varid).unwrap();
+                            chunk.write_u24(slot.0 as u32);
                         }
-                    }
-                    UnaryOpKind::PreIncrement => {
-                        match metadata.types.get(&right.id).unwrap() {
-                            Type::Int => {
-                                chunk.write(OpCode::LoadConst as u8);
-                                let idx = chunk.write_constant(Value::new_int(1));
-                                chunk.write_u24(idx as u32);
-                                chunk.write(OpCode::IAdd as u8);
-                                chunk.write(OpCode::Dup as u8);
-                                chunk.write(OpCode::IStoreLocal as u8);
-                                let varid = metadata.variables.get(&right.id).unwrap();
-                                let slot = self.locals.get(varid).unwrap();
-                                chunk.write_u24(slot.0 as u32);
-                            }
-                            Type::Bool | Type::Error => {
-                                unreachable!()
-                            }
+                        Type::Bool | Type::Error => {
+                            unreachable!()
                         }
-                    }
+                    },
+                    UnaryOpKind::PreDecrement => match metadata.types.get(&right.id).unwrap() {
+                        Type::Int => {
+                            chunk.write(OpCode::LoadConst as u8);
+                            let idx = chunk.write_constant(Value::new_int(1));
+                            chunk.write_u24(idx as u32);
+
+                            chunk.write(OpCode::ISub as u8);
+                            chunk.write(OpCode::Dup as u8);
+                            chunk.write(OpCode::IStoreLocal as u8);
+                            let varid = metadata.variables.get(&right.id).unwrap();
+                            let slot = self.locals.get(varid).unwrap();
+                            chunk.write_u24(slot.0 as u32);
+                        }
+                        Type::Bool | Type::Error => {
+                            unreachable!()
+                        }
+                    },
+                    UnaryOpKind::PreIncrement => match metadata.types.get(&right.id).unwrap() {
+                        Type::Int => {
+                            chunk.write(OpCode::LoadConst as u8);
+                            let idx = chunk.write_constant(Value::new_int(1));
+                            chunk.write_u24(idx as u32);
+                            chunk.write(OpCode::IAdd as u8);
+                            chunk.write(OpCode::Dup as u8);
+                            chunk.write(OpCode::IStoreLocal as u8);
+                            let varid = metadata.variables.get(&right.id).unwrap();
+                            let slot = self.locals.get(varid).unwrap();
+                            chunk.write_u24(slot.0 as u32);
+                        }
+                        Type::Bool | Type::Error => {
+                            unreachable!()
+                        }
+                    },
                 };
-
             }
             ExprKind::Error => {
                 unreachable!()
