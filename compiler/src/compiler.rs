@@ -347,17 +347,95 @@ impl Compiler {
             ExprKind::UnaryOp(op, right) => {
                 self.compile_expr(&right, chunk, metadata);
 
-                let opcode = match op.node {
+                match op.node {
                     UnaryOpKind::Negate => match metadata.types.get(&right.id).unwrap() {
-                        Type::Int => OpCode::INegate,
+                        Type::Int => {
+                            chunk.write(OpCode::INegate as u8);
+                        }
                         Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
-                    _ => todo!(),
+                    UnaryOpKind::PostDecrement => {
+                        match metadata.types.get(&right.id).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_int(1));
+
+                                chunk.write_u24(idx as u32);
+
+                                chunk.write(OpCode::ISub as u8);
+
+                                chunk.write(OpCode::IStoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Bool | Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    }
+                    UnaryOpKind::PostIncrement => {
+                        match metadata.types.get(&right.id).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_int(1));
+                                chunk.write_u24(idx as u32);
+
+                                chunk.write(OpCode::IAdd as u8);
+
+                                chunk.write(OpCode::IStoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Bool | Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    }
+                    UnaryOpKind::PreDecrement => {
+                        match metadata.types.get(&right.id).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_int(1));
+                                chunk.write_u24(idx as u32);
+
+                                chunk.write(OpCode::ISub as u8);
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::IStoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Bool | Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    }
+                    UnaryOpKind::PreIncrement => {
+                        match metadata.types.get(&right.id).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_int(1));
+                                chunk.write_u24(idx as u32);
+                                chunk.write(OpCode::IAdd as u8);
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::IStoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Bool | Type::Error => {
+                                unreachable!()
+                            }
+                        }
+                    }
                 };
 
-                chunk.write(opcode as u8);
             }
             ExprKind::Error => {
                 unreachable!()
