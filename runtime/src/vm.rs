@@ -27,8 +27,7 @@ impl<T> Stack<T> {
     }
 }
 
-// temporary max no. of locals because call frames dont exist yet
-const LOCAL_MAX: usize = 2048;
+const LOCAL_MAX: usize = 0xFFFFFF;
 
 pub struct VirtualMachine {
     // stack that bytecode operates on

@@ -31,20 +31,20 @@ pub enum OpCode {
     ILoadLocal = 0x09,
 
     // takes a 3 byte operand, then pops an int off the stack then adds the value into local pool at index
-    IStoreLocal = 0x0a,
+    IStoreLocal = 0x0A,
 
     // print a boolean from the top of the stack
-    BPrint = 0x0b,
+    BPrint = 0x0B,
 
     // takes a 3 byte operand and indexes into local pool and pushes the boolean value at index operand
-    BLoadLocal = 0x0c,
+    BLoadLocal = 0x0C,
 
     // takes a 3 byte operand, then pops an bool off the stack then adds the value into local pool at index
-    BStoreLocal = 0x0d,
+    BStoreLocal = 0x0D,
 
     // integer equality
-    IEqual = 0x0e,
-    INEqual = 0x0f,
+    IEqual = 0x0E,
+    INEqual = 0x0F,
 
     // boolean equality
     BEqual = 0x10,
