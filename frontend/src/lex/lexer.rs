@@ -81,6 +81,7 @@ impl<'src> Lexer<'src> {
             b"break" => TokenKind::Break,
             b"continue" => TokenKind::Continue,
             b"for" => TokenKind::For,
+            b"double" => TokenKind::Double,
             _ => TokenKind::Identifier,
         }
     }
@@ -228,9 +229,23 @@ impl<'src> TokenStream for Lexer<'src> {
                     while let Some(d) = self.peek() {
                         if d.is_ascii_digit() {
                             self.advance();
-                            continue;
+                        } else {
+                            break;
                         }
-                        break;
+                    }
+
+                    if self.peek() == Some(b'.') {
+                        self.advance();
+
+                        while let Some(d) = self.peek() {
+                            if d.is_ascii_digit() {
+                                self.advance();
+                            } else {
+                                break;
+                            }
+                        }
+
+                        return self.create_token(TokenKind::FloatLiteral);
                     }
                     return self.create_token(TokenKind::IntegerLiteral);
                 } else if c.is_ascii_alphabetic() {

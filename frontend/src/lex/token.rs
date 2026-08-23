@@ -34,6 +34,9 @@ pub enum TokenKind {
     // a boolean literal representing false
     False,
 
+    // f64 floatinig point literals
+    FloatLiteral,
+
     // plus character
     // i.e. '+'
     Plus,
@@ -79,6 +82,9 @@ pub enum TokenKind {
     // the type 'bool'
     // not to be confused with boolean literals i.e. 'true' and 'false'
     Bool,
+
+    // the type 'double' a.k.a. f64
+    Double,
 
     // assignment operator
     // i.e. '='
