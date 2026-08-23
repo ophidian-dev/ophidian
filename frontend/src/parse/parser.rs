@@ -660,7 +660,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             self.peek().kind,
             TokenKind::PlusPlus | TokenKind::MinusMinus
         ) {
-            let op_kind= self.peek().kind;
+            let op_kind = self.peek().kind;
             let op_span = self.advance().span;
 
             let expr_span = expr.span;
@@ -676,7 +676,10 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 ),
                 TokenKind::MinusMinus => Expr::new(
                     self.next_node_id(),
-                    ExprKind::UnaryOp(Spanned::new(UnaryOpKind::PostDecrement, op_span), Box::new(expr)),
+                    ExprKind::UnaryOp(
+                        Spanned::new(UnaryOpKind::PostDecrement, op_span),
+                        Box::new(expr),
+                    ),
                     op_span.join(expr_span),
                 ),
                 _ => unreachable!(),

@@ -433,9 +433,19 @@ impl<'diag> TypeChecker<'diag> {
         }
         match (op, rhs) {
             (UnaryOpKind::Negate, Type::Int) => Type::Int,
-            (UnaryOpKind::Negate, Type::Bool) => Type::Error,
-            _ => todo!(),
-            (UnaryOpKind::Negate, Type::Error) => unreachable!(),
+            (
+                UnaryOpKind::Negate
+                | UnaryOpKind::PostDecrement
+                | UnaryOpKind::PostIncrement
+                | UnaryOpKind::PreDecrement
+                | UnaryOpKind::PreIncrement,
+                Type::Bool,
+            ) => Type::Error,
+            (UnaryOpKind::PostDecrement, Type::Int) => Type::Int,
+            (UnaryOpKind::PostIncrement, Type::Int) => Type::Int,
+            (UnaryOpKind::PreDecrement, Type::Int) => Type::Int,
+            (UnaryOpKind::PreIncrement, Type::Int) => Type::Int,
+            (_, Type::Error) => unreachable!(),
         }
     }
 
