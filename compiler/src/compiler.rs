@@ -439,6 +439,8 @@ impl Compiler {
                     _ => unreachable!("non lvalue?"),
                 };
 
+                chunk.write(OpCode::Dup as u8);
+
                 match metadata.var_types.get(varid).unwrap() {
                     Type::Int => {
                         chunk.write(OpCode::IStoreLocal as u8);
