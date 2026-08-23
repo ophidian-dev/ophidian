@@ -3,7 +3,7 @@ use frontend::analysis::analyzer::{AnalysisResult, SemanticAnalyzer, Type, VarId
 use frontend::diagnostics::Diagnostic;
 use frontend::lex::Lexer;
 use frontend::parse::Parser;
-use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Stmt, StmtKind, UnaryOpKind};
+use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Stmt, StmtKind, UnaryOpKind, ForInit};
 use runtime::chunk::Chunk;
 use runtime::disassembler::Disassembler;
 use runtime::opcodes::OpCode;
@@ -207,7 +207,37 @@ impl Compiler {
                 }
             }
             StmtKind::For(init, cond, incre, body) => {
-                todo!()
+                if let Some(init) = init {
+                    match &**init {
+                        ForInit::Decl(decl)  => {
+                            self.compile_stmt(decl, chunk, metadata);
+                        }
+                        ForInit::Expr(expr) => {
+                            self.compile_expr(expr, chunk, metadata);
+                        }
+                    }
+                }
+
+                let loop_start = chunk.bytecode.len();
+                let jump_out = if let Some(cond) = cond {
+                    self.compile_expr(cond, chunk, metadata);
+
+                    Some(chunk.write_jump(OpCode::JmpFalse))
+                } else {
+                    None
+                };
+
+                self.compile_stmt(body, chunk, metadata);
+
+                if let Some(incre) = incre {
+                    self.compile_expr(incre, chunk, metadata);
+                }
+                
+                chunk.write_jump_back(OpCode::Jmp, loop_start);
+
+                if let Some(jump_out) = jump_out {
+                    chunk.patch_jump(jump_out);
+                }
             }
             StmtKind::Break => {
                 let jump = chunk.write_jump(OpCode::Jmp);
