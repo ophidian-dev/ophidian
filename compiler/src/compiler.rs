@@ -3,7 +3,9 @@ use frontend::analysis::analyzer::{AnalysisResult, SemanticAnalyzer, Type, VarId
 use frontend::diagnostics::Diagnostic;
 use frontend::lex::Lexer;
 use frontend::parse::Parser;
-use frontend::parse::ast::{BinOpKind, Expr, ExprKind, LitKind, Stmt, StmtKind, UnaryOpKind, ForInit};
+use frontend::parse::ast::{
+    BinOpKind, Expr, ExprKind, ForInit, LitKind, Stmt, StmtKind, UnaryOpKind,
+};
 use runtime::chunk::Chunk;
 use runtime::disassembler::Disassembler;
 use runtime::opcodes::OpCode;
@@ -213,7 +215,7 @@ impl Compiler {
             StmtKind::For(init, cond, incre, body) => {
                 if let Some(init) = init {
                     match &**init {
-                        ForInit::Decl(decl)  => {
+                        ForInit::Decl(decl) => {
                             self.compile_stmt(decl, chunk, metadata);
                         }
                         ForInit::Expr(expr) => {
@@ -231,7 +233,10 @@ impl Compiler {
                     None
                 };
 
-                self.loop_stack.push(LoopContext { continue_jumps: Vec::new(), break_jumps: Vec::new() });
+                self.loop_stack.push(LoopContext {
+                    continue_jumps: Vec::new(),
+                    break_jumps: Vec::new(),
+                });
 
                 self.compile_stmt(body, chunk, metadata);
 
@@ -240,7 +245,7 @@ impl Compiler {
                 if let Some(incre) = incre {
                     self.compile_expr(incre, chunk, metadata);
                 }
-                
+
                 chunk.write_jump_back(OpCode::Jmp, loop_start);
 
                 if let Some(jump_out) = jump_out {
@@ -263,7 +268,11 @@ impl Compiler {
             }
             StmtKind::Continue => {
                 let jump = chunk.write_jump(OpCode::Jmp);
-                self.loop_stack.last_mut().unwrap().continue_jumps.push(jump);
+                self.loop_stack
+                    .last_mut()
+                    .unwrap()
+                    .continue_jumps
+                    .push(jump);
             }
             StmtKind::Error => {
                 unreachable!()

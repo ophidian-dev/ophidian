@@ -2,7 +2,7 @@ use crate::analysis::analyzer::Type;
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::lex::token::{Token, TokenKind, TokenStream};
 use crate::parse::ast::{
-    BinOpKind, Expr, ExprKind, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind, ForInit
+    BinOpKind, Expr, ExprKind, ForInit, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind,
 };
 use crate::span::{Span, Spanned};
 
@@ -158,7 +158,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             let val = Some(Box::new(ForInit::Expr(self.parse_expression())));
             if self.peek().kind != TokenKind::Semicolon {
                 self.error("expected ';' after loop initializer", self.peek().span);
-                return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span)
+                return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
             }
             self.advance();
             val
@@ -174,7 +174,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             self.error("expected ';' after for loop condition", self.peek().span);
             return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
         }
-        
+
         self.advance();
 
         let incre = if self.peek().kind == TokenKind::CloseParen {

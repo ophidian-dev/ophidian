@@ -1,6 +1,6 @@
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parse::ast::{
-    BinOpKind, Expr, ExprKind, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind, ForInit
+    BinOpKind, Expr, ExprKind, ForInit, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind,
 };
 use crate::span::Span;
 use std::collections::HashMap;
@@ -106,101 +106,154 @@ impl<'diag> Resolver<'diag> {
     fn resolve_stmt(&mut self, stmt: &Stmt, ctx: &mut AnalysisCtx) {
         match &stmt.kind {
             StmtKind::VarDecl(name, .., init) => {
-                if let Some(initializer) = init {
-                    self.resolve_expr(initializer, ctx);
-                }
-
-                let varid = self.declare_var(name, ctx, stmt.span);
-
-                ctx.variables.insert(stmt.id, varid);
+                self.resolve_vardecl(stmt, name, init, ctx);
             }
             StmtKind::Block(body) => {
-                self.enter_scope(ctx);
-
-                for s in body {
-                    self.resolve_stmt(s, ctx);
-                }
-
-                self.exit_scope(ctx);
+                self.resolve_block(body, ctx);
             }
             StmtKind::ExprStmt(expr) => {
-                self.resolve_expr(expr, ctx);
+                self.resolve_exprstmt(expr, ctx);
             }
             StmtKind::Print(expr) => {
-                self.resolve_expr(expr, ctx);
+                self.resolve_print(expr, ctx);
             }
             StmtKind::If(cond, body, else_body) => {
-                self.resolve_expr(cond, ctx);
-                self.resolve_stmt(body, ctx);
-                if let Some(e) = else_body {
-                    self.resolve_stmt(e, ctx);
-                }
+                self.resolve_if(cond, body, else_body, ctx);
             }
             StmtKind::While(cond, body) => {
-                self.resolve_expr(cond, ctx);
-
-                self.loop_depth += 1;
-                self.resolve_stmt(body, ctx);
-                self.loop_depth -= 1;
+                self.resolve_while(cond, body, ctx);
             }
             StmtKind::For(init, cond, incre, body) => {
-                self.enter_scope(ctx);
-
-                match init {
-                    Some(init) => {
-                        match &**init {
-                            ForInit::Expr(expr)  => {
-                                self.resolve_expr(&expr, ctx); 
-                            }
-                            ForInit::Decl(decl) => {
-                                self.resolve_stmt(&decl, ctx);
-                            }
-                        }                        
-                    }
-                    None => {
-                        // no name resolution needed here
-                    }
-                }
-
-                match cond {
-                    Some(cond) => {
-                        self.resolve_expr(cond, ctx);
-                    }
-                    None => {
-                        // no name resolution needed here
-                    }
-                }
-
-                match incre {
-                    Some(incre) => {
-                        self.resolve_expr(incre, ctx);
-                    }
-                    None => {
-                        // no name resolution needed here
-                    }
-                }
-
-                self.loop_depth += 1;
-
-                self.resolve_stmt(body, ctx);
-
-                self.loop_depth -= 1;
-
-                self.exit_scope(ctx);
+                self.resolve_for(init, cond, incre, body, ctx);
             }
             StmtKind::Break => {
-                if self.loop_depth == 0 {
-                    self.error("use of 'break' statement outside loop", stmt.span);
-                }
+                self.resolve_break(stmt);
             }
             StmtKind::Continue => {
-                if self.loop_depth == 0 {
-                    self.error("use of continue statement outside loop", stmt.span);
-                }
+                self.resolve_continue(stmt); 
             }
             StmtKind::Error => {
                 unreachable!()
             }
+        }
+    }
+
+    fn resolve_vardecl(
+        &mut self,
+        stmt: &Stmt,
+        name: &[u8],
+        init: &Option<Expr>,
+        ctx: &mut AnalysisCtx,
+    ) {
+        if let Some(initializer) = init {
+            self.resolve_expr(initializer, ctx);
+        }
+
+        let varid = self.declare_var(name, ctx, stmt.span);
+
+        ctx.variables.insert(stmt.id, varid);
+    }
+
+    fn resolve_block(&mut self, body: &[Stmt], ctx: &mut AnalysisCtx) {
+        self.enter_scope(ctx);
+
+        for s in body {
+            self.resolve_stmt(s, ctx);
+        }
+
+        self.exit_scope(ctx);
+    }
+
+    fn resolve_exprstmt(&mut self, expr: &Expr, ctx: &mut AnalysisCtx) {
+        self.resolve_expr(expr, ctx);
+    }
+
+    fn resolve_print(&mut self, expr: &Expr, ctx: &mut AnalysisCtx) {
+        self.resolve_expr(expr, ctx);
+    }
+
+    fn resolve_if(
+        &mut self,
+        cond: &Expr,
+        body: &Stmt,
+        else_body: &Option<Box<Stmt>>,
+        ctx: &mut AnalysisCtx,
+    ) {
+        self.resolve_expr(cond, ctx);
+        self.resolve_stmt(body, ctx);
+        if let Some(e) = else_body {
+            self.resolve_stmt(e, ctx);
+        }
+    }
+
+    fn resolve_while(&mut self, cond: &Expr, body: &Stmt, ctx: &mut AnalysisCtx) {
+        self.resolve_expr(cond, ctx);
+
+        self.loop_depth += 1;
+        self.resolve_stmt(body, ctx);
+        self.loop_depth -= 1;
+    }
+
+    fn resolve_for(
+        &mut self,
+        init: &Option<Box<ForInit>>,
+        cond: &Option<Expr>,
+        incre: &Option<Expr>,
+        body: &Stmt,
+        ctx: &mut AnalysisCtx,
+    ) {
+        self.enter_scope(ctx);
+
+        match init {
+            Some(init) => match &**init {
+                ForInit::Expr(expr) => {
+                    self.resolve_expr(&expr, ctx);
+                }
+                ForInit::Decl(decl) => {
+                    self.resolve_stmt(&decl, ctx);
+                }
+            },
+            None => {
+                // no name resolution needed here
+            }
+        }
+
+        match cond {
+            Some(cond) => {
+                self.resolve_expr(cond, ctx);
+            }
+            None => {
+                // no name resolution needed here
+            }
+        }
+
+        match incre {
+            Some(incre) => {
+                self.resolve_expr(incre, ctx);
+            }
+            None => {
+                // no name resolution needed here
+            }
+        }
+
+        self.loop_depth += 1;
+
+        self.resolve_stmt(body, ctx);
+
+        self.loop_depth -= 1;
+
+        self.exit_scope(ctx);
+    }
+
+    fn resolve_break(&mut self, stmt: &Stmt) {
+        if self.loop_depth == 0 {
+            self.error("use of 'break' statement outside loop", stmt.span);
+        }
+    }
+
+    fn resolve_continue(&mut self, stmt: &Stmt) {
+        if self.loop_depth == 0 {
+            self.error("use of continue statement outside loop", stmt.span);
         }
     }
 
