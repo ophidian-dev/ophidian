@@ -80,6 +80,7 @@ impl<'src> Lexer<'src> {
             b"while" => TokenKind::While,
             b"break" => TokenKind::Break,
             b"continue" => TokenKind::Continue,
+            b"for" => TokenKind::For,
             _ => TokenKind::Identifier,
         }
     }

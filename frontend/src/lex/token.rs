@@ -134,6 +134,9 @@ pub enum TokenKind {
     // 'continue' keyword
     Continue,
 
+    // 'for' keyword
+    For,
+
     // end of the file
     Eof,
 }
