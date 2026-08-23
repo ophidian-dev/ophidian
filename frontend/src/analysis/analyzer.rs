@@ -180,7 +180,11 @@ impl<'diag> Resolver<'diag> {
                     }
                 }
 
+                self.loop_depth += 1;
+
                 self.resolve_stmt(body, ctx);
+
+                self.loop_depth -= 1;
 
                 self.exit_scope(ctx);
             }
