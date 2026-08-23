@@ -143,6 +143,9 @@ impl<'diag> Resolver<'diag> {
                 self.resolve_stmt(body, ctx);
                 self.loop_depth -= 1;
             }
+            StmtKind::For(init, cond, incre, body) => {
+                todo!()
+            }
             StmtKind::Break => {
                 if self.loop_depth == 0 {
                     self.error("use of 'break' statement outside loop", stmt.span);
@@ -333,6 +336,9 @@ impl<'diag> TypeChecker<'diag> {
             }
             StmtKind::Continue => {
                 // nothing to type check
+            }
+            StmtKind::For(init, cond, incre, body) => {
+                todo!()
             }
             StmtKind::Error => {
                 unreachable!()

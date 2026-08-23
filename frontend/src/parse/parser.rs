@@ -80,6 +80,27 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 TokenKind::Let => {
                     return;
                 }
+                TokenKind::If => {
+                    return;
+                }
+                TokenKind::While => {
+                    return;
+                }
+                TokenKind::For => {
+                    return;
+                }
+                TokenKind::Break => {
+                    return;
+                }
+                TokenKind::Continue => {
+                    return;
+                }
+                TokenKind::Else => {
+                    return;
+                }
+                TokenKind::OpenBrace => {
+                    return;
+                }
                 _ => {
                     self.advance();
                 }
@@ -110,11 +131,63 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             TokenKind::While => self.parse_while(),
             TokenKind::Break => self.parse_break(),
             TokenKind::Continue => self.parse_continue(),
+            TokenKind::For => self.parse_for(),
             _ => {
                 self.error("unexpected token", self.peek().span);
                 return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
             }
         }
+    }
+
+    fn parse_for(&mut self) -> Stmt {
+        let start_span = self.advance().span;
+
+        if self.peek().kind != TokenKind::OpenParen {
+            self.error("expected '('", self.peek().span);
+            return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+        }
+
+        self.advance();
+
+        let init = if self.peek().kind == TokenKind::Let {
+            Some(Box::new(self.parse_var_decl()))
+        } else {
+            None
+        };
+
+        let cond = if self.peek().kind == TokenKind::Semicolon {
+            None
+        } else {
+            Some(self.parse_expression())
+        };
+
+        if self.peek().kind != TokenKind::Semicolon {
+            self.error("expected ';' after for loop condition", self.peek().span);
+            return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+        }
+
+        let incre = if self.peek().kind == TokenKind::CloseParen {
+            None
+        } else {
+            Some(self.parse_expression())
+        };
+
+        if self.peek().kind != TokenKind::CloseParen {
+            self.error("expected ')'", self.peek().span);
+            return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+        }
+
+        self.advance();
+
+        let body = self.parse_statement();
+
+        let end_span = body.span;
+
+        return Stmt::new(
+            self.next_node_id(),
+            StmtKind::For(init, cond, incre, Box::new(body)),
+            start_span.join(end_span),
+        );
     }
 
     fn parse_break(&mut self) -> Stmt {

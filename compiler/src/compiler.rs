@@ -206,6 +206,9 @@ impl Compiler {
                     chunk.patch_jump(jump);
                 }
             }
+            StmtKind::For(init, cond, incre, body) => {
+                todo!()
+            }
             StmtKind::Break => {
                 let jump = chunk.write_jump(OpCode::Jmp);
                 self.loop_stack.last_mut().unwrap().break_jumps.push(jump);

@@ -216,6 +216,21 @@ pub enum StmtKind {
     // a continue statement
     Continue,
 
+    // a for loop
+    // Option<Box<Stmt>> is the intializer statement
+    // Option<Expr> is the condition for the loop to continue
+    // Option<Expr> is the increment expression that happens after each interation
+    // Box<Stmt> is the body of the loop
+    // e.g.
+    //       |          |       |
+    //       |          |       |
+    //       v          v       v
+    //   initializer   cond     increment
+    // for (let i = 0; i < 10; i++) {
+    //                            <-- body
+    // }
+    For(Option<Box<Stmt>>, Option<Expr>, Option<Expr>, Box<Stmt>),
+
     // an error node to represent a recoverable error this node exists
     // so that the parser can recover from a parsing function. Before the
     // semantic analysis phase begins, if the parser has any error nodes
