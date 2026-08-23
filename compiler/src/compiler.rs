@@ -22,14 +22,22 @@ impl From<LocalSlot> for u32 {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct LoopContext {
+    continue_target: usize,
+    break_jumps: Vec<usize>,
+}
+
 pub struct Compiler {
     locals: HashMap<VarId, LocalSlot>,
+    loop_stack: Vec<LoopContext>,
 }
 
 impl Compiler {
     pub fn new() -> Self {
         Self {
             locals: HashMap::new(),
+            loop_stack: Vec::new(),
         }
     }
 
@@ -181,17 +189,29 @@ impl Compiler {
 
                 let exit_jump = chunk.write_jump(OpCode::JmpFalse);
 
+                self.loop_stack.push(LoopContext { 
+                    continue_target: loop_start,
+                    break_jumps: Vec::new(),
+                });
+
                 self.compile_stmt(body, chunk, metadata);
 
                 chunk.write_jump_back(OpCode::Jmp, loop_start);
 
                 chunk.patch_jump(exit_jump);
+
+                let loop_context = self.loop_stack.pop().unwrap();
+
+                for jump in loop_context.break_jumps {
+                    chunk.patch_jump(jump);
+                }
             }
             StmtKind::Break => {
-                todo!()
+                let jump = chunk.write_jump(OpCode::Jmp);
+                self.loop_stack.last_mut().unwrap().break_jumps.push(jump);
             }
             StmtKind::Continue => {
-                todo!()
+                chunk.write_jump_back(OpCode::Jmp, self.loop_stack.last().unwrap().continue_target);
             }
             StmtKind::Error => {
                 unreachable!()

@@ -191,7 +191,7 @@ pub enum StmtKind {
     // a break statement
     Break,
 
-    // a while statement
+    // a continue statement
     Continue,
 
     // an error node to represent a recoverable error this node exists
