@@ -103,6 +103,20 @@ pub enum UnaryOpKind {
     PostDecrement,
 }
 
+impl std::fmt::Display for UnaryOpKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let op = match self {
+            Self::Negate => "!",
+            Self::PostDecrement => "--",
+            Self::PostIncrement => "++",
+            Self::PreDecrement => "--",
+            Self::PreIncrement => "++"
+        };
+
+        write!(f, "{}", op)
+    }
+}
+
 pub type BinOp = Spanned<BinOpKind>;
 
 pub type UnaryOp = Spanned<UnaryOpKind>;

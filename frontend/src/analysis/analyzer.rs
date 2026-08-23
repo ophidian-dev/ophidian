@@ -371,6 +371,18 @@ impl<'diag> TypeChecker<'diag> {
             ExprKind::UnaryOp(op, right) => {
                 let expr_type = self.check_expr(right, ctx);
 
+                match op.node {
+                    UnaryOpKind::Negate => {
+                        // do nothin
+                    }
+                    UnaryOpKind::PostDecrement | UnaryOpKind::PostIncrement | UnaryOpKind::PreDecrement | UnaryOpKind::PreIncrement => {
+                        if !self.is_lvalue(right) {
+                            self.error(format!("cannot apply operator '{}' on non l-value", op.node), expr.span);
+                            return Type::Error;
+                        }
+                    }
+                }
+
                 self.unary_result_type(op.node, expr_type)
             }
             ExprKind::VarAssign(target, rhs) => {
