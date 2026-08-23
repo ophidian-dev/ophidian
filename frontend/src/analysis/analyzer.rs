@@ -146,7 +146,7 @@ impl<'diag> Resolver<'diag> {
             StmtKind::Break => {
                 if self.loop_depth == 0 {
                     self.error("use of 'break' statement outside loop", stmt.span);
-                } 
+                }
             }
             StmtKind::Continue => {
                 if self.loop_depth == 0 {
@@ -434,6 +434,7 @@ impl<'diag> TypeChecker<'diag> {
         match (op, rhs) {
             (UnaryOpKind::Negate, Type::Int) => Type::Int,
             (UnaryOpKind::Negate, Type::Bool) => Type::Error,
+            _ => todo!(),
             (UnaryOpKind::Negate, Type::Error) => unreachable!(),
         }
     }

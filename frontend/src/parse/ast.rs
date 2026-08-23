@@ -93,6 +93,14 @@ impl From<Token> for BinOpKind {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum UnaryOpKind {
     Negate,
+    // ++i
+    PreIncrement,
+    // i++
+    PostIncrement,
+    // --i
+    PreDecrement,
+    // i--
+    PostDecrement,
 }
 
 pub type BinOp = Spanned<BinOpKind>;

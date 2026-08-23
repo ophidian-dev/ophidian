@@ -189,7 +189,7 @@ impl Compiler {
 
                 let exit_jump = chunk.write_jump(OpCode::JmpFalse);
 
-                self.loop_stack.push(LoopContext { 
+                self.loop_stack.push(LoopContext {
                     continue_target: loop_start,
                     break_jumps: Vec::new(),
                 });
@@ -348,14 +348,13 @@ impl Compiler {
                 self.compile_expr(&right, chunk, metadata);
 
                 let opcode = match op.node {
-                    // only type int exists for now so no type checks
-                    // are necessary
                     UnaryOpKind::Negate => match metadata.types.get(&right.id).unwrap() {
                         Type::Int => OpCode::INegate,
                         Type::Error | Type::Bool => {
                             unreachable!()
                         }
                     },
+                    _ => todo!(),
                 };
 
                 chunk.write(opcode as u8);

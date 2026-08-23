@@ -137,7 +137,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             self.error("expected ';' after continue statement", self.peek().span);
             return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
         }
-        
+
         let end_span = self.advance().span;
 
         return Stmt::new(self.next_node_id(), StmtKind::Continue, span.join(end_span));
@@ -619,9 +619,70 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 ExprKind::UnaryOp(Spanned::new(UnaryOpKind::Negate, op_span), Box::new(right)),
                 right_span.join(op_span),
             );
+        } else if self.peek().kind == TokenKind::PlusPlus {
+            let op_span = self.advance().span;
+
+            let operand = self.parse_unary();
+            let operand_span = operand.span;
+
+            return Expr::new(
+                self.next_node_id(),
+                ExprKind::UnaryOp(
+                    Spanned::new(UnaryOpKind::PreIncrement, op_span),
+                    Box::new(operand),
+                ),
+                op_span.join(operand_span),
+            );
+        } else if self.peek().kind == TokenKind::MinusMinus {
+            let op_span = self.advance().span;
+
+            let operand = self.parse_unary();
+
+            let operand_span = operand.span;
+
+            return Expr::new(
+                self.next_node_id(),
+                ExprKind::UnaryOp(
+                    Spanned::new(UnaryOpKind::PreDecrement, op_span),
+                    Box::new(operand),
+                ),
+                op_span.join(operand_span),
+            );
         }
 
-        self.parse_primary()
+        self.parse_postfix()
+    }
+
+    fn parse_postfix(&mut self) -> Expr {
+        let mut expr = self.parse_primary();
+
+        while matches!(
+            self.peek().kind,
+            TokenKind::PlusPlus | TokenKind::MinusMinus
+        ) {
+            let op_span = self.advance().span;
+
+            let expr_span = expr.span;
+
+            expr = match self.peek().kind {
+                TokenKind::PlusPlus => Expr::new(
+                    self.next_node_id(),
+                    ExprKind::UnaryOp(
+                        Spanned::new(UnaryOpKind::PostIncrement, op_span),
+                        Box::new(expr),
+                    ),
+                    op_span.join(expr_span),
+                ),
+                TokenKind::MinusMinus => Expr::new(
+                    self.next_node_id(),
+                    ExprKind::UnaryOp(Spanned::new(UnaryOpKind::PostDecrement, op_span), Box::new(expr)),
+                    op_span.join(expr_span),
+                ),
+                _ => unreachable!(),
+            };
+        }
+
+        expr
     }
 
     fn parse_primary(&mut self) -> Expr {
