@@ -95,9 +95,6 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 TokenKind::Continue => {
                     return;
                 }
-                TokenKind::Else => {
-                    return;
-                }
                 TokenKind::OpenBrace => {
                     return;
                 }
@@ -120,6 +117,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     }
 
     pub fn parse_statement(&mut self) -> Stmt {
+        println!("parse_statement: {:?}", self.peek().kind);
         match self.peek().kind {
             TokenKind::Print => self.parse_print(),
             TokenKind::IntegerLiteral | TokenKind::OpenParen | TokenKind::Identifier => {
@@ -133,8 +131,10 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             TokenKind::Continue => self.parse_continue(),
             TokenKind::For => self.parse_for(),
             _ => {
-                self.error("unexpected token", self.peek().span);
-                return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+                let span = self.peek().span;
+                self.error("unexpected token", span);
+                self.sync();
+                return Stmt::new(self.next_node_id(), StmtKind::Error, span);
             }
         }
     }
@@ -261,16 +261,20 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         let start_span = self.advance().span;
 
         if self.peek().kind != TokenKind::OpenParen {
-            self.error("expected '('", self.peek().span);
-            return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+            let span = self.peek().span;
+            self.error("expected '('", span);
+            self.sync();
+            return Stmt::new(self.next_node_id(), StmtKind::Error, span);
         }
 
         self.advance();
         let cond = self.parse_expression();
 
         if self.peek().kind != TokenKind::CloseParen {
-            self.error("expected ')'", self.peek().span);
-            return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
+            let span = self.peek().span;
+            self.error("expected ')'", span);
+            self.sync();
+            return Stmt::new(self.next_node_id(), StmtKind::Error, span);
         }
         self.advance();
 
@@ -443,7 +447,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         let expr = self.parse_expression();
 
         if self.peek().kind != TokenKind::Semicolon {
-            let span = self.advance().span;
+            let span = self.peek().span;
             self.error("expected ';' after statement", span);
             self.sync();
             return Stmt::new(self.next_node_id(), StmtKind::Error, span);
