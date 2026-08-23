@@ -660,11 +660,12 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             self.peek().kind,
             TokenKind::PlusPlus | TokenKind::MinusMinus
         ) {
+            let op_kind= self.peek().kind;
             let op_span = self.advance().span;
 
             let expr_span = expr.span;
 
-            expr = match self.peek().kind {
+            expr = match op_kind {
                 TokenKind::PlusPlus => Expr::new(
                     self.next_node_id(),
                     ExprKind::UnaryOp(
