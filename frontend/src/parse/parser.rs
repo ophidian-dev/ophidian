@@ -170,6 +170,8 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             self.error("expected ';' after for loop condition", self.peek().span);
             return Stmt::new(self.next_node_id(), StmtKind::Error, self.peek().span);
         }
+        
+        self.advance();
 
         let incre = if self.peek().kind == TokenKind::CloseParen {
             None
