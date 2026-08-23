@@ -173,6 +173,13 @@ impl Expr {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum ForInit {
+    Expr(Expr),
+    // Stmt::StmtKind for this field is guarenteed to have StmtKind::VarDecl
+    Statement(Stmt),
+}
+
+#[derive(Debug, PartialEq)]
 pub enum StmtKind {
     // because right now this language does not have functions,
     // we have a built in print statement that is still called like a
@@ -229,7 +236,7 @@ pub enum StmtKind {
     // for (let i = 0; i < 10; i++) {
     //                            <-- body
     // }
-    For(Option<Box<Stmt>>, Option<Expr>, Option<Expr>, Box<Stmt>),
+    For(Option<Box<ForInit>>, Option<Expr>, Option<Expr>, Box<Stmt>),
 
     // an error node to represent a recoverable error this node exists
     // so that the parser can recover from a parsing function. Before the
