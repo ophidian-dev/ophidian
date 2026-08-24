@@ -131,7 +131,8 @@ impl Compiler {
                                     .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Double => {
-                                todo!()
+                                chunk.write(OpCode::F64StoreLocal as u8);
+                                chunk.write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Error => {
                                 unreachable!()
