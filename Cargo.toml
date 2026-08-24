@@ -15,3 +15,4 @@ frontend = { path = "frontend" }
 compiler = { path = "compiler" }
 runtime = { path = "runtime" }
 cli = { path = "cli" }
+num_enum = "0.7.6"
