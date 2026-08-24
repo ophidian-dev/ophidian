@@ -7,11 +7,19 @@ pub type VMExitCode = i32;
 
 const LOCAL_MAX: usize = 0xFFFFFF;
 
+struct CallFrame {
+    return_ip: *const u8,
+    base: usize,
+}
+
 pub struct VirtualMachine {
     // stack that bytecode operates on
     stack: Stack<Value>,
     // pointer to instruction to be executed
     ip: *const u8,
+
+    // call stack
+    frames: Stack<CallFrame>,
 
     locals: Vec<Value>,
 }
@@ -20,7 +28,8 @@ impl VirtualMachine {
     pub fn new() -> Self {
         let mut s = Self {
             stack: Stack::new(),
-            ip: std::ptr::null_mut(),
+            frames: Stack::new(),
+            ip: std::ptr::null(),
             locals: Vec::new(),
         };
 
