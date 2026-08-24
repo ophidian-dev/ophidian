@@ -139,6 +139,7 @@ impl VirtualMachine {
                     let b2 = self.read_byte();
                     let idx = decode_u24_le([b0, b1, b2]);
                     *self.locals.get_mut(idx as usize).unwrap() = value;
+                    self.push(value);
                 }
                 OpCode::BEqual => {
                     let b = self.pop();
@@ -361,6 +362,7 @@ impl VirtualMachine {
                     let b2 = self.read_byte();
                     let idx = decode_u24_le([b0, b1, b2]);
                     *self.locals.get_mut(idx as usize).unwrap() = value;
+                    self.push(value);
                 }
                 OpCode::F64Sub => {
                     let b = self.pop();
