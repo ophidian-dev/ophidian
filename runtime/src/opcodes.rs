@@ -119,6 +119,21 @@ impl TryFrom<u8> for OpCode {
             0x17 => Ok(Self::JmpTrue),
             0x18 => Ok(Self::JmpFalse),
             0x19 => Ok(Self::Dup),
+
+            0x1A => Ok(Self::F64Add),
+            0x1B => Ok(Self::F64Sub),
+            0x1C => Ok(Self::F64Mul),
+            0x1D => Ok(Self::F64Div),
+            0x1E => Ok(Self::F64Negate),
+            0x1F => Ok(Self::F64Print),
+            0x20 => Ok(Self::F64LoadLocal),
+            0x21 => Ok(Self::F64StoreLocal),
+            0x22 => Ok(Self::F64Equal),
+            0x23 => Ok(Self::F64NEqual),
+            0x24 => Ok(Self::F64Less),
+            0x25 => Ok(Self::F64LessEq),
+            0x26 => Ok(Self::F64Greater),
+            0x27 => Ok(Self::F64GreaterEq),
             _ => Err(()),
         }
     }
