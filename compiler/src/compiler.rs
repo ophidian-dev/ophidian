@@ -96,7 +96,7 @@ impl Compiler {
 
                 match metadata.types.get(&expr.id).unwrap() {
                     Type::Int => {
-                        chunk.write(OpCode::IPrint as u8);
+                        chunk.write(OpCode::I32Print as u8);
                     }
                     Type::Bool => {
                         chunk.write(OpCode::BPrint as u8);
@@ -120,7 +120,7 @@ impl Compiler {
 
                         match metadata.var_types.get(&varid).unwrap() {
                             Type::Int => {
-                                chunk.write(OpCode::IStoreLocal as u8);
+                                chunk.write(OpCode::I32StoreLocal as u8);
                                 chunk.write_u24(
                                     varid.0.try_into().expect("hopefully this doesnt happen"),
                                 );
@@ -150,7 +150,7 @@ impl Compiler {
 
                         match metadata.var_types.get(&varid).unwrap() {
                             Type::Int => {
-                                chunk.write(OpCode::IStoreLocal as u8);
+                                chunk.write(OpCode::I32StoreLocal as u8);
                                 chunk
                                     .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
@@ -322,7 +322,7 @@ impl Compiler {
                     // check for different types
                     BinOpKind::Add => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::IAdd as u8);
+                            chunk.write(OpCode::I32Add as u8);
                         }
                         Type::Double => {
                             todo!()
@@ -333,7 +333,7 @@ impl Compiler {
                     },
                     BinOpKind::Sub => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::ISub as u8);
+                            chunk.write(OpCode::I32Sub as u8);
                         }
                         Type::Double => {
                             todo!()
@@ -344,7 +344,7 @@ impl Compiler {
                     },
                     BinOpKind::Mul => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::IMul as u8);
+                            chunk.write(OpCode::I32Mul as u8);
                         }
                         Type::Double => {
                             todo!()
@@ -355,7 +355,7 @@ impl Compiler {
                     },
                     BinOpKind::Div => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::IDiv as u8);
+                            chunk.write(OpCode::I32Div as u8);
                         }
                         Type::Double => {
                             todo!()
@@ -366,7 +366,7 @@ impl Compiler {
                     },
                     BinOpKind::BangEq => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::INEqual as u8);
+                            chunk.write(OpCode::I32NEqual as u8);
                         }
                         Type::Bool => {
                             chunk.write(OpCode::BNEqual as u8);
@@ -378,7 +378,7 @@ impl Compiler {
                     },
                     BinOpKind::EqEq => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::IEqual as u8);
+                            chunk.write(OpCode::I32Equal as u8);
                         }
                         Type::Bool => {
                             chunk.write(OpCode::BEqual as u8);
@@ -390,7 +390,7 @@ impl Compiler {
                     },
                     BinOpKind::GreaterEq => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::IGreaterEq as u8);
+                            chunk.write(OpCode::I32GreaterEq as u8);
                         }
                         Type::Double => {
                             todo!()
@@ -399,7 +399,7 @@ impl Compiler {
                     },
                     BinOpKind::GreaterThan => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::IGreater as u8);
+                            chunk.write(OpCode::I32Greater as u8);
                         }
                         Type::Double => {
                             todo!()
@@ -408,7 +408,7 @@ impl Compiler {
                     },
                     BinOpKind::LessEq => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::ILessEq as u8);
+                            chunk.write(OpCode::I32LessEq as u8);
                         }
                         Type::Double => {
                             todo!()
@@ -417,7 +417,7 @@ impl Compiler {
                     },
                     BinOpKind::LessThan => match metadata.types.get(&left.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::ILess as u8);
+                            chunk.write(OpCode::I32Less as u8);
                         }
                         Type::Double => {
                             todo!()
@@ -453,7 +453,7 @@ impl Compiler {
                 match op.node {
                     UnaryOpKind::Negate => match metadata.types.get(&right.id).unwrap() {
                         Type::Int => {
-                            chunk.write(OpCode::INegate as u8);
+                            chunk.write(OpCode::I32Negate as u8);
                         }
                         Type::Double => {
                             todo!()
@@ -470,9 +470,9 @@ impl Compiler {
 
                             chunk.write_u24(idx as u32);
 
-                            chunk.write(OpCode::ISub as u8);
+                            chunk.write(OpCode::I32Sub as u8);
 
-                            chunk.write(OpCode::IStoreLocal as u8);
+                            chunk.write(OpCode::I32StoreLocal as u8);
                             let varid = metadata.variables.get(&right.id).unwrap();
                             let slot = self.locals.get(varid).unwrap();
                             chunk.write_u24(slot.0 as u32);
@@ -491,9 +491,9 @@ impl Compiler {
                             let idx = chunk.write_constant(Value::new_int(1));
                             chunk.write_u24(idx as u32);
 
-                            chunk.write(OpCode::IAdd as u8);
+                            chunk.write(OpCode::I32Add as u8);
 
-                            chunk.write(OpCode::IStoreLocal as u8);
+                            chunk.write(OpCode::I32StoreLocal as u8);
                             let varid = metadata.variables.get(&right.id).unwrap();
                             let slot = self.locals.get(varid).unwrap();
                             chunk.write_u24(slot.0 as u32);
@@ -511,9 +511,9 @@ impl Compiler {
                             let idx = chunk.write_constant(Value::new_int(1));
                             chunk.write_u24(idx as u32);
 
-                            chunk.write(OpCode::ISub as u8);
+                            chunk.write(OpCode::I32Sub as u8);
                             chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::IStoreLocal as u8);
+                            chunk.write(OpCode::I32StoreLocal as u8);
                             let varid = metadata.variables.get(&right.id).unwrap();
                             let slot = self.locals.get(varid).unwrap();
                             chunk.write_u24(slot.0 as u32);
@@ -530,9 +530,9 @@ impl Compiler {
                             chunk.write(OpCode::LoadConst as u8);
                             let idx = chunk.write_constant(Value::new_int(1));
                             chunk.write_u24(idx as u32);
-                            chunk.write(OpCode::IAdd as u8);
+                            chunk.write(OpCode::I32Add as u8);
                             chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::IStoreLocal as u8);
+                            chunk.write(OpCode::I32StoreLocal as u8);
                             let varid = metadata.variables.get(&right.id).unwrap();
                             let slot = self.locals.get(varid).unwrap();
                             chunk.write_u24(slot.0 as u32);
@@ -561,7 +561,7 @@ impl Compiler {
 
                 match metadata.var_types.get(varid).unwrap() {
                     Type::Int => {
-                        chunk.write(OpCode::IStoreLocal as u8);
+                        chunk.write(OpCode::I32StoreLocal as u8);
                         chunk.write_u24((*self.locals.get(varid).unwrap()).into());
                     }
                     Type::Bool => {
@@ -578,7 +578,7 @@ impl Compiler {
                 let varid = *metadata.variables.get(&expr.id).unwrap();
                 match metadata.var_types.get(&varid).unwrap() {
                     Type::Int => {
-                        chunk.write(OpCode::ILoadLocal as u8);
+                        chunk.write(OpCode::I32LoadLocal as u8);
                     }
                     Type::Bool => {
                         chunk.write(OpCode::BLoadLocal as u8);

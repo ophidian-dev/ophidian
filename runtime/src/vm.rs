@@ -68,28 +68,28 @@ impl VirtualMachine {
                     // similar to c's `exit()` function from <stdlib.h>
                     return unsafe { exit_code.data.integer };
                 }
-                OpCode::IAdd => {
+                OpCode::I32Add => {
                     let b = self.pop();
                     let a = self.pop();
                     let res = unsafe { a.data.integer + b.data.integer };
                     let value = Value::new_int(res);
                     self.push(value);
                 }
-                OpCode::ISub => {
+                OpCode::I32Sub => {
                     let b = self.pop();
                     let a = self.pop();
                     let res = unsafe { a.data.integer - b.data.integer };
                     let value = Value::new_int(res);
                     self.push(value);
                 }
-                OpCode::IMul => {
+                OpCode::I32Mul => {
                     let b = self.pop();
                     let a = self.pop();
                     let res = unsafe { a.data.integer * b.data.integer };
                     let value = Value::new_int(res);
                     self.push(value);
                 }
-                OpCode::IDiv => {
+                OpCode::I32Div => {
                     // division by zero is undefined behaviour
                     let b = self.pop();
                     let a = self.pop();
@@ -97,7 +97,7 @@ impl VirtualMachine {
                     let value = Value::new_int(res);
                     self.push(value);
                 }
-                OpCode::INegate => {
+                OpCode::I32Negate => {
                     let a = self.pop();
                     let res = unsafe { -a.data.integer };
                     let value = Value::new_int(res);
@@ -116,12 +116,12 @@ impl VirtualMachine {
                 OpCode::Pop => {
                     let _ = self.pop();
                 }
-                OpCode::IPrint => {
+                OpCode::I32Print => {
                     let v = self.pop();
                     let int = unsafe { v.data.integer };
                     println!("{}", int);
                 }
-                OpCode::ILoadLocal => {
+                OpCode::I32LoadLocal => {
                     let b0 = self.read_byte();
                     let b1 = self.read_byte();
                     let b2 = self.read_byte();
@@ -129,7 +129,7 @@ impl VirtualMachine {
                     let value = *self.locals.get(idx as usize).expect("shouldnt happen");
                     self.push(value);
                 }
-                OpCode::IStoreLocal => {
+                OpCode::I32StoreLocal => {
                     let value = self.pop();
                     if value.kind == ValueKind::Uninitialized {
                         panic!("use of unitialized variable");
@@ -179,42 +179,42 @@ impl VirtualMachine {
                     *self.locals.get_mut(idx as usize).unwrap() = value;
                     self.push(value);
                 }
-                OpCode::IEqual => {
+                OpCode::I32Equal => {
                     let b = self.pop();
                     let a = self.pop();
                     let res = unsafe { a.data.integer == b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
-                OpCode::IGreater => {
+                OpCode::I32Greater => {
                     let b = self.pop();
                     let a = self.pop();
                     let res = unsafe { a.data.integer > b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
-                OpCode::IGreaterEq => {
+                OpCode::I32GreaterEq => {
                     let b = self.pop();
                     let a = self.pop();
                     let res = unsafe { a.data.integer >= b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
-                OpCode::ILess => {
+                OpCode::I32Less => {
                     let b = self.pop();
                     let a = self.pop();
                     let res = unsafe { a.data.integer < b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
-                OpCode::ILessEq => {
+                OpCode::I32LessEq => {
                     let b = self.pop();
                     let a = self.pop();
                     let res = unsafe { a.data.integer <= b.data.integer };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }
-                OpCode::INEqual => {
+                OpCode::I32NEqual => {
                     let b = self.pop();
                     let a = self.pop();
                     let res = unsafe { a.data.integer != b.data.integer };

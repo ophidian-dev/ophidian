@@ -23,28 +23,28 @@ impl<'a> Disassembler<'a> {
                     offset += 1;
                 }
 
-                x if x == OpCode::IAdd as u8 => {
-                    println!("IADD");
+                x if x == OpCode::I32Add as u8 => {
+                    println!("I32ADD");
                     offset += 1;
                 }
 
-                x if x == OpCode::ISub as u8 => {
-                    println!("ISUB");
+                x if x == OpCode::I32Sub as u8 => {
+                    println!("I32SUB");
                     offset += 1;
                 }
 
-                x if x == OpCode::IMul as u8 => {
-                    println!("IMUL");
+                x if x == OpCode::I32Mul as u8 => {
+                    println!("I32MUL");
                     offset += 1;
                 }
 
-                x if x == OpCode::IDiv as u8 => {
-                    println!("IDIV");
+                x if x == OpCode::I32Div as u8 => {
+                    println!("I32DIV");
                     offset += 1;
                 }
 
-                x if x == OpCode::INegate as u8 => {
-                    println!("INEGATE");
+                x if x == OpCode::I32Negate as u8 => {
+                    println!("I32NEGATE");
                     offset += 1;
                 }
 
@@ -54,8 +54,8 @@ impl<'a> Disassembler<'a> {
                     offset += 4;
                 }
 
-                x if x == OpCode::IPrint as u8 => {
-                    println!("IPRINT");
+                x if x == OpCode::I32Print as u8 => {
+                    println!("I32PRINT");
                     offset += 1;
                 }
 
@@ -64,15 +64,15 @@ impl<'a> Disassembler<'a> {
                     offset += 1;
                 }
 
-                x if x == OpCode::ILoadLocal as u8 => {
+                x if x == OpCode::I32LoadLocal as u8 => {
                     let bytes = &self.chunk.bytecode[offset + 1..offset + 4];
-                    println!("ILOADLOCAL {} {} {}", bytes[0], bytes[1], bytes[2]);
+                    println!("I32LOADLOCAL {} {} {}", bytes[0], bytes[1], bytes[2]);
                     offset += 4;
                 }
 
-                x if x == OpCode::IStoreLocal as u8 => {
+                x if x == OpCode::I32StoreLocal as u8 => {
                     let bytes = &self.chunk.bytecode[offset + 1..offset + 4];
-                    println!("ISTORELOCAL {} {} {}", bytes[0], bytes[1], bytes[2]);
+                    println!("I32STORELOCAL {} {} {}", bytes[0], bytes[1], bytes[2]);
                     offset += 4;
                 }
 
@@ -93,13 +93,13 @@ impl<'a> Disassembler<'a> {
                     offset += 4;
                 }
 
-                x if x == OpCode::IEqual as u8 => {
-                    println!("IEQUAL");
+                x if x == OpCode::I32Equal as u8 => {
+                    println!("I32EQUAL");
                     offset += 1;
                 }
 
-                x if x == OpCode::INEqual as u8 => {
-                    println!("INEQUAL");
+                x if x == OpCode::I32NEqual as u8 => {
+                    println!("I32NEQUAL");
                     offset += 1;
                 }
 
@@ -113,23 +113,23 @@ impl<'a> Disassembler<'a> {
                     offset += 1;
                 }
 
-                x if x == OpCode::ILess as u8 => {
-                    println!("ILESS");
+                x if x == OpCode::I32Less as u8 => {
+                    println!("I32LESS");
                     offset += 1;
                 }
 
-                x if x == OpCode::ILessEq as u8 => {
-                    println!("ILESSEQ");
+                x if x == OpCode::I32LessEq as u8 => {
+                    println!("I32LESSEQ");
                     offset += 1;
                 }
 
-                x if x == OpCode::IGreater as u8 => {
-                    println!("IGREATER");
+                x if x == OpCode::I32Greater as u8 => {
+                    println!("I32GREATER");
                     offset += 1;
                 }
 
-                x if x == OpCode::IGreaterEq as u8 => {
-                    println!("IGREATEREQ");
+                x if x == OpCode::I32GreaterEq as u8 => {
+                    println!("I32GREATEREQ");
                     offset += 1;
                 }
 
