@@ -1,4 +1,5 @@
 use num_enum::TryFromPrimitive;
+use frontend::analysis::analyzer::Conversion;
 
 #[repr(u8)]
 #[derive(TryFromPrimitive)]
@@ -92,6 +93,16 @@ pub enum OpCode {
 
     // convert f64 a.k.a. double to i32 a.k.a. int
     I32ToF64 = 0x28,
+}
+
+impl From<Conversion> for OpCode {
+    fn from(value: Conversion) -> Self {
+        match value {
+            Conversion::IntToDouble => {
+                Self::I32ToF64
+            }
+        }
+    }
 }
 
 // impl TryFrom<u8> for OpCode {
