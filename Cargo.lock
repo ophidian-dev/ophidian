@@ -126,7 +126,6 @@ name = "frontend"
 version = "0.1.0"
 dependencies = [
  "frontend",
- "num_enum",
  "owo-colors",
 ]
 
@@ -240,6 +239,9 @@ dependencies = [
 [[package]]
 name = "runtime"
 version = "0.1.0"
+dependencies = [
+ "num_enum",
+]
 
 [[package]]
 name = "rustversion"
