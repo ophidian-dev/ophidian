@@ -65,6 +65,10 @@ impl Scope {
     }
 }
 
+pub enum Conversion {
+    IntToDouble,
+}
+
 impl<'diag> SemanticAnalyzer<'diag> {
     pub fn new(diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
         Self { diagnostics }
@@ -462,7 +466,7 @@ impl<'diag> TypeChecker<'diag> {
                 if let Some(cond) = cond {
                     let ty = self.check_expr(cond, ctx);
 
-                    if ty != Type::Bool {
+                    if ty != Type::Bool && ty != Type::Error {
                         self.error("for loop condition must have type 'bool'", cond.span);
                         return;
                     }
@@ -584,7 +588,7 @@ impl<'diag> TypeChecker<'diag> {
                 return true;
             }
             (Type::Double, Type::Int) => {
-                ctx.conversions.insert(expr.id, Type::Double);
+                ctx.conversions.insert(expr.id, Conversion::IntToDouble);
                 return true;
             }
             _ => {
@@ -643,11 +647,11 @@ impl<'diag> TypeChecker<'diag> {
                         return Type::Double;
                     }
                     (Type::Int, Type::Double) => {
-                        ctx.conversions.insert(left_id, Type::Double);
+                        ctx.conversions.insert(left_id, Conversion::IntToDouble);
                         return Type::Double;
                     }
                     (Type::Double, Type::Int) => {
-                        ctx.conversions.insert(right_id, Type::Double);
+                        ctx.conversions.insert(right_id, Conversion::IntToDouble);
                         return Type::Double;
                     }
                     (Type::Bool | Type::Error, _) => {
@@ -667,11 +671,11 @@ impl<'diag> TypeChecker<'diag> {
                         return Type::Bool;
                     }
                     (Type::Int, Type::Double) => {
-                        ctx.conversions.insert(left_id, Type::Double);
+                        ctx.conversions.insert(left_id, Conversion::IntToDouble);
                         return Type::Bool;
                     }
                     (Type::Double, Type::Int) => {
-                        ctx.conversions.insert(right_id, Type::Double);
+                        ctx.conversions.insert(right_id, Conversion::IntToDouble);
                         return Type::Bool;
                     }
                     (Type::Bool, Type::Bool) => {
@@ -691,12 +695,12 @@ impl<'diag> TypeChecker<'diag> {
                         return Type::Bool;
                     }
                     (Type::Int, Type::Double) => {
-                        ctx.conversions.insert(left_id, Type::Double);
-                        return Type::Error;
+                        ctx.conversions.insert(left_id, Conversion::IntToDouble);
+                        return Type::Bool;
                     }
                     (Type::Double, Type::Int) => {
-                        ctx.conversions.insert(right_id, Type::Double);
-                        return Type::Error;
+                        ctx.conversions.insert(right_id, Conversion::IntToDouble);
+                        return Type::Bool;
                     }
                     _ => {
                         return Type::Error;
@@ -714,23 +718,6 @@ impl<'diag> TypeChecker<'diag> {
                 }
             }
         }
-        // match (op, lhs, rhs) {
-        //     (BinOpKind::Add, Type::Int, Type::Int) => Type::Int,
-        //     (BinOpKind::Sub, Type::Int, Type::Int) => Type::Int,
-        //     (BinOpKind::Mul, Type::Int, Type::Int) => Type::Int,
-        //     (BinOpKind::Div, Type::Int, Type::Int) => Type::Int,
-        //     (BinOpKind::BangEq, Type::Int, Type::Int) => Type::Bool,
-        //     (BinOpKind::BangEq, Type::Bool, Type::Bool) => Type::Bool,
-        //     (BinOpKind::EqEq, Type::Int, Type::Int) => Type::Bool,
-        //     (BinOpKind::EqEq, Type::Bool, Type::Bool) => Type::Bool,
-        //     (BinOpKind::GreaterEq, Type::Int, Type::Int) => Type::Bool,
-        //     (BinOpKind::GreaterThan, Type::Int, Type::Int) => Type::Bool,
-        //     (BinOpKind::LessEq, Type::Int, Type::Int) => Type::Bool,
-        //     (BinOpKind::LessThan, Type::Int, Type::Int) => Type::Bool,
-        //     (BinOpKind::Or, Type::Bool, Type::Bool) => Type::Bool,
-        //     (BinOpKind::And, Type::Bool, Type::Bool) => Type::Bool,
-        //     _ => Type::Error,
-        // }
     }
 }
 
@@ -740,7 +727,7 @@ struct AnalysisCtx {
     variables: HashMap<NodeId, VarId>,
     var_types: HashMap<VarId, Type>,
 
-    conversions: HashMap<NodeId, Type>,
+    conversions: HashMap<NodeId, Conversion>,
 }
 
 impl AnalysisCtx {
@@ -760,7 +747,7 @@ pub struct AnalysisResult {
     pub variables: HashMap<NodeId, VarId>,
     pub var_types: HashMap<VarId, Type>,
 
-    pub conversions: HashMap<NodeId, Type>,
+    pub conversions: HashMap<NodeId, Conversion>,
 }
 
 impl From<AnalysisCtx> for AnalysisResult {
