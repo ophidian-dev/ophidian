@@ -265,6 +265,9 @@ impl VirtualMachine {
                     self.push(v);
                     self.push(v);
                 }
+                _ => {
+                    todo!()
+                }
             }
         }
     }

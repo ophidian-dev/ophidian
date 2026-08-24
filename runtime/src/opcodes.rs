@@ -64,6 +64,28 @@ pub enum OpCode {
 
     // duplicate the value at the top of the stack
     Dup = 0x19,
+
+    // double arithmetic operations
+    // works by popping 2 values off the stack, applying the operation then pushing the result
+    F64Add = 0x1A,
+    F64Sub = 0x1B,
+    F64Mul = 0x1C,
+    F64Div = 0x1D,
+    
+    F64Negate = 0x1E,
+
+    F64Print = 0x1F,
+
+    F64LoadLocal = 0x20,
+    F64StoreLocal = 0x21,
+
+    F64Equal = 0x22,
+    F64NEqual = 0x23,
+
+    F64Less = 0x24,
+    F64LessEq = 0x25,
+    F64Greater = 0x26,
+    F64GreaterEq = 0x27,
 }
 
 impl TryFrom<u8> for OpCode {
