@@ -350,21 +350,15 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             TokenKind::Colon => {
                 self.advance();
 
-                let var_type = match self.peek().kind {
-                    TokenKind::Int => {
-                        self.advance();
-                        Type::Int
-                    }
-                    TokenKind::Bool => {
-                        self.advance();
-                        Type::Bool
-                    }
-                    _ => {
-                        // not a valid variable type
+                let var_type = {
+                    let ty: Type = self.peek().kind.into();
+                    if ty == Type::Error {
                         let end_span = self.advance().span;
                         self.error("expected a type annotation", end_span);
                         return Stmt::new(self.next_node_id(), StmtKind::Error, end_span);
                     }
+                    self.advance();
+                    ty
                 };
 
                 match self.peek().kind {

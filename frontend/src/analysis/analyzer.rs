@@ -3,6 +3,7 @@ use crate::parse::ast::{
     BinOpKind, Expr, ExprKind, ForInit, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind,
 };
 use crate::span::Span;
+use crate::lex::token::TokenKind;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -11,9 +12,30 @@ pub enum Type {
 
     Bool,
 
+    Double,
+
     // The type that allows analysis to continue if it
     // encounters an error
     Error,
+}
+
+impl From<TokenKind> for Type {
+    fn from(value: TokenKind) -> Self {
+        match value {
+            TokenKind::Int => {
+                Self::Int
+            }
+            TokenKind::Double => {
+                Self::Double
+            }
+            TokenKind::Bool => {
+                Self::Bool
+            }
+            _ => {
+                Self::Error
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -365,7 +387,7 @@ impl<'diag> TypeChecker<'diag> {
                     Type::Error => {
                         return;
                     }
-                    Type::Int | Type::Bool => {}
+                    Type::Int | Type::Bool | Type::Double => {}
                 }
             }
             StmtKind::VarDecl(.., type_annotation, initializer) => {
@@ -579,6 +601,7 @@ impl<'diag> TypeChecker<'diag> {
         }
         match (op, rhs) {
             (UnaryOpKind::Negate, Type::Int) => Type::Int,
+            (UnaryOpKind::Negate, Type::Double) => Type::Double,
             (
                 UnaryOpKind::Negate
                 | UnaryOpKind::PostDecrement
@@ -591,11 +614,16 @@ impl<'diag> TypeChecker<'diag> {
             (UnaryOpKind::PostIncrement, Type::Int) => Type::Int,
             (UnaryOpKind::PreDecrement, Type::Int) => Type::Int,
             (UnaryOpKind::PreIncrement, Type::Int) => Type::Int,
+            (UnaryOpKind::PostDecrement, Type::Double) => Type::Double,
+            (UnaryOpKind::PostIncrement, Type::Double) => Type::Double,
+            (UnaryOpKind::PreDecrement, Type::Double) => Type::Double,
+            (UnaryOpKind::PreIncrement, Type::Double) => Type::Double,
             (_, Type::Error) => unreachable!(),
         }
     }
 
     fn binary_result_type(&self, op: BinOpKind, lhs: Type, rhs: Type) -> Type {
+        todo!("add floating point arithmetic checks");
         if lhs == Type::Error || rhs == Type::Error {
             return Type::Error;
         }
