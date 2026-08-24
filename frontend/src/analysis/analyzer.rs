@@ -759,7 +759,6 @@ impl AnalysisCtx {
 }
 
 pub struct AnalysisResult {
-    pub types: HashMap<NodeId, Type>,
     pub variables: HashMap<NodeId, VarId>,
     pub var_types: HashMap<VarId, Type>,
 
@@ -772,7 +771,6 @@ impl From<AnalysisCtx> for AnalysisResult {
     fn from(value: AnalysisCtx) -> Self {
         Self {
             variables: value.variables,
-            types: value.types,
             var_types: value.var_types,
             conversions: value.conversions,
             converted_types: value.converted_types,

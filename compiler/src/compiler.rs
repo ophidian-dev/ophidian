@@ -94,7 +94,7 @@ impl Compiler {
             StmtKind::Print(expr) => {
                 self.compile_expr(expr, chunk, metadata);
 
-                match metadata.types.get(&expr.id).unwrap() {
+                match metadata.converted_types.get(&expr.id).unwrap() {
                     Type::Int => {
                         chunk.write(OpCode::I32Print as u8);
                     }
@@ -455,7 +455,7 @@ impl Compiler {
                 self.compile_expr(&right, chunk, metadata);
 
                 match op.node {
-                    UnaryOpKind::Negate => match metadata.types.get(&right.id).unwrap() {
+                    UnaryOpKind::Negate => match metadata.converted_types.get(&right.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32Negate as u8);
                         }
@@ -466,7 +466,7 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    UnaryOpKind::PostDecrement => match metadata.types.get(&right.id).unwrap() {
+                    UnaryOpKind::PostDecrement => match metadata.converted_types.get(&right.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::Dup as u8);
                             chunk.write(OpCode::LoadConst as u8);
@@ -499,7 +499,7 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    UnaryOpKind::PostIncrement => match metadata.types.get(&right.id).unwrap() {
+                    UnaryOpKind::PostIncrement => match metadata.converted_types.get(&right.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::Dup as u8);
                             chunk.write(OpCode::LoadConst as u8);
@@ -530,7 +530,7 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    UnaryOpKind::PreDecrement => match metadata.types.get(&right.id).unwrap() {
+                    UnaryOpKind::PreDecrement => match metadata.converted_types.get(&right.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::LoadConst as u8);
                             let idx = chunk.write_constant(Value::new_int(1));
@@ -559,7 +559,7 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    UnaryOpKind::PreIncrement => match metadata.types.get(&right.id).unwrap() {
+                    UnaryOpKind::PreIncrement => match metadata.converted_types.get(&right.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::LoadConst as u8);
                             let idx = chunk.write_constant(Value::new_int(1));
