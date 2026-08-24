@@ -1,9 +1,9 @@
 use crate::diagnostics::{Diagnostic, Severity};
+use crate::lex::token::TokenKind;
 use crate::parse::ast::{
     BinOpKind, Expr, ExprKind, ForInit, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind,
 };
 use crate::span::Span;
-use crate::lex::token::TokenKind;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -22,18 +22,10 @@ pub enum Type {
 impl From<TokenKind> for Type {
     fn from(value: TokenKind) -> Self {
         match value {
-            TokenKind::Int => {
-                Self::Int
-            }
-            TokenKind::Double => {
-                Self::Double
-            }
-            TokenKind::Bool => {
-                Self::Bool
-            }
-            _ => {
-                Self::Error
-            }
+            TokenKind::Int => Self::Int,
+            TokenKind::Double => Self::Double,
+            TokenKind::Bool => Self::Bool,
+            _ => Self::Error,
         }
     }
 }
@@ -400,8 +392,9 @@ impl<'diag> TypeChecker<'diag> {
                             Some(init) => {
                                 let initializer_type = self.check_expr(init, ctx);
 
-                                if !self.can_assign(initializer_type, *annotation) {
+                                if !self.can_assign(initializer_type, *annotation, init, ctx) {
                                     self.error("mismatched types", stmt.span);
+                                    return;
                                 }
 
                                 ctx.var_types.insert(varid, *annotation);
@@ -493,7 +486,8 @@ impl<'diag> TypeChecker<'diag> {
                 let left_type = self.check_expr(left, ctx);
                 let right_type = self.check_expr(right, ctx);
 
-                let res = self.binary_result_type(op.node, left_type, right_type);
+                let res =
+                    self.binary_result_type(op.node, left_type, right_type, left.id, right.id, ctx);
                 if res == Type::Error {
                     self.error(
                         format!("invalid operands for binary operation: '{}'", op.node),
@@ -514,9 +508,10 @@ impl<'diag> TypeChecker<'diag> {
                     }
                 }
                 LitKind::Bool(_b) => Type::Bool,
-                LitKind::Float(f) => {
-                    todo!()
-                },
+                LitKind::Float(_f) => {
+                    // no type checking needed here?
+                    Type::Double        
+                }
             },
             ExprKind::UnaryOp(op, right) => {
                 let expr_type = self.check_expr(right, ctx);
@@ -545,7 +540,7 @@ impl<'diag> TypeChecker<'diag> {
                 let rhs_type = self.check_expr(rhs, ctx);
                 let target_type = self.check_expr(target, ctx);
 
-                if !self.can_assign(rhs_type, target_type) {
+                if !self.can_assign(rhs_type, target_type, rhs, ctx) {
                     self.error("mismatched types", expr.span);
                     Type::Error
                 } else if !self.is_lvalue(target) {
@@ -579,16 +574,19 @@ impl<'diag> TypeChecker<'diag> {
         }
     }
 
-    fn can_assign(&self, from: Type, to: Type) -> bool {
-        if from == to {
+    fn can_assign(&self, value: Type, target: Type, expr: &Expr, ctx: &mut AnalysisCtx) -> bool {
+        if target == value {
             return true;
         }
 
-        match (from, to) {
+        match (target, value) {
             (Type::Error, _) | (_, Type::Error) => {
                 return true;
             }
-
+            (Type::Double, Type::Int) => {
+                ctx.conversions.insert(expr.id, Type::Double);
+                return true;
+            }
             _ => {
                 return false;
             }
@@ -622,28 +620,117 @@ impl<'diag> TypeChecker<'diag> {
         }
     }
 
-    fn binary_result_type(&self, op: BinOpKind, lhs: Type, rhs: Type) -> Type {
-        todo!("add floating point arithmetic checks");
+    fn binary_result_type(
+        &self,
+        op: BinOpKind,
+        lhs: Type,
+        rhs: Type,
+        left_id: NodeId,
+        right_id: NodeId,
+        ctx: &mut AnalysisCtx,
+    ) -> Type {
         if lhs == Type::Error || rhs == Type::Error {
             return Type::Error;
         }
-        match (op, lhs, rhs) {
-            (BinOpKind::Add, Type::Int, Type::Int) => Type::Int,
-            (BinOpKind::Sub, Type::Int, Type::Int) => Type::Int,
-            (BinOpKind::Mul, Type::Int, Type::Int) => Type::Int,
-            (BinOpKind::Div, Type::Int, Type::Int) => Type::Int,
-            (BinOpKind::BangEq, Type::Int, Type::Int) => Type::Bool,
-            (BinOpKind::BangEq, Type::Bool, Type::Bool) => Type::Bool,
-            (BinOpKind::EqEq, Type::Int, Type::Int) => Type::Bool,
-            (BinOpKind::EqEq, Type::Bool, Type::Bool) => Type::Bool,
-            (BinOpKind::GreaterEq, Type::Int, Type::Int) => Type::Bool,
-            (BinOpKind::GreaterThan, Type::Int, Type::Int) => Type::Bool,
-            (BinOpKind::LessEq, Type::Int, Type::Int) => Type::Bool,
-            (BinOpKind::LessThan, Type::Int, Type::Int) => Type::Bool,
-            (BinOpKind::Or, Type::Bool, Type::Bool) => Type::Bool,
-            (BinOpKind::And, Type::Bool, Type::Bool) => Type::Bool,
-            _ => Type::Error,
+
+        match op {
+            BinOpKind::Add | BinOpKind::Sub | BinOpKind::Mul | BinOpKind::Div => {
+                match (lhs, rhs) {
+                    (Type::Int, Type::Int) => {
+                        return Type::Int;
+                    }
+                    (Type::Double, Type::Double) => {
+                        return Type::Double;
+                    }
+                    (Type::Int, Type::Double) => {
+                        ctx.conversions.insert(left_id, Type::Double);
+                        return Type::Double;
+                    }
+                    (Type::Double, Type::Int) => {
+                        ctx.conversions.insert(right_id, Type::Double);
+                        return Type::Double;
+                    }
+                    (Type::Bool | Type::Error, _) => {
+                        return Type::Error;
+                    }
+                    (_, Type::Bool | Type::Error) => {
+                        return Type::Error;
+                    }
+                }
+            }
+            BinOpKind::BangEq | BinOpKind::EqEq => {
+                match (lhs, rhs) {
+                    (Type::Int, Type::Int) => {
+                        return Type::Bool;
+                    }
+                    (Type::Double, Type::Double) => {
+                        return Type::Bool;
+                    }
+                    (Type::Int, Type::Double) => {
+                        ctx.conversions.insert(left_id, Type::Double);
+                        return Type::Bool;
+                    }
+                    (Type::Double, Type::Int) => {
+                        ctx.conversions.insert(right_id, Type::Double);
+                        return Type::Bool;
+                    }
+                    (Type::Bool, Type::Bool) => {
+                        return Type::Bool;
+                    }
+                    _ => {
+                        return Type::Error;
+                    }
+                }
+            }
+            BinOpKind::GreaterEq | BinOpKind::GreaterThan | BinOpKind::LessEq | BinOpKind::LessThan => {
+                match (lhs, rhs) {
+                    (Type::Int, Type::Int) => {
+                        return Type::Bool;
+                    }
+                    (Type::Double, Type::Double) => {
+                        return Type::Bool;
+                    }
+                    (Type::Int, Type::Double) => {
+                        ctx.conversions.insert(left_id, Type::Double);
+                        return Type::Error;
+                    }
+                    (Type::Double, Type::Int) => {
+                        ctx.conversions.insert(right_id, Type::Double);
+                        return Type::Error;
+                    }
+                    _ => {
+                        return Type::Error;
+                    }
+                }
+            }
+            BinOpKind::Or | BinOpKind::And => {
+                match (lhs, rhs) {
+                    (Type::Bool, Type::Bool) => {
+                        return Type::Bool;
+                    }
+                    _ => {
+                        return Type::Error;
+                    }
+                }
+            }
         }
+        // match (op, lhs, rhs) {
+        //     (BinOpKind::Add, Type::Int, Type::Int) => Type::Int,
+        //     (BinOpKind::Sub, Type::Int, Type::Int) => Type::Int,
+        //     (BinOpKind::Mul, Type::Int, Type::Int) => Type::Int,
+        //     (BinOpKind::Div, Type::Int, Type::Int) => Type::Int,
+        //     (BinOpKind::BangEq, Type::Int, Type::Int) => Type::Bool,
+        //     (BinOpKind::BangEq, Type::Bool, Type::Bool) => Type::Bool,
+        //     (BinOpKind::EqEq, Type::Int, Type::Int) => Type::Bool,
+        //     (BinOpKind::EqEq, Type::Bool, Type::Bool) => Type::Bool,
+        //     (BinOpKind::GreaterEq, Type::Int, Type::Int) => Type::Bool,
+        //     (BinOpKind::GreaterThan, Type::Int, Type::Int) => Type::Bool,
+        //     (BinOpKind::LessEq, Type::Int, Type::Int) => Type::Bool,
+        //     (BinOpKind::LessThan, Type::Int, Type::Int) => Type::Bool,
+        //     (BinOpKind::Or, Type::Bool, Type::Bool) => Type::Bool,
+        //     (BinOpKind::And, Type::Bool, Type::Bool) => Type::Bool,
+        //     _ => Type::Error,
+        // }
     }
 }
 
@@ -652,6 +739,8 @@ struct AnalysisCtx {
     types: HashMap<NodeId, Type>,
     variables: HashMap<NodeId, VarId>,
     var_types: HashMap<VarId, Type>,
+
+    conversions: HashMap<NodeId, Type>,
 }
 
 impl AnalysisCtx {
@@ -661,6 +750,7 @@ impl AnalysisCtx {
             types: HashMap::new(),
             variables: HashMap::new(),
             var_types: HashMap::new(),
+            conversions: HashMap::new(),
         }
     }
 }
@@ -669,6 +759,8 @@ pub struct AnalysisResult {
     pub types: HashMap<NodeId, Type>,
     pub variables: HashMap<NodeId, VarId>,
     pub var_types: HashMap<VarId, Type>,
+
+    pub conversions: HashMap<NodeId, Type>,
 }
 
 impl From<AnalysisCtx> for AnalysisResult {
@@ -677,6 +769,7 @@ impl From<AnalysisCtx> for AnalysisResult {
             variables: value.variables,
             types: value.types,
             var_types: value.var_types,
+            conversions: value.conversions,
         }
     }
 }
