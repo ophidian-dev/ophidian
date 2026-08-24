@@ -21,6 +21,9 @@ impl std::cmp::PartialEq for Value {
                 ValueKind::Uninitialized => {
                     return false;
                 }
+                ValueKind::Double => {
+                    return self.data.double == other.data.double;
+                }
             }
         }
     }
@@ -40,6 +43,9 @@ impl std::fmt::Debug for Value {
                 }
                 ValueKind::Boolean => {
                     write!(f, "{}", self.data.boolean)
+                }
+                ValueKind::Double => {
+                    write!(f, "{}", self.data.double)
                 }
             }
         }
@@ -61,6 +67,13 @@ impl Value {
         }
     }
 
+    pub const fn new_double(double: f64) -> Self {
+        Self {
+            kind: ValueKind::Double,
+            data: ValueData { double: double },
+        }
+    }
+
     const fn new_uninitialized() -> Self {
         Self {
             kind: ValueKind::Uninitialized,
@@ -76,7 +89,11 @@ impl Value {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValueKind {
     Integer,
+
     Boolean,
+
+    Double,
+
     Uninitialized,
 }
 
@@ -84,6 +101,7 @@ pub enum ValueKind {
 pub union ValueData {
     pub integer: i32,
     pub boolean: bool,
+    pub double: f64,
 
     // any type is fine
     // just makes it ub when the vm reads it
