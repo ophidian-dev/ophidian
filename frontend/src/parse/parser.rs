@@ -797,6 +797,20 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 ExprKind::Literal(LitKind::Int(value)),
                 self.prev.span,
             );
+        } else if self.peek().kind == TokenKind::FloatLiteral {
+            self.advance();
+            let lexeme = Span::retrieve_slice(self.source, &self.prev.span);
+
+            let value = std::str::from_utf8(lexeme)
+                .expect("source code is assumed to be valid ascii and therefore valid utf8")
+                .parse::<f64>()
+                .expect("failed to pass float");
+
+            return Expr::new(
+                self.next_node_id(),
+                ExprKind::Literal(LitKind::Float(value)),
+                self.prev.span,
+            );
         } else if self.peek().kind == TokenKind::OpenParen {
             // advnace past the open parentheses
             self.advance();

@@ -26,6 +26,7 @@ impl std::ops::AddAssign<usize> for NodeId {
 #[derive(Debug, PartialEq)]
 pub enum LitKind {
     Int(u128),
+    Float(f64),
     Bool(bool),
 }
 

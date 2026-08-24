@@ -130,7 +130,7 @@ impl<'diag> Resolver<'diag> {
                 self.resolve_break(stmt);
             }
             StmtKind::Continue => {
-                self.resolve_continue(stmt); 
+                self.resolve_continue(stmt);
             }
             StmtKind::Error => {
                 unreachable!()
@@ -492,6 +492,9 @@ impl<'diag> TypeChecker<'diag> {
                     }
                 }
                 LitKind::Bool(_b) => Type::Bool,
+                LitKind::Float(f) => {
+                    todo!()
+                },
             },
             ExprKind::UnaryOp(op, right) => {
                 let expr_type = self.check_expr(right, ctx);
