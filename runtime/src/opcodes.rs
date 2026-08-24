@@ -89,6 +89,9 @@ pub enum OpCode {
     F64LessEq = 0x25,
     F64Greater = 0x26,
     F64GreaterEq = 0x27,
+
+    // convert f64 a.k.a. double to i32 a.k.a. int
+    I32ToF64 = 0x28,
 }
 
 // impl TryFrom<u8> for OpCode {
