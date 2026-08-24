@@ -265,8 +265,115 @@ impl VirtualMachine {
                     self.push(v);
                     self.push(v);
                 }
-                _ => {
-                    todo!()
+                OpCode::F64Add => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.double + b.data.double
+                    };
+                    let value = Value::new_double(res);
+                    self.push(value);
+                }
+                OpCode::F64Div => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.double / b.data.double
+                    };
+                    let value = Value::new_double(res);
+                    self.push(value);
+                }
+                OpCode::F64Equal => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe {
+                        a.data.double == b.data.double
+                    };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::F64Greater => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe { a.data.double > b.data.double };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::F64GreaterEq => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe { a.data.double >= b.data.double };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::F64Less => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe { a.data.double < b.data.double };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::F64LessEq => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe { a.data.double <= b.data.double };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::F64LoadLocal => {
+                    let bytes = [self.read_byte(), self.read_byte(), self.read_byte()];
+                    let idx = decode_u24_le(bytes);
+                    let value = *self.locals.get(idx as usize).unwrap();
+                    self.push(value);
+                }
+                OpCode::F64Mul => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe { a.data.double * b.data.double };
+                    let value = Value::new_double(res);
+                    self.push(value);
+                }
+                OpCode::F64NEqual => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe { a.data.double != b.data.double };
+                    let value = Value::new_bool(res);
+                    self.push(value);
+                }
+                OpCode::F64Negate => {
+                    let a = self.pop();
+                    let res = unsafe { -a.data.double };
+                    let value = Value::new_double(res);
+                    self.push(value);
+                }
+                OpCode::F64Print => {
+                    let val = self.pop();
+                    let double = unsafe { val.data.double };
+                    println!("{}", double);
+                }
+                OpCode::F64StoreLocal => {
+                    let value = self.pop();
+                    if value.kind == ValueKind::Uninitialized {
+                        panic!("use of unitialized variable");
+                    }
+                    let b0 = self.read_byte();
+                    let b1 = self.read_byte();
+                    let b2 = self.read_byte();
+                    let idx = decode_u24_le([b0, b1, b2]);
+                    *self.locals.get_mut(idx as usize).unwrap() = value;
+                }
+                OpCode::F64Sub => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let res = unsafe { a.data.double - b.data.double };
+                    let value = Value::new_double(res);
+                    self.push(value);
+                }
+                OpCode::I32ToF64 => {
+                    let a = self.pop();
+                    let res = unsafe { a.data.integer as f64 };
+                    let value = Value::new_double(res);
+                    self.push(value);
                 }
             }
         }
