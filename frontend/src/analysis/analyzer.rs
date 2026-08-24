@@ -88,6 +88,18 @@ impl<'diag> SemanticAnalyzer<'diag> {
         let mut typechecker = TypeChecker::new(self.diagnostics);
         typechecker.check(program, &mut ctx);
 
+        for (id, value) in &ctx.types {
+            if let Some(conversion_type) = ctx.conversions.get(id) {
+                match conversion_type {
+                    Conversion::IntToDouble => {
+                        ctx.converted_types.insert(*id, Type::Double);
+                    }
+                }
+            } else {
+                ctx.converted_types.insert(*id, *value);
+            }
+        }
+
         Ok(AnalysisResult::from(ctx))
     }
 }
@@ -729,6 +741,8 @@ struct AnalysisCtx {
     var_types: HashMap<VarId, Type>,
 
     conversions: HashMap<NodeId, Conversion>,
+
+    converted_types: HashMap<NodeId, Type>,
 }
 
 impl AnalysisCtx {
@@ -739,6 +753,7 @@ impl AnalysisCtx {
             variables: HashMap::new(),
             var_types: HashMap::new(),
             conversions: HashMap::new(),
+            converted_types: HashMap::new(),
         }
     }
 }
@@ -749,6 +764,8 @@ pub struct AnalysisResult {
     pub var_types: HashMap<VarId, Type>,
 
     pub conversions: HashMap<NodeId, Conversion>,
+
+    pub converted_types: HashMap<NodeId, Type>,
 }
 
 impl From<AnalysisCtx> for AnalysisResult {
@@ -758,6 +775,7 @@ impl From<AnalysisCtx> for AnalysisResult {
             types: value.types,
             var_types: value.var_types,
             conversions: value.conversions,
+            converted_types: value.converted_types,
         }
     }
 }

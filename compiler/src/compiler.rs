@@ -324,7 +324,7 @@ impl Compiler {
                 match op.node {
                     // only type int exists rn so we dont needa
                     // check for different types
-                    BinOpKind::Add => match metadata.types.get(&expr.id).unwrap() {
+                    BinOpKind::Add => match metadata.converted_types.get(&expr.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32Add as u8);
                         }
@@ -335,7 +335,7 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    BinOpKind::Sub => match metadata.types.get(&left.id).unwrap() {
+                    BinOpKind::Sub => match metadata.converted_types.get(&expr.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32Sub as u8);
                         }
@@ -346,7 +346,7 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    BinOpKind::Mul => match metadata.types.get(&left.id).unwrap() {
+                    BinOpKind::Mul => match metadata.converted_types.get(&expr.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32Mul as u8);
                         }
@@ -357,7 +357,7 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    BinOpKind::Div => match metadata.types.get(&left.id).unwrap() {
+                    BinOpKind::Div => match metadata.converted_types.get(&expr.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32Div as u8);
                         }
@@ -368,7 +368,7 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    BinOpKind::BangEq => match metadata.types.get(&left.id).unwrap() {
+                    BinOpKind::BangEq => match metadata.converted_types.get(&left.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32NEqual as u8);
                         }
@@ -380,7 +380,7 @@ impl Compiler {
                         }
                         Type::Error => unreachable!(),
                     },
-                    BinOpKind::EqEq => match metadata.types.get(&left.id).unwrap() {
+                    BinOpKind::EqEq => match metadata.converted_types.get(&left.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32Equal as u8);
                         }
@@ -392,7 +392,7 @@ impl Compiler {
                         }
                         Type::Error => unreachable!(),
                     },
-                    BinOpKind::GreaterEq => match metadata.types.get(&left.id).unwrap() {
+                    BinOpKind::GreaterEq => match metadata.converted_types.get(&left.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32GreaterEq as u8);
                         }
@@ -401,7 +401,7 @@ impl Compiler {
                         }
                         Type::Bool | Type::Error => unreachable!(),
                     },
-                    BinOpKind::GreaterThan => match metadata.types.get(&left.id).unwrap() {
+                    BinOpKind::GreaterThan => match metadata.converted_types.get(&left.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32Greater as u8);
                         }
@@ -410,7 +410,7 @@ impl Compiler {
                         }
                         Type::Bool | Type::Error => unreachable!(),
                     },
-                    BinOpKind::LessEq => match metadata.types.get(&left.id).unwrap() {
+                    BinOpKind::LessEq => match metadata.converted_types.get(&left.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32LessEq as u8);
                         }
@@ -419,7 +419,7 @@ impl Compiler {
                         }
                         Type::Bool | Type::Error => unreachable!(),
                     },
-                    BinOpKind::LessThan => match metadata.types.get(&left.id).unwrap() {
+                    BinOpKind::LessThan => match metadata.converted_types.get(&left.id).unwrap() {
                         Type::Int => {
                             chunk.write(OpCode::I32Less as u8);
                         }
