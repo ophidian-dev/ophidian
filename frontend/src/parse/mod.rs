@@ -3,8 +3,8 @@ mod parser;
 
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::lex::token::{Token, TokenKind, TokenStream};
-use crate::span::Span;
 use crate::parse::ast::NodeId;
+use crate::span::Span;
 
 pub struct Parser<'src, 'diag, T>
 where
@@ -66,7 +66,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             .push(Diagnostic::new(message.into(), span, Severity::Error));
     }
 
-     fn sync(&mut self) {
+    fn sync(&mut self) {
         while self.peek().kind != TokenKind::Eof {
             let kind = self.peek().kind;
             match kind {

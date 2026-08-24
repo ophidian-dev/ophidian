@@ -527,7 +527,7 @@ impl<'diag> TypeChecker<'diag> {
                 LitKind::Bool(_b) => Type::Bool,
                 LitKind::Float(_f) => {
                     // no type checking needed here?
-                    Type::Double        
+                    Type::Double
                 }
             },
             ExprKind::UnaryOp(op, right) => {
@@ -651,85 +651,80 @@ impl<'diag> TypeChecker<'diag> {
         }
 
         match op {
-            BinOpKind::Add | BinOpKind::Sub | BinOpKind::Mul | BinOpKind::Div => {
-                match (lhs, rhs) {
-                    (Type::Int, Type::Int) => {
-                        return Type::Int;
-                    }
-                    (Type::Double, Type::Double) => {
-                        return Type::Double;
-                    }
-                    (Type::Int, Type::Double) => {
-                        ctx.conversions.insert(left_id, Conversion::IntToDouble);
-                        return Type::Double;
-                    }
-                    (Type::Double, Type::Int) => {
-                        ctx.conversions.insert(right_id, Conversion::IntToDouble);
-                        return Type::Double;
-                    }
-                    (Type::Bool | Type::Error, _) => {
-                        return Type::Error;
-                    }
-                    (_, Type::Bool | Type::Error) => {
-                        return Type::Error;
-                    }
+            BinOpKind::Add | BinOpKind::Sub | BinOpKind::Mul | BinOpKind::Div => match (lhs, rhs) {
+                (Type::Int, Type::Int) => {
+                    return Type::Int;
                 }
-            }
-            BinOpKind::BangEq | BinOpKind::EqEq => {
-                match (lhs, rhs) {
-                    (Type::Int, Type::Int) => {
-                        return Type::Bool;
-                    }
-                    (Type::Double, Type::Double) => {
-                        return Type::Bool;
-                    }
-                    (Type::Int, Type::Double) => {
-                        ctx.conversions.insert(left_id, Conversion::IntToDouble);
-                        return Type::Bool;
-                    }
-                    (Type::Double, Type::Int) => {
-                        ctx.conversions.insert(right_id, Conversion::IntToDouble);
-                        return Type::Bool;
-                    }
-                    (Type::Bool, Type::Bool) => {
-                        return Type::Bool;
-                    }
-                    _ => {
-                        return Type::Error;
-                    }
+                (Type::Double, Type::Double) => {
+                    return Type::Double;
                 }
-            }
-            BinOpKind::GreaterEq | BinOpKind::GreaterThan | BinOpKind::LessEq | BinOpKind::LessThan => {
-                match (lhs, rhs) {
-                    (Type::Int, Type::Int) => {
-                        return Type::Bool;
-                    }
-                    (Type::Double, Type::Double) => {
-                        return Type::Bool;
-                    }
-                    (Type::Int, Type::Double) => {
-                        ctx.conversions.insert(left_id, Conversion::IntToDouble);
-                        return Type::Bool;
-                    }
-                    (Type::Double, Type::Int) => {
-                        ctx.conversions.insert(right_id, Conversion::IntToDouble);
-                        return Type::Bool;
-                    }
-                    _ => {
-                        return Type::Error;
-                    }
+                (Type::Int, Type::Double) => {
+                    ctx.conversions.insert(left_id, Conversion::IntToDouble);
+                    return Type::Double;
                 }
-            }
-            BinOpKind::Or | BinOpKind::And => {
-                match (lhs, rhs) {
-                    (Type::Bool, Type::Bool) => {
-                        return Type::Bool;
-                    }
-                    _ => {
-                        return Type::Error;
-                    }
+                (Type::Double, Type::Int) => {
+                    ctx.conversions.insert(right_id, Conversion::IntToDouble);
+                    return Type::Double;
                 }
-            }
+                (Type::Bool | Type::Error, _) => {
+                    return Type::Error;
+                }
+                (_, Type::Bool | Type::Error) => {
+                    return Type::Error;
+                }
+            },
+            BinOpKind::BangEq | BinOpKind::EqEq => match (lhs, rhs) {
+                (Type::Int, Type::Int) => {
+                    return Type::Bool;
+                }
+                (Type::Double, Type::Double) => {
+                    return Type::Bool;
+                }
+                (Type::Int, Type::Double) => {
+                    ctx.conversions.insert(left_id, Conversion::IntToDouble);
+                    return Type::Bool;
+                }
+                (Type::Double, Type::Int) => {
+                    ctx.conversions.insert(right_id, Conversion::IntToDouble);
+                    return Type::Bool;
+                }
+                (Type::Bool, Type::Bool) => {
+                    return Type::Bool;
+                }
+                _ => {
+                    return Type::Error;
+                }
+            },
+            BinOpKind::GreaterEq
+            | BinOpKind::GreaterThan
+            | BinOpKind::LessEq
+            | BinOpKind::LessThan => match (lhs, rhs) {
+                (Type::Int, Type::Int) => {
+                    return Type::Bool;
+                }
+                (Type::Double, Type::Double) => {
+                    return Type::Bool;
+                }
+                (Type::Int, Type::Double) => {
+                    ctx.conversions.insert(left_id, Conversion::IntToDouble);
+                    return Type::Bool;
+                }
+                (Type::Double, Type::Int) => {
+                    ctx.conversions.insert(right_id, Conversion::IntToDouble);
+                    return Type::Bool;
+                }
+                _ => {
+                    return Type::Error;
+                }
+            },
+            BinOpKind::Or | BinOpKind::And => match (lhs, rhs) {
+                (Type::Bool, Type::Bool) => {
+                    return Type::Bool;
+                }
+                _ => {
+                    return Type::Error;
+                }
+            },
         }
     }
 }

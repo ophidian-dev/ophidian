@@ -1,5 +1,5 @@
 use cli::options::Options;
-use frontend::analysis::analyzer::{AnalysisResult, SemanticAnalyzer, Type, VarId, Conversion};
+use frontend::analysis::analyzer::{AnalysisResult, Conversion, SemanticAnalyzer, Type, VarId};
 use frontend::diagnostics::Diagnostic;
 use frontend::lex::Lexer;
 use frontend::parse::Parser;
@@ -132,7 +132,8 @@ impl Compiler {
                             }
                             Type::Double => {
                                 chunk.write(OpCode::F64StoreLocal as u8);
-                                chunk.write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
+                                chunk
+                                    .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Error => {
                                 unreachable!()
@@ -401,7 +402,8 @@ impl Compiler {
                         }
                         Type::Bool | Type::Error => unreachable!(),
                     },
-                    BinOpKind::GreaterThan => match metadata.converted_types.get(&left.id).unwrap() {
+                    BinOpKind::GreaterThan => match metadata.converted_types.get(&left.id).unwrap()
+                    {
                         Type::Int => {
                             chunk.write(OpCode::I32Greater as u8);
                         }
@@ -466,126 +468,134 @@ impl Compiler {
                             unreachable!()
                         }
                     },
-                    UnaryOpKind::PostDecrement => match metadata.converted_types.get(&right.id).unwrap() {
-                        Type::Int => {
-                            chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::LoadConst as u8);
-                            let idx = chunk.write_constant(Value::new_int(1));
+                    UnaryOpKind::PostDecrement => {
+                        match metadata.converted_types.get(&right.id).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_int(1));
 
-                            chunk.write_u24(idx as u32);
+                                chunk.write_u24(idx as u32);
 
-                            chunk.write(OpCode::I32Sub as u8);
+                                chunk.write(OpCode::I32Sub as u8);
 
-                            chunk.write(OpCode::I32StoreLocal as u8);
-                            let varid = metadata.variables.get(&right.id).unwrap();
-                            let slot = self.locals.get(varid).unwrap();
-                            chunk.write_u24(slot.0 as u32);
-                        }
-                        Type::Double => {
-                            chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::LoadConst as u8);
-                            let idx = chunk.write_constant(Value::new_double(1.0));
+                                chunk.write(OpCode::I32StoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Double => {
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_double(1.0));
 
-                            chunk.write_u24(idx as u32);
+                                chunk.write_u24(idx as u32);
 
-                            chunk.write(OpCode::F64Sub as u8);
+                                chunk.write(OpCode::F64Sub as u8);
 
-                            chunk.write(OpCode::F64StoreLocal as u8);
-                            let varid = metadata.variables.get(&right.id).unwrap();
-                            let slot = self.locals.get(varid).unwrap();
-                            chunk.write_u24(slot.0 as u32);
+                                chunk.write(OpCode::F64StoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Bool | Type::Error => {
+                                unreachable!()
+                            }
                         }
-                        Type::Bool | Type::Error => {
-                            unreachable!()
-                        }
-                    },
-                    UnaryOpKind::PostIncrement => match metadata.converted_types.get(&right.id).unwrap() {
-                        Type::Int => {
-                            chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::LoadConst as u8);
-                            let idx = chunk.write_constant(Value::new_int(1));
-                            chunk.write_u24(idx as u32);
+                    }
+                    UnaryOpKind::PostIncrement => {
+                        match metadata.converted_types.get(&right.id).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_int(1));
+                                chunk.write_u24(idx as u32);
 
-                            chunk.write(OpCode::I32Add as u8);
+                                chunk.write(OpCode::I32Add as u8);
 
-                            chunk.write(OpCode::I32StoreLocal as u8);
-                            let varid = metadata.variables.get(&right.id).unwrap();
-                            let slot = self.locals.get(varid).unwrap();
-                            chunk.write_u24(slot.0 as u32);
-                        }
-                        Type::Double => {
-                            chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::LoadConst as u8);
-                            let idx = chunk.write_constant(Value::new_double(1.0));
-                            chunk.write_u24(idx as u32);
+                                chunk.write(OpCode::I32StoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Double => {
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_double(1.0));
+                                chunk.write_u24(idx as u32);
 
-                            chunk.write(OpCode::F64Add as u8);
+                                chunk.write(OpCode::F64Add as u8);
 
-                            chunk.write(OpCode::F64StoreLocal as u8);
-                            let varid = metadata.variables.get(&right.id).unwrap();
-                            let slot = self.locals.get(varid).unwrap();
-                            chunk.write_u24(slot.0 as u32);
+                                chunk.write(OpCode::F64StoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Bool | Type::Error => {
+                                unreachable!()
+                            }
                         }
-                        Type::Bool | Type::Error => {
-                            unreachable!()
-                        }
-                    },
-                    UnaryOpKind::PreDecrement => match metadata.converted_types.get(&right.id).unwrap() {
-                        Type::Int => {
-                            chunk.write(OpCode::LoadConst as u8);
-                            let idx = chunk.write_constant(Value::new_int(1));
-                            chunk.write_u24(idx as u32);
+                    }
+                    UnaryOpKind::PreDecrement => {
+                        match metadata.converted_types.get(&right.id).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_int(1));
+                                chunk.write_u24(idx as u32);
 
-                            chunk.write(OpCode::I32Sub as u8);
-                            chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::I32StoreLocal as u8);
-                            let varid = metadata.variables.get(&right.id).unwrap();
-                            let slot = self.locals.get(varid).unwrap();
-                            chunk.write_u24(slot.0 as u32);
-                        }
-                        Type::Double => {
-                            chunk.write(OpCode::LoadConst as u8);
-                            let idx = chunk.write_constant(Value::new_double(1.0));
-                            chunk.write_u24(idx as u32);
+                                chunk.write(OpCode::I32Sub as u8);
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::I32StoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Double => {
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_double(1.0));
+                                chunk.write_u24(idx as u32);
 
-                            chunk.write(OpCode::F64Sub as u8);
-                            chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::F64StoreLocal as u8);
-                            let varid = metadata.variables.get(&right.id).unwrap();
-                            let slot = self.locals.get(varid).unwrap();
-                            chunk.write_u24(slot.0 as u32);
+                                chunk.write(OpCode::F64Sub as u8);
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::F64StoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Bool | Type::Error => {
+                                unreachable!()
+                            }
                         }
-                        Type::Bool | Type::Error => {
-                            unreachable!()
+                    }
+                    UnaryOpKind::PreIncrement => {
+                        match metadata.converted_types.get(&right.id).unwrap() {
+                            Type::Int => {
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_int(1));
+                                chunk.write_u24(idx as u32);
+                                chunk.write(OpCode::I32Add as u8);
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::I32StoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Double => {
+                                chunk.write(OpCode::LoadConst as u8);
+                                let idx = chunk.write_constant(Value::new_double(1.0));
+                                chunk.write_u24(idx as u32);
+                                chunk.write(OpCode::F64Add as u8);
+                                chunk.write(OpCode::Dup as u8);
+                                chunk.write(OpCode::F64StoreLocal as u8);
+                                let varid = metadata.variables.get(&right.id).unwrap();
+                                let slot = self.locals.get(varid).unwrap();
+                                chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Bool | Type::Error => {
+                                unreachable!()
+                            }
                         }
-                    },
-                    UnaryOpKind::PreIncrement => match metadata.converted_types.get(&right.id).unwrap() {
-                        Type::Int => {
-                            chunk.write(OpCode::LoadConst as u8);
-                            let idx = chunk.write_constant(Value::new_int(1));
-                            chunk.write_u24(idx as u32);
-                            chunk.write(OpCode::I32Add as u8);
-                            chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::I32StoreLocal as u8);
-                            let varid = metadata.variables.get(&right.id).unwrap();
-                            let slot = self.locals.get(varid).unwrap();
-                            chunk.write_u24(slot.0 as u32);
-                        }
-                        Type::Double => {
-                            chunk.write(OpCode::LoadConst as u8);
-                            let idx = chunk.write_constant(Value::new_double(1.0));
-                            chunk.write_u24(idx as u32);
-                            chunk.write(OpCode::F64Add as u8);
-                            chunk.write(OpCode::Dup as u8);
-                            chunk.write(OpCode::F64StoreLocal as u8);
-                            let varid = metadata.variables.get(&right.id).unwrap();
-                            let slot = self.locals.get(varid).unwrap();
-                            chunk.write_u24(slot.0 as u32);
-                        }
-                        Type::Bool | Type::Error => {
-                            unreachable!()
-                        }
-                    },
+                    }
                 };
             }
             ExprKind::Error => {
@@ -648,7 +658,7 @@ impl Compiler {
             match conversion {
                 Conversion::IntToDouble => {
                     chunk.write(OpCode::I32ToF64 as u8);
-                } 
+                }
             }
         }
     }

@@ -1,5 +1,5 @@
-use num_enum::TryFromPrimitive;
 use frontend::analysis::analyzer::Conversion;
+use num_enum::TryFromPrimitive;
 
 #[repr(u8)]
 #[derive(TryFromPrimitive)]
@@ -75,7 +75,7 @@ pub enum OpCode {
     F64Sub = 0x1B,
     F64Mul = 0x1C,
     F64Div = 0x1D,
-    
+
     F64Negate = 0x1E,
 
     F64Print = 0x1F,
@@ -98,9 +98,7 @@ pub enum OpCode {
 impl From<Conversion> for OpCode {
     fn from(value: Conversion) -> Self {
         match value {
-            Conversion::IntToDouble => {
-                Self::I32ToF64
-            }
+            Conversion::IntToDouble => Self::I32ToF64,
         }
     }
 }

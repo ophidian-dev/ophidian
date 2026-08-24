@@ -269,27 +269,21 @@ impl VirtualMachine {
                 OpCode::F64Add => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.double + b.data.double
-                    };
+                    let res = unsafe { a.data.double + b.data.double };
                     let value = Value::new_double(res);
                     self.push(value);
                 }
                 OpCode::F64Div => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.double / b.data.double
-                    };
+                    let res = unsafe { a.data.double / b.data.double };
                     let value = Value::new_double(res);
                     self.push(value);
                 }
                 OpCode::F64Equal => {
                     let b = self.pop();
                     let a = self.pop();
-                    let res = unsafe {
-                        a.data.double == b.data.double
-                    };
+                    let res = unsafe { a.data.double == b.data.double };
                     let value = Value::new_bool(res);
                     self.push(value);
                 }

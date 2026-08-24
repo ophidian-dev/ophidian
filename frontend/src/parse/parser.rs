@@ -1,9 +1,9 @@
 use crate::analysis::analyzer::Type;
 use crate::lex::token::{TokenKind, TokenStream};
+use crate::parse::Parser;
 use crate::parse::ast::{
     BinOpKind, Expr, ExprKind, ForInit, LitKind, Program, Stmt, StmtKind, UnaryOpKind,
 };
-use crate::parse::Parser;
 use crate::span::{Span, Spanned};
 
 impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
@@ -759,9 +759,9 @@ mod tests {
 
     use super::*;
     use crate::diagnostics::Diagnostic;
-    use crate::parse::ast::NodeId;
-    use crate::lex::token::Token;
     use crate::lex::Lexer;
+    use crate::lex::token::Token;
+    use crate::parse::ast::NodeId;
 
     fn new_diag_vec() -> Vec<Diagnostic> {
         Vec::new()
