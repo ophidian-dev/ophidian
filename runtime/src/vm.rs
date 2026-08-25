@@ -26,6 +26,27 @@ pub struct RuntimeFunction {
 #[derive(Debug, Clone, Copy)]
 pub struct RuntimeFunctionId(pub usize);
 
+// safe wrapper that ties pointer lifetime to the chunk
+// struct Reader<'a> {
+    // ptr: *const u8,
+    // _marker: std::marker::PhantomData<&'a u8>,
+// }
+
+// impl<'a> Reader<'a> {
+//     pub fn new(chunk: &'a Chunk) -> Self {
+//         Self { ptr: chunk.bytecode.as_ptr(), _marker: std::marker::PhantomData }
+//     }
+
+//     #[inline(always)]
+//     pub unsafe fn read_byte(&mut self) -> u8 {
+//         let byte = unsafe { *self.ptr };
+//         self.ptr = unsafe {
+//             self.ptr.add(1)   
+//         };
+//         byte
+//     }
+// }
+
 pub struct VirtualMachine {
     // stack that bytecode operates on
     stack: Stack<Value>,
@@ -36,6 +57,8 @@ pub struct VirtualMachine {
     frames: Stack<CallFrame>,
 
     functions: Vec<RuntimeFunction>,
+
+    // reader: Reader<'chunk>,
 }
 
 impl VirtualMachine {
@@ -45,6 +68,7 @@ impl VirtualMachine {
             frames: Stack::new(),
             ip: std::ptr::null(),
             functions: Vec::new(),
+            // reader: Reader::new(),
         }
     }
 
