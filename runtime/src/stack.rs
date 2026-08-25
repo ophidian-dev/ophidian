@@ -19,10 +19,6 @@ impl<T> Stack<T> {
     pub fn pop(&mut self) -> T {
         self.data.pop().expect("stack underflow")
     }
-
-    pub fn size(&self) -> usize {
-        self.data.len()
-    }
 }
 
 

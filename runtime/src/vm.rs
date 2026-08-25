@@ -378,7 +378,7 @@ impl VirtualMachine {
                     let bytes = [self.read_byte(), self.read_byte(), self.read_byte()];
                     let idx = decode_u24_le(bytes);
                     let function = self.functions[idx as usize];
-                    self.frames.push(CallFrame::new(self.ip, self.frames.size()));
+                    self.frames.push(CallFrame::new(self.ip, self.locals.len()));
                     self.set_ip(function.start);
                     
                 }
