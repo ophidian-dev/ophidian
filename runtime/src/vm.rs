@@ -5,8 +5,6 @@ use crate::stack::Stack;
 
 pub type VMExitCode = i32;
 
-const LOCAL_MAX: usize = 0xFFFFFF;
-
 struct CallFrame {
     return_ip: *const u8,
     base: usize,
@@ -21,8 +19,11 @@ impl CallFrame {
 #[derive(Debug, Clone, Copy)]
 pub struct RuntimeFunction {
     start: *const u8,
+    arity: usize,
+    local_count: usize,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct RuntimeFunctionId(pub usize);
 
 pub struct VirtualMachine {
@@ -34,25 +35,17 @@ pub struct VirtualMachine {
     // call stack
     frames: Stack<CallFrame>,
 
-    locals: Vec<Value>,
-
     functions: Vec<RuntimeFunction>,
 }
 
 impl VirtualMachine {
     pub fn new() -> Self {
-        let mut s = Self {
+        Self {
             stack: Stack::new(),
             frames: Stack::new(),
             ip: std::ptr::null(),
-            locals: Vec::new(),
             functions: Vec::new(),
-        };
-
-        for _ in 0..LOCAL_MAX {
-            s.locals.push(Value::UNINITIALIZED);
         }
-        s
     }
 
     pub fn execute(&mut self, chunk: &Chunk) -> VMExitCode {
@@ -129,7 +122,7 @@ impl VirtualMachine {
                     let b1 = self.read_byte();
                     let b2 = self.read_byte();
                     let idx = decode_u24_le([b0, b1, b2]);
-                    let value = *self.locals.get(idx as usize).expect("shouldnt happen");
+                    let value = self.stack[idx as usize + self.current_base()];
                     self.push(value);
                 }
                 OpCode::I32StoreLocal => {
@@ -141,7 +134,8 @@ impl VirtualMachine {
                     let b1 = self.read_byte();
                     let b2 = self.read_byte();
                     let idx = decode_u24_le([b0, b1, b2]);
-                    *self.locals.get_mut(idx as usize).unwrap() = value;
+                    let base = self.current_base();
+                    self.stack[base + idx as usize] = value;
                     self.push(value);
                 }
                 OpCode::BEqual => {
@@ -156,7 +150,7 @@ impl VirtualMachine {
                     let b1 = self.read_byte();
                     let b2 = self.read_byte();
                     let idx = decode_u24_le([b0, b1, b2]);
-                    let value = *self.locals.get(idx as usize).unwrap();
+                    let value = self.stack[(idx as usize) + self.current_base()];
                     self.push(value);
                 }
                 OpCode::BNEqual => {
@@ -180,7 +174,8 @@ impl VirtualMachine {
                     let b1 = self.read_byte();
                     let b2 = self.read_byte();
                     let idx = decode_u24_le([b0, b1, b2]);
-                    *self.locals.get_mut(idx as usize).unwrap() = value;
+                    let base = self.current_base();
+                    self.stack[base + (idx as usize)] = value;
                     self.push(value);
                 }
                 OpCode::I32Equal => {
@@ -321,7 +316,7 @@ impl VirtualMachine {
                 OpCode::F64LoadLocal => {
                     let bytes = [self.read_byte(), self.read_byte(), self.read_byte()];
                     let idx = decode_u24_le(bytes);
-                    let value = *self.locals.get(idx as usize).unwrap();
+                    let value = self.stack[self.current_base() + (idx as usize)];
                     self.push(value);
                 }
                 OpCode::F64Mul => {
@@ -358,7 +353,8 @@ impl VirtualMachine {
                     let b1 = self.read_byte();
                     let b2 = self.read_byte();
                     let idx = decode_u24_le([b0, b1, b2]);
-                    *self.locals.get_mut(idx as usize).unwrap() = value;
+                    let base = self.current_base();
+                    self.stack[base + (idx as usize)] = value;
                     self.push(value);
                 }
                 OpCode::F64Sub => {
@@ -378,9 +374,24 @@ impl VirtualMachine {
                     let bytes = [self.read_byte(), self.read_byte(), self.read_byte()];
                     let idx = decode_u24_le(bytes);
                     let function = self.functions[idx as usize];
-                    self.frames.push(CallFrame::new(self.ip, self.locals.len()));
+                    let base = self.stack.len() - function.arity;
+                    self.frames.push(CallFrame::new(self.ip, base));
+
+                    self.stack.extend(std::iter::repeat_n(Value::UNINITIALIZED, function.local_count));
+
                     self.set_ip(function.start);
-                    
+                }
+                OpCode::Return => {
+                    let frame = self.frames.pop();
+                    self.stack.truncate(frame.base);
+                    self.set_ip(frame.return_ip);
+                }
+                OpCode::ReturnVal => {
+                    let frame = self.frames.pop();
+                    let return_value = self.pop();
+                    self.stack.truncate(frame.base);
+                    self.push(return_value);
+                    self.set_ip(frame.return_ip);
                 }
             }
         }
@@ -400,6 +411,10 @@ impl VirtualMachine {
             self.ip = self.ip.add(1);
             byte
         }
+    }
+
+    fn current_base(&self) -> usize {
+        self.frames.top().expect("empty stack").base
     }
 
     fn set_ip(&mut self, pos: *const u8) {

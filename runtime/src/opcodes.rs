@@ -98,6 +98,11 @@ pub enum OpCode {
     // takes a 3 byte operand and uses that to index into a function lookup table which provides 
     // metadata needed to execute the function
     Call = 0x29,
+
+    // returns from a function that DOESN'T return anything
+    Return = 0x2A,
+    // returns from a function that DOES return exactly ONE value
+    ReturnVal = 0x2B,
 }
 
 impl From<Conversion> for OpCode {
@@ -107,54 +112,3 @@ impl From<Conversion> for OpCode {
         }
     }
 }
-
-// impl TryFrom<u8> for OpCode {
-//     type Error = ();
-
-//     fn try_from(value: u8) -> Result<Self, Self::Error> {
-//         match value {
-//             0x00 => Ok(Self::Halt),
-//             0x01 => Ok(Self::I32Add),
-//             0x02 => Ok(Self::I32Sub),
-//             0x03 => Ok(Self::I32Mul),
-//             0x04 => Ok(Self::I32Div),
-//             0x05 => Ok(Self::I32Negate),
-//             0x06 => Ok(Self::LoadConst),
-//             0x07 => Ok(Self::I32Print),
-//             0x08 => Ok(Self::Pop),
-//             0x09 => Ok(Self::I32LoadLocal),
-//             0x0a => Ok(Self::I32StoreLocal),
-//             0x0b => Ok(Self::BPrint),
-//             0x0c => Ok(Self::BLoadLocal),
-//             0x0d => Ok(Self::BStoreLocal),
-//             0x0e => Ok(Self::I32Equal),
-//             0x0f => Ok(Self::I32NEqual),
-//             0x10 => Ok(Self::BEqual),
-//             0x11 => Ok(Self::BNEqual),
-//             0x12 => Ok(Self::I32Less),
-//             0x13 => Ok(Self::I32LessEq),
-//             0x14 => Ok(Self::I32Greater),
-//             0x15 => Ok(Self::I32GreaterEq),
-//             0x16 => Ok(Self::Jmp),
-//             0x17 => Ok(Self::JmpTrue),
-//             0x18 => Ok(Self::JmpFalse),
-//             0x19 => Ok(Self::Dup),
-
-//             0x1A => Ok(Self::F64Add),
-//             0x1B => Ok(Self::F64Sub),
-//             0x1C => Ok(Self::F64Mul),
-//             0x1D => Ok(Self::F64Div),
-//             0x1E => Ok(Self::F64Negate),
-//             0x1F => Ok(Self::F64Print),
-//             0x20 => Ok(Self::F64LoadLocal),
-//             0x21 => Ok(Self::F64StoreLocal),
-//             0x22 => Ok(Self::F64Equal),
-//             0x23 => Ok(Self::F64NEqual),
-//             0x24 => Ok(Self::F64Less),
-//             0x25 => Ok(Self::F64LessEq),
-//             0x26 => Ok(Self::F64Greater),
-//             0x27 => Ok(Self::F64GreaterEq),
-//             _ => Err(()),
-//         }
-//     }
-// }

@@ -19,6 +19,37 @@ impl<T> Stack<T> {
     pub fn pop(&mut self) -> T {
         self.data.pop().expect("stack underflow")
     }
+
+    pub fn top(&self) -> Option<&T> {
+        self.data.last()
+    }
+
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn truncate(&mut self, len: usize) {
+        self.data.truncate(len);
+    }
+}
+
+impl<T> std::ops::Index<usize> for Stack<T> {
+    type Output = T;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.data[index]  
+    }
+}
+
+impl<T> std::ops::IndexMut<usize> for Stack<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.data[index]
+    }
+}
+
+impl<T> Extend<T> for Stack<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        self.data.extend(iter);
+    }
 }
 
 
