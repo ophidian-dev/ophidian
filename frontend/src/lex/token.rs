@@ -149,6 +149,15 @@ pub enum TokenKind {
     // decrement operator '--'
     MinusMinus,
 
+    // 'fn' keyword
+    Fn,
+
+    // '->'
+    Arrow,
+
+    // 'return' keyword
+    Return,
+
     // end of the file
     Eof,
 }

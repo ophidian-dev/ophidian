@@ -66,6 +66,8 @@ impl<'src> Lexer<'src> {
             b"continue" => TokenKind::Continue,
             b"for" => TokenKind::For,
             b"double" => TokenKind::Double,
+            b"fn" => TokenKind::Fn,
+            b"return" => TokenKind::Return,
             _ => TokenKind::Identifier,
         }
     }
@@ -112,6 +114,9 @@ impl<'src> TokenStream for Lexer<'src> {
                     if d == b'-' {
                         self.advance();
                         return self.create_token(TokenKind::MinusMinus);
+                    } else if d == b'>' {
+                        self.advance();
+                        return self.create_token(TokenKind::Arrow);
                     }
                 }
                 return self.create_token(TokenKind::Minus);
