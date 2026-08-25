@@ -12,6 +12,19 @@ struct CallFrame {
     base: usize,
 }
 
+impl CallFrame {
+    pub fn new(return_ip: *const u8, base: usize) -> Self {
+        Self { return_ip, base } 
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct RuntimeFunction {
+    start: *const u8,
+}
+
+pub struct RuntimeFunctionId(pub usize);
+
 pub struct VirtualMachine {
     // stack that bytecode operates on
     stack: Stack<Value>,
@@ -22,6 +35,8 @@ pub struct VirtualMachine {
     frames: Stack<CallFrame>,
 
     locals: Vec<Value>,
+
+    functions: Vec<RuntimeFunction>,
 }
 
 impl VirtualMachine {
@@ -31,6 +46,7 @@ impl VirtualMachine {
             frames: Stack::new(),
             ip: std::ptr::null(),
             locals: Vec::new(),
+            functions: Vec::new(),
         };
 
         for _ in 0..LOCAL_MAX {
@@ -358,6 +374,14 @@ impl VirtualMachine {
                     let value = Value::new_double(res);
                     self.push(value);
                 }
+                OpCode::Call => {
+                    let bytes = [self.read_byte(), self.read_byte(), self.read_byte()];
+                    let idx = decode_u24_le(bytes);
+                    let function = self.functions[idx as usize];
+                    self.frames.push(CallFrame::new(self.ip, self.frames.size()));
+                    self.set_ip(function.start);
+                    
+                }
             }
         }
     }
@@ -376,6 +400,10 @@ impl VirtualMachine {
             self.ip = self.ip.add(1);
             byte
         }
+    }
+
+    fn set_ip(&mut self, pos: *const u8) {
+        self.ip = pos;
     }
 
     unsafe fn jump(&mut self, offset: i32) {

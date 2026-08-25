@@ -93,6 +93,11 @@ pub enum OpCode {
 
     // convert f64 a.k.a. double to i32 a.k.a. int
     I32ToF64 = 0x28,
+
+    // call a function
+    // takes a 3 byte operand and uses that to index into a function lookup table which provides 
+    // metadata needed to execute the function
+    Call = 0x29,
 }
 
 impl From<Conversion> for OpCode {
