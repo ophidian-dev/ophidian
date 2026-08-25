@@ -49,6 +49,7 @@ impl VirtualMachine {
     }
 
     pub fn execute(&mut self, chunk: &Chunk) -> VMExitCode {
+        // TODO: jump to main function
         self.ip = chunk.bytecode_ptr();
 
         loop {
