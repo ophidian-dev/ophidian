@@ -163,6 +163,9 @@ impl<'diag> Resolver<'diag> {
             StmtKind::Continue => {
                 self.resolve_continue(stmt);
             }
+            StmtKind::Return(expr) => {
+                todo!()
+            }
             StmtKind::Error => {
                 unreachable!()
             }
@@ -491,6 +494,9 @@ impl<'diag> TypeChecker<'diag> {
 
                 self.check_stmt(body, ctx);
             }
+            StmtKind::Return(expr) => {
+                todo!()
+            }
             StmtKind::Error => {
                 unreachable!()
             }
@@ -573,6 +579,9 @@ impl<'diag> TypeChecker<'diag> {
                 let varid = ctx.variables.get(&expr.id).unwrap();
                 // unwrap here because we know that this variable is already declared
                 *ctx.var_types.get(varid).unwrap()
+            }
+            ExprKind::Call(callee, args) => {
+                todo!()
             }
             ExprKind::Error => {
                 unreachable!()

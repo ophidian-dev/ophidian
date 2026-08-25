@@ -285,6 +285,9 @@ impl Compiler {
                     .continue_jumps
                     .push(jump);
             }
+            StmtKind::Return(expr) => {
+                todo!()
+            }
             StmtKind::Error => {
                 unreachable!()
             }
@@ -651,6 +654,9 @@ impl Compiler {
                     .try_into()
                     .expect("overflow"),
                 );
+            }
+            ExprKind::Call(callee, args) => {
+                todo!()
             }
         }
 

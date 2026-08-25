@@ -148,6 +148,11 @@ pub enum ExprKind {
     // that was assigned
     VarAssign(Box<Expr>, Box<Expr>),
 
+    // a function call
+    // Vec<u8> being name of function
+    // Vec<Expr> being the arguments
+    Call(Vec<u8>, Vec<Expr>),
+
     // this error node represents a recoverable error. this
     // node exists so that when the parser encounters an error
     // e.g. an unexpected token, it can create an error node, return it
@@ -239,6 +244,10 @@ pub enum StmtKind {
     // }
     For(Option<Box<ForInit>>, Option<Expr>, Option<Expr>, Box<Stmt>),
 
+    // a return statement
+    // Option<Expr> represnts an optional return value
+    Return(Option<Expr>),
+
     // an error node to represent a recoverable error this node exists
     // so that the parser can recover from a parsing function. Before the
     // semantic analysis phase begins, if the parser has any error nodes
@@ -261,13 +270,33 @@ impl Stmt {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct Function {
+    id: NodeId,
+    span: Span,
+    name: Vec<u8>,
+    params: Vec<Param>,
+    return_type: Option<Type>,
+    // has to be a block
+    body: Stmt,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Param {
+    span: Span,
+    id: NodeId,
+    name: Vec<u8>,
+    ty: Type,
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Program {
     pub body: Vec<Stmt>,
+    pub functions: Vec<Function>,
 }
 
 impl Program {
     pub fn new() -> Self {
-        Self { body: Vec::new() }
+        Self { body: Vec::new(), functions: Vec::new() }
     }
 
     pub fn add(&mut self, stmt: Stmt) {

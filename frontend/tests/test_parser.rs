@@ -69,6 +69,7 @@ fn test_parser_parse_print_stmt() {
     assert_eq!(
         program,
         Program {
+            functions: vec![],
             body: vec![Stmt {
                 id: NodeId(5),
                 kind: StmtKind::Print(Box::new(Expr {
