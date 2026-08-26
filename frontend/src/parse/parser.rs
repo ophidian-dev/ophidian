@@ -70,13 +70,11 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         self.advance();
 
         let params = match self.parse_params() {
-            Ok(params) => {
-                params
-            }
+            Ok(params) => params,
             Err((msg, span)) => {
                 self.error(msg, span);
                 self.sync_fn();
-                return Err(())
+                return Err(());
             }
         };
 
@@ -112,7 +110,14 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         let body = self.parse_statement();
         let end_span = body.span;
 
-        return Ok(Function::new(self.next_node_id(), ident, params, ret_type, body, start_span.join(end_span)));
+        return Ok(Function::new(
+            self.next_node_id(),
+            ident,
+            params,
+            ret_type,
+            body,
+            start_span.join(end_span),
+        ));
     }
 
     fn parse_params(&mut self) -> Result<Vec<Param>, (String, Span)> {
@@ -134,10 +139,10 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     fn parse_param(&mut self) -> Result<Param, (String, Span)> {
         if self.peek().kind != TokenKind::Identifier {
             return Err(("expected identifier".to_string(), self.peek().span));
-        } 
+        }
 
         let start_span = self.peek().span;
-        
+
         let ident = Span::retrieve_slice(self.source, &self.peek().span).to_vec();
         self.advance();
 
@@ -156,7 +161,12 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             (ty, end_span)
         };
 
-        return Ok(Param::new(self.next_node_id(), ident, ty, start_span.join(end_span)));
+        return Ok(Param::new(
+            self.next_node_id(),
+            ident,
+            ty,
+            start_span.join(end_span),
+        ));
     }
 
     fn parse_for(&mut self) -> Stmt {
@@ -759,34 +769,85 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
     fn parse_postfix(&mut self) -> Expr {
         let mut expr = self.parse_primary();
 
-        while matches!(
-            self.peek().kind,
-            TokenKind::PlusPlus | TokenKind::MinusMinus
-        ) {
-            let op_kind = self.peek().kind;
-            let op_span = self.advance().span;
+        loop {
+            match self.peek().kind {
+                TokenKind::OpenParen => {
+                    let open_span = self.advance().span;
+                    let mut args = Vec::new();
 
-            let expr_span = expr.span;
+                    if self.peek().kind != TokenKind::CloseParen {
+                        loop {
+                            args.push(self.parse_expression());
 
-            expr = match op_kind {
-                TokenKind::PlusPlus => Expr::new(
-                    self.next_node_id(),
-                    ExprKind::UnaryOp(
-                        Spanned::new(UnaryOpKind::PostIncrement, op_span),
-                        Box::new(expr),
-                    ),
-                    op_span.join(expr_span),
-                ),
-                TokenKind::MinusMinus => Expr::new(
-                    self.next_node_id(),
-                    ExprKind::UnaryOp(
-                        Spanned::new(UnaryOpKind::PostDecrement, op_span),
-                        Box::new(expr),
-                    ),
-                    op_span.join(expr_span),
-                ),
-                _ => unreachable!(),
-            };
+                            if self.peek().kind == TokenKind::CloseParen {
+                                break;
+                            }
+
+                            if self.peek().kind != TokenKind::Comma {
+                                let span = self.peek().span;
+                                self.error("expected ',' or ')' after argument", span);
+                                self.sync();
+                                return Expr::new(self.next_node_id(), ExprKind::Error, span);
+                            }
+
+                            self.advance();
+
+                            if self.peek().kind == TokenKind::CloseParen {
+                                let span = self.peek().span;
+                                self.error("trailing comma in function arguments", span);
+                                self.sync();
+                                return Expr::new(self.next_node_id(), ExprKind::Error, span);
+                            }
+                        }
+                    }
+
+                    if self.peek().kind != TokenKind::CloseParen {
+                        let span = self.peek().span;
+                        self.error("expected ')' after arguments to function", span);
+                        self.sync();
+                        return Expr::new(self.next_node_id(), ExprKind::Error, span);
+                    }
+
+                    let close_span = self.advance().span;
+
+                    let expr_span = expr.span;
+
+                    expr = Expr::new(
+                        self.next_node_id(),
+                        ExprKind::Call(Box::new(expr), args),
+                        expr_span.join(open_span).join(close_span),
+                    );
+                }
+                TokenKind::PlusPlus | TokenKind::MinusMinus => {
+                    let op_kind = self.peek().kind;
+                    let op_span = self.advance().span;
+
+                    let expr_span = expr.span;
+
+                    expr = match op_kind {
+                        TokenKind::PlusPlus => Expr::new(
+                            self.next_node_id(),
+                            ExprKind::UnaryOp(
+                                Spanned::new(UnaryOpKind::PostIncrement, op_span),
+                                Box::new(expr),
+                            ),
+                            op_span.join(expr_span),
+                        ),
+                        TokenKind::MinusMinus => Expr::new(
+                            self.next_node_id(),
+                            ExprKind::UnaryOp(
+                                Spanned::new(UnaryOpKind::PostDecrement, op_span),
+                                Box::new(expr),
+                            ),
+                            op_span.join(expr_span),
+                        ),
+                        _ => unreachable!(),
+                    };
+                }
+                _ => {
+                    break;
+                }
+            }
         }
 
         expr

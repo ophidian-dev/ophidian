@@ -149,9 +149,9 @@ pub enum ExprKind {
     VarAssign(Box<Expr>, Box<Expr>),
 
     // a function call
-    // Vec<u8> being name of function
+    // Box<Expr> being the thing being called
     // Vec<Expr> being the arguments
-    Call(Vec<u8>, Vec<Expr>),
+    Call(Box<Expr>, Vec<Expr>),
 
     // this error node represents a recoverable error. this
     // node exists so that when the parser encounters an error
