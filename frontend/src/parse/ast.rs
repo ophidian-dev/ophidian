@@ -1,4 +1,4 @@
-use crate::analysis::analyzer::Type;
+use crate::analysis::type_check::Type;
 use crate::lex::token::{Token, TokenKind};
 use crate::span::{Span, Spanned};
 

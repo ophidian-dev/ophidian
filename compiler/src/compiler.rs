@@ -1,5 +1,8 @@
 use cli::options::Options;
-use frontend::analysis::analyzer::{AnalysisResult, Conversion, SemanticAnalyzer, Type, VarId};
+use frontend::analysis::analyzer::{AnalysisResult};
+use frontend::analysis::SemanticAnalyzer;
+use frontend::analysis::type_check::{Conversion, Type};
+use frontend::analysis::resolution::VarId;
 use frontend::diagnostics::Diagnostic;
 use frontend::lex::Lexer;
 use frontend::parse::Parser;
