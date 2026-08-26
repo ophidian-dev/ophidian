@@ -1,4 +1,4 @@
-use frontend::analysis::analyzer::Conversion;
+use frontend::analysis::type_check::Conversion;
 use num_enum::TryFromPrimitive;
 
 #[repr(u8)]
