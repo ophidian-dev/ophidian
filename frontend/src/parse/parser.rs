@@ -2,7 +2,8 @@ use crate::analysis::analyzer::Type;
 use crate::lex::token::{TokenKind, TokenStream};
 use crate::parse::Parser;
 use crate::parse::ast::{
-    BinOpKind, Expr, ExprKind, ForInit, LitKind, Program, Stmt, StmtKind, UnaryOpKind,
+    BinOpKind, Expr, ExprKind, ForInit, Function, LitKind, Param, Program, Stmt, StmtKind,
+    UnaryOpKind,
 };
 use crate::span::{Span, Spanned};
 
@@ -11,8 +12,16 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         let mut program = Program::new();
 
         while self.peek().kind != TokenKind::Eof {
-            let stmt = self.parse_statement();
-            program.add(stmt);
+            if self.peek().kind == TokenKind::Fn {
+                let function = self.parse_fn();
+                if function.is_err() {
+                    continue;
+                }
+                program.functions.push(function.unwrap());
+            } else {
+                // just parse a normal statment for now
+                program.add(self.parse_statement());
+            }
         }
 
         program
@@ -38,6 +47,116 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 return Stmt::new(self.next_node_id(), StmtKind::Error, span);
             }
         }
+    }
+
+    fn parse_fn(&mut self) -> Result<Function, ()> {
+        let start_span = self.advance().span;
+
+        if self.peek().kind != TokenKind::Identifier {
+            self.error("expected identifer", self.peek().span);
+            self.sync_fn();
+            return Err(());
+        }
+
+        let ident = Span::retrieve_slice(self.source, &self.peek().span).to_vec();
+        self.advance();
+
+        if self.peek().kind != TokenKind::OpenParen {
+            self.error("expected '('", self.peek().span);
+            self.sync_fn();
+            return Err(());
+        }
+
+        self.advance();
+
+        let params = match self.parse_params() {
+            Ok(params) => {
+                params
+            }
+            Err((msg, span)) => {
+                self.error(msg, span);
+                self.sync_fn();
+                return Err(())
+            }
+        };
+
+        if self.peek().kind != TokenKind::CloseParen {
+            self.error("expected ')'", self.peek().span);
+            self.sync_fn();
+            return Err(());
+        }
+
+        self.advance();
+
+        let ret_type = if self.peek().kind == TokenKind::Arrow {
+            self.advance();
+            let ty: Type = self.peek().kind.into();
+            if ty == Type::Error {
+                self.error("expected return type", self.peek().span);
+                self.sync_fn();
+                return Err(());
+            }
+            self.advance();
+            Some(ty)
+        } else {
+            None
+        };
+
+        if self.peek().kind != TokenKind::OpenBrace {
+            self.error("expected block", self.peek().span);
+            self.sync_fn();
+            return Err(());
+        }
+
+        // guarenteed to return block
+        let body = self.parse_statement();
+        let end_span = body.span;
+
+        return Ok(Function::new(self.next_node_id(), ident, params, ret_type, body, start_span.join(end_span)));
+    }
+
+    fn parse_params(&mut self) -> Result<Vec<Param>, (String, Span)> {
+        let mut params = Vec::new();
+
+        if self.peek().kind == TokenKind::CloseParen {
+            return Ok(params);
+        }
+
+        params.push(self.parse_param()?);
+        while self.peek().kind == TokenKind::Comma {
+            self.advance();
+            params.push(self.parse_param()?);
+        }
+
+        Ok(params)
+    }
+
+    fn parse_param(&mut self) -> Result<Param, (String, Span)> {
+        if self.peek().kind != TokenKind::Identifier {
+            return Err(("expected identifier".to_string(), self.peek().span));
+        } 
+
+        let start_span = self.peek().span;
+        
+        let ident = Span::retrieve_slice(self.source, &self.peek().span).to_vec();
+        self.advance();
+
+        if self.peek().kind != TokenKind::Colon {
+            return Err(("expected ':'".to_string(), self.peek().span));
+        }
+
+        self.advance();
+
+        let (ty, end_span) = {
+            let ty = self.peek().kind.into();
+            if ty == Type::Error {
+                return Err(("expected type annotation".to_string(), self.peek().span));
+            }
+            let end_span = self.advance().span;
+            (ty, end_span)
+        };
+
+        return Ok(Param::new(self.next_node_id(), ident, ty, start_span.join(end_span)));
     }
 
     fn parse_for(&mut self) -> Stmt {

@@ -36,7 +36,7 @@ impl<T> Stack<T> {
 impl<T> std::ops::Index<usize> for Stack<T> {
     type Output = T;
     fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index]  
+        &self.data[index]
     }
 }
 
@@ -51,7 +51,6 @@ impl<T> Extend<T> for Stack<T> {
         self.data.extend(iter);
     }
 }
-
 
 #[cfg(test)]
 mod tests {

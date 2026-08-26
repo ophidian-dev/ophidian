@@ -158,6 +158,9 @@ pub enum TokenKind {
     // 'return' keyword
     Return,
 
+    // ','
+    Comma,
+
     // end of the file
     Eof,
 }

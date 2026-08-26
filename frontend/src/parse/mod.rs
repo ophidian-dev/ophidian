@@ -66,6 +66,20 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             .push(Diagnostic::new(message.into(), span, Severity::Error));
     }
 
+    fn sync_fn(&mut self) {
+        while self.peek().kind != TokenKind::Eof {
+            let kind = self.peek().kind;
+            match kind {
+                TokenKind::CloseBrace => {
+                    return;
+                }
+                _ => {
+                    self.advance();
+                }
+            }
+        }
+    }
+
     fn sync(&mut self) {
         while self.peek().kind != TokenKind::Eof {
             let kind = self.peek().kind;

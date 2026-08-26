@@ -1,7 +1,7 @@
 use crate::chunk::Chunk;
 use crate::opcodes::OpCode;
-use crate::value::{Value, ValueKind};
 use crate::stack::Stack;
+use crate::value::{Value, ValueKind};
 
 pub type VMExitCode = i32;
 
@@ -12,7 +12,7 @@ struct CallFrame {
 
 impl CallFrame {
     pub fn new(return_ip: *const u8, base: usize) -> Self {
-        Self { return_ip, base } 
+        Self { return_ip, base }
     }
 }
 
@@ -28,8 +28,8 @@ pub struct RuntimeFunctionId(pub usize);
 
 // safe wrapper that ties pointer lifetime to the chunk
 // struct Reader<'a> {
-    // ptr: *const u8,
-    // _marker: std::marker::PhantomData<&'a u8>,
+// ptr: *const u8,
+// _marker: std::marker::PhantomData<&'a u8>,
 // }
 
 // impl<'a> Reader<'a> {
@@ -41,7 +41,7 @@ pub struct RuntimeFunctionId(pub usize);
 //     pub unsafe fn read_byte(&mut self) -> u8 {
 //         let byte = unsafe { *self.ptr };
 //         self.ptr = unsafe {
-//             self.ptr.add(1)   
+//             self.ptr.add(1)
 //         };
 //         byte
 //     }
@@ -57,7 +57,6 @@ pub struct VirtualMachine {
     frames: Stack<CallFrame>,
 
     functions: Vec<RuntimeFunction>,
-
     // reader: Reader<'chunk>,
 }
 
@@ -402,7 +401,10 @@ impl VirtualMachine {
                     let base = self.stack.len() - function.arity;
                     self.frames.push(CallFrame::new(self.ip, base));
 
-                    self.stack.extend(std::iter::repeat_n(Value::UNINITIALIZED, function.local_count));
+                    self.stack.extend(std::iter::repeat_n(
+                        Value::UNINITIALIZED,
+                        function.local_count,
+                    ));
 
                     self.set_ip(function.start);
                 }

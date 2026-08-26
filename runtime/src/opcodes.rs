@@ -95,7 +95,7 @@ pub enum OpCode {
     I32ToF64 = 0x28,
 
     // call a function
-    // takes a 3 byte operand and uses that to index into a function lookup table which provides 
+    // takes a 3 byte operand and uses that to index into a function lookup table which provides
     // metadata needed to execute the function
     Call = 0x29,
 

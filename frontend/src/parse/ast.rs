@@ -280,12 +280,38 @@ pub struct Function {
     body: Stmt,
 }
 
+impl Function {
+    pub fn new(
+        id: NodeId,
+        name: Vec<u8>,
+        params: Vec<Param>,
+        return_type: Option<Type>,
+        body: Stmt,
+        span: Span,
+    ) -> Self {
+        Self {
+            id,
+            span,
+            name,
+            params,
+            return_type,
+            body,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Param {
     span: Span,
     id: NodeId,
     name: Vec<u8>,
     ty: Type,
+}
+
+impl Param {
+    pub fn new(id: NodeId, name: Vec<u8>, ty: Type, span: Span) -> Self {
+        Self { span, id, name, ty }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -296,7 +322,10 @@ pub struct Program {
 
 impl Program {
     pub fn new() -> Self {
-        Self { body: Vec::new(), functions: Vec::new() }
+        Self {
+            body: Vec::new(),
+            functions: Vec::new(),
+        }
     }
 
     pub fn add(&mut self, stmt: Stmt) {

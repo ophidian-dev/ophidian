@@ -213,6 +213,10 @@ impl<'src> TokenStream for Lexer<'src> {
                 }
                 unimplemented!("bitwise and")
             }
+            b',' => {
+                self.advance();
+                return self.create_token(TokenKind::Comma);
+            }
             _ => {
                 if c.is_ascii_digit() {
                     while let Some(d) = self.peek() {
