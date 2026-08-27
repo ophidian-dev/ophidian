@@ -33,13 +33,11 @@ pub enum Conversion {
     IntToDouble,
 }
 
-pub struct TypeChecker<'diag> {
-    diagnostics: &'diag mut Vec<Diagnostic>,
-}
+pub struct TypeChecker;
 
-impl<'diag> TypeChecker<'diag> {
-    pub fn new(diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
-        Self { diagnostics }
+impl TypeChecker {
+    pub fn new() -> Self {
+        Self { }
     }
 
     pub fn check(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
@@ -48,8 +46,8 @@ impl<'diag> TypeChecker<'diag> {
         }
     }
 
-    fn error<T: Into<String>>(&mut self, message: T, span: Span) {
-        self.diagnostics
+    fn error<T: Into<String>>(&mut self, message: T, span: Span, ctx: &mut AnalysisCtx) {
+        ctx.diagnostics
             .push(Diagnostic::new(message.into(), span, Severity::Error));
     }
 
@@ -86,7 +84,7 @@ impl<'diag> TypeChecker<'diag> {
                                 let initializer_type = self.check_expr(init, ctx);
 
                                 if !self.can_assign(initializer_type, *annotation, init, ctx) {
-                                    self.error("mismatched types", stmt.span);
+                                    self.error("mismatched types", stmt.span, ctx);
                                     return;
                                 }
 
@@ -105,7 +103,7 @@ impl<'diag> TypeChecker<'diag> {
                             ctx.var_types.insert(varid, initializer_type);
                         }
                         None => {
-                            self.error("type annotation required", stmt.span);
+                            self.error("type annotation required", stmt.span, ctx);
                         }
                     },
                 }
@@ -114,7 +112,7 @@ impl<'diag> TypeChecker<'diag> {
                 let cond_ty = self.check_expr(cond, ctx);
 
                 if cond_ty != Type::Bool && cond_ty != Type::Error {
-                    self.error("if statement condition must have type 'bool'", cond.span);
+                    self.error("if statement condition must have type 'bool'", cond.span, ctx);
                     return;
                 }
 
@@ -128,7 +126,7 @@ impl<'diag> TypeChecker<'diag> {
                 let cond_ty = self.check_expr(cond, ctx);
 
                 if cond_ty != Type::Bool && cond_ty != Type::Error {
-                    self.error("while statement condition must have type 'bool'", cond.span);
+                    self.error("while statement condition must have type 'bool'", cond.span, ctx);
                     return;
                 }
 
@@ -156,7 +154,7 @@ impl<'diag> TypeChecker<'diag> {
                     let ty = self.check_expr(cond, ctx);
 
                     if ty != Type::Bool && ty != Type::Error {
-                        self.error("for loop condition must have type 'bool'", cond.span);
+                        self.error("for loop condition must have type 'bool'", cond.span, ctx);
                         return;
                     }
                 }
@@ -188,6 +186,7 @@ impl<'diag> TypeChecker<'diag> {
                     self.error(
                         format!("invalid operands for binary operation: '{}'", op.node),
                         expr.span,
+                        ctx
                     );
                 }
 
@@ -224,6 +223,7 @@ impl<'diag> TypeChecker<'diag> {
                             self.error(
                                 format!("cannot apply operator '{}' on non l-value", op.node),
                                 expr.span,
+                                ctx
                             );
                             return Type::Error;
                         }
@@ -237,10 +237,10 @@ impl<'diag> TypeChecker<'diag> {
                 let target_type = self.check_expr(target, ctx);
 
                 if !self.can_assign(rhs_type, target_type, rhs, ctx) {
-                    self.error("mismatched types", expr.span);
+                    self.error("mismatched types", expr.span, ctx);
                     Type::Error
                 } else if !self.is_lvalue(target) {
-                    self.error("cannot assign to non-lvalue", expr.span);
+                    self.error("cannot assign to non-lvalue", expr.span, ctx);
                     Type::Error
                 } else {
                     rhs_type

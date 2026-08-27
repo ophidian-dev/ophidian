@@ -37,17 +37,15 @@ impl std::ops::AddAssign<usize> for VarId {
 
 
 
-pub struct Resolver<'diag> {
+pub struct Resolver {
     curr_var_id: VarId,
-    diagnostics: &'diag mut Vec<Diagnostic>,
     loop_depth: usize,
 }
 
-impl<'diag> Resolver<'diag> {
-    pub fn new(diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
+impl Resolver {
+    pub fn new() -> Self {
         Self {
             curr_var_id: VarId::from(0),
-            diagnostics,
             loop_depth: 0,
         }
     }
@@ -62,8 +60,8 @@ impl<'diag> Resolver<'diag> {
         self.exit_scope(ctx);
     }
 
-    fn error<T: Into<String>>(&mut self, message: T, span: Span) {
-        self.diagnostics
+    fn error<T: Into<String>>(&mut self, message: T, span: Span, ctx: &mut AnalysisCtx) {
+        ctx.diagnostics
             .push(Diagnostic::new(message.into(), span, Severity::Error));
     }
 
@@ -91,10 +89,10 @@ impl<'diag> Resolver<'diag> {
                 self.resolve_for(init, cond, incre, body, ctx);
             }
             StmtKind::Break => {
-                self.resolve_break(stmt);
+                self.resolve_break(stmt, ctx);
             }
             StmtKind::Continue => {
-                self.resolve_continue(stmt);
+                self.resolve_continue(stmt, ctx);
             }
             StmtKind::Return(expr) => {
                 todo!()
@@ -212,15 +210,15 @@ impl<'diag> Resolver<'diag> {
         self.exit_scope(ctx);
     }
 
-    fn resolve_break(&mut self, stmt: &Stmt) {
+    fn resolve_break(&mut self, stmt: &Stmt, ctx: &mut AnalysisCtx) {
         if self.loop_depth == 0 {
-            self.error("use of 'break' statement outside loop", stmt.span);
+            self.error("use of 'break' statement outside loop", stmt.span, ctx);
         }
     }
 
-    fn resolve_continue(&mut self, stmt: &Stmt) {
+    fn resolve_continue(&mut self, stmt: &Stmt, ctx: &mut AnalysisCtx) {
         if self.loop_depth == 0 {
-            self.error("use of continue statement outside loop", stmt.span);
+            self.error("use of continue statement outside loop", stmt.span, ctx);
         }
     }
 
@@ -241,6 +239,7 @@ impl<'diag> Resolver<'diag> {
                             std::str::from_utf8(name).unwrap()
                         ),
                         expr.span,
+                        ctx
                     );
                 }
             },
@@ -263,6 +262,7 @@ impl<'diag> Resolver<'diag> {
                     std::str::from_utf8(name).unwrap()
                 ),
                 span,
+                ctx 
             );
             return VarId::ERROR;
         }

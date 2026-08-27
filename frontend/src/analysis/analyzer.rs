@@ -15,16 +15,16 @@ impl<'diag> SemanticAnalyzer<'diag> {
     }
 
     pub fn analyze(&mut self, program: &Program) -> Result<AnalysisResult, ()> {
-        let mut ctx = AnalysisCtx::new();
+        let mut ctx = AnalysisCtx::new(self.diagnostics);
 
-        let mut resolver = Resolver::new(self.diagnostics);
+        let mut resolver = Resolver::new();
         resolver.resolve(program, &mut ctx);
 
-        if !self.diagnostics.is_empty() {
+        if !ctx.diagnostics.is_empty() {
             return Err(());
         }
 
-        let mut typechecker = TypeChecker::new(self.diagnostics);
+        let mut typechecker = TypeChecker::new();
         typechecker.check(program, &mut ctx);
 
         for (id, value) in &ctx.types {
@@ -44,7 +44,7 @@ impl<'diag> SemanticAnalyzer<'diag> {
 }
 
 
-pub struct AnalysisCtx {
+pub struct AnalysisCtx<'diag> {
     pub scopes: Vec<Scope>,
     pub types: HashMap<NodeId, Type>,
     pub variables: HashMap<NodeId, VarId>,
@@ -55,11 +55,13 @@ pub struct AnalysisCtx {
     pub functions: HashMap<NodeId, FunctionId>,
     pub signatures: HashMap<FunctionId, Function>,
 
+    pub diagnostics: &'diag mut Vec<Diagnostic>,
+
     converted_types: HashMap<NodeId, Type>,
 }
 
-impl AnalysisCtx {
-    fn new() -> Self {
+impl<'diag> AnalysisCtx<'diag> {
+    fn new(diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
         Self {
             scopes: Vec::new(),
             types: HashMap::new(),
@@ -69,6 +71,7 @@ impl AnalysisCtx {
             converted_types: HashMap::new(),
             functions: HashMap::new(),
             signatures: HashMap::new(),
+            diagnostics,
         }
     }
 }
@@ -82,7 +85,7 @@ pub struct AnalysisResult {
     pub converted_types: HashMap<NodeId, Type>,
 }
 
-impl From<AnalysisCtx> for AnalysisResult {
+impl From<AnalysisCtx<'_>> for AnalysisResult {
     fn from(value: AnalysisCtx) -> Self {
         Self {
             variables: value.variables,
