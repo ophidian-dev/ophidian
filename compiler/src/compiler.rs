@@ -107,6 +107,9 @@ impl Compiler {
                     Type::Double => {
                         chunk.write(OpCode::F64Print as u8);
                     }
+                    Type::Void => {
+                        todo!()
+                    }
                     Type::Error => {
                         unreachable!()
                     }
@@ -138,6 +141,9 @@ impl Compiler {
                                 chunk
                                     .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
+                            Type::Void => {
+                                todo!()
+                            }
                             Type::Error => {
                                 unreachable!()
                             }
@@ -165,6 +171,9 @@ impl Compiler {
                                     .write_u24(varid.0.try_into().expect("varid exceeds u32::MAX"));
                             }
                             Type::Double => {
+                                todo!()
+                            }
+                            Type::Void => {
                                 todo!()
                             }
                             Type::Error => {
@@ -338,6 +347,9 @@ impl Compiler {
                         Type::Double => {
                             chunk.write(OpCode::F64Add as u8);
                         }
+                        Type::Void => {
+                            todo!()
+                        }
                         Type::Error | Type::Bool => {
                             unreachable!()
                         }
@@ -348,6 +360,9 @@ impl Compiler {
                         }
                         Type::Double => {
                             chunk.write(OpCode::F64Sub as u8);
+                        }
+                        Type::Void => {
+                            todo!()
                         }
                         Type::Error | Type::Bool => {
                             unreachable!()
@@ -360,6 +375,9 @@ impl Compiler {
                         Type::Double => {
                             chunk.write(OpCode::F64Mul as u8);
                         }
+                        Type::Void => {
+                            todo!()
+                        }
                         Type::Error | Type::Bool => {
                             unreachable!()
                         }
@@ -370,6 +388,9 @@ impl Compiler {
                         }
                         Type::Double => {
                             chunk.write(OpCode::F64Div as u8);
+                        }
+                        Type::Void => {
+                            todo!()
                         }
                         Type::Error | Type::Bool => {
                             unreachable!()
@@ -385,6 +406,9 @@ impl Compiler {
                         Type::Double => {
                             chunk.write(OpCode::F64NEqual as u8);
                         }
+                        Type::Void => {
+                            todo!()
+                        }
                         Type::Error => unreachable!(),
                     },
                     BinOpKind::EqEq => match metadata.converted_types.get(&left.id).unwrap() {
@@ -397,6 +421,9 @@ impl Compiler {
                         Type::Double => {
                             chunk.write(OpCode::F64Equal as u8);
                         }
+                        Type::Void => {
+                            todo!()
+                        }
                         Type::Error => unreachable!(),
                     },
                     BinOpKind::GreaterEq => match metadata.converted_types.get(&left.id).unwrap() {
@@ -405,6 +432,9 @@ impl Compiler {
                         }
                         Type::Double => {
                             chunk.write(OpCode::F64GreaterEq as u8);
+                        }
+                        Type::Void => {
+                            todo!()
                         }
                         Type::Bool | Type::Error => unreachable!(),
                     },
@@ -416,6 +446,9 @@ impl Compiler {
                         Type::Double => {
                             chunk.write(OpCode::F64Greater as u8);
                         }
+                        Type::Void => {
+                            todo!()
+                        }
                         Type::Bool | Type::Error => unreachable!(),
                     },
                     BinOpKind::LessEq => match metadata.converted_types.get(&left.id).unwrap() {
@@ -425,6 +458,9 @@ impl Compiler {
                         Type::Double => {
                             chunk.write(OpCode::F64LessEq as u8);
                         }
+                        Type::Void => {
+                            todo!()
+                        }
                         Type::Bool | Type::Error => unreachable!(),
                     },
                     BinOpKind::LessThan => match metadata.converted_types.get(&left.id).unwrap() {
@@ -433,6 +469,9 @@ impl Compiler {
                         }
                         Type::Double => {
                             chunk.write(OpCode::F64Less as u8);
+                        }
+                        Type::Void => {
+                            todo!()
                         }
                         Type::Bool | Type::Error => unreachable!(),
                     },
@@ -470,6 +509,9 @@ impl Compiler {
                         Type::Double => {
                             chunk.write(OpCode::F64Negate as u8);
                         }
+                        Type::Void => {
+                            todo!()
+                        }
                         Type::Error | Type::Bool => {
                             unreachable!()
                         }
@@ -504,6 +546,9 @@ impl Compiler {
                                 let slot = self.locals.get(varid).unwrap();
                                 chunk.write_u24(slot.0 as u32);
                             }
+                            Type::Void => {
+                                todo!()
+                            }
                             Type::Bool | Type::Error => {
                                 unreachable!()
                             }
@@ -537,6 +582,9 @@ impl Compiler {
                                 let slot = self.locals.get(varid).unwrap();
                                 chunk.write_u24(slot.0 as u32);
                             }
+                            Type::Void => {
+                                todo!()
+                            }
                             Type::Bool | Type::Error => {
                                 unreachable!()
                             }
@@ -568,6 +616,9 @@ impl Compiler {
                                 let slot = self.locals.get(varid).unwrap();
                                 chunk.write_u24(slot.0 as u32);
                             }
+                            Type::Void => {
+                                todo!()
+                            }
                             Type::Bool | Type::Error => {
                                 unreachable!()
                             }
@@ -596,6 +647,9 @@ impl Compiler {
                                 let varid = metadata.variables.get(&right.id).unwrap();
                                 let slot = self.locals.get(varid).unwrap();
                                 chunk.write_u24(slot.0 as u32);
+                            }
+                            Type::Void => {
+                                todo!()
                             }
                             Type::Bool | Type::Error => {
                                 unreachable!()
@@ -630,6 +684,9 @@ impl Compiler {
                         chunk.write(OpCode::F64StoreLocal as u8);
                         chunk.write_u24((*self.locals.get(varid).unwrap()).into());
                     }
+                    Type::Void => {
+                        todo!()
+                    }
                     Type::Error => unreachable!(),
                 }
             }
@@ -644,6 +701,9 @@ impl Compiler {
                     }
                     Type::Double => {
                         chunk.write(OpCode::F64LoadLocal as u8);
+                    }
+                    Type::Void => {
+                        todo!()
                     }
                     Type::Error => {
                         unreachable!()

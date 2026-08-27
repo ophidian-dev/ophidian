@@ -14,6 +14,8 @@ pub enum Type {
 
     Double,
 
+    Void,
+
     // The type that allows analysis to continue if it
     // encounters an error
     Error,
@@ -70,6 +72,10 @@ impl TypeChecker {
                 // because print is not a function yet
                 match expr_type {
                     Type::Error => {
+                        return;
+                    }
+                    Type::Void => {
+                        self.error("invalid use of 'void' expression", expr.span, ctx);
                         return;
                     }
                     Type::Int | Type::Bool | Type::Double => {}
@@ -191,7 +197,7 @@ impl TypeChecker {
                 let right_type = self.check_expr(right, ctx);
 
                 let res =
-                    self.binary_result_type(op.node, left_type, right_type, left.id, right.id, ctx);
+                    self.binary_result_type(op.node, left_type, right_type, left.id, right.id, left.span, right.span, ctx);
                 if res == Type::Error {
                     self.error(
                         format!("invalid operands for binary operation: '{}'", op.node),
@@ -240,7 +246,7 @@ impl TypeChecker {
                     }
                 }
 
-                self.unary_result_type(op.node, expr_type)
+                self.unary_result_type(op.node, expr_type, &expr.span, ctx)
             }
             ExprKind::VarAssign(target, rhs) => {
                 let rhs_type = self.check_expr(rhs, ctx);
@@ -302,10 +308,16 @@ impl TypeChecker {
         }
     }
 
-    fn unary_result_type(&self, op: UnaryOpKind, rhs: Type) -> Type {
+    fn unary_result_type(&mut self, op: UnaryOpKind, rhs: Type, span: &Span, ctx: &mut AnalysisCtx) -> Type {
         if rhs == Type::Error {
             return Type::Error;
         }
+
+        if rhs == Type::Void {
+            self.error("invalid use of void expression", *span, ctx);
+            return Type::Error;
+        }
+
         match (op, rhs) {
             (UnaryOpKind::Negate, Type::Int) => Type::Int,
             (UnaryOpKind::Negate, Type::Double) => Type::Double,
@@ -326,19 +338,30 @@ impl TypeChecker {
             (UnaryOpKind::PreDecrement, Type::Double) => Type::Double,
             (UnaryOpKind::PreIncrement, Type::Double) => Type::Double,
             (_, Type::Error) => unreachable!(),
+            (_, Type::Void) => unreachable!()
         }
     }
 
     fn binary_result_type(
-        &self,
+        &mut self,
         op: BinOpKind,
         lhs: Type,
         rhs: Type,
         left_id: NodeId,
         right_id: NodeId,
+        left_span: Span,
+        right_span: Span,
         ctx: &mut AnalysisCtx,
     ) -> Type {
         if lhs == Type::Error || rhs == Type::Error {
+            return Type::Error;
+        }
+
+        if lhs == Type::Void {
+            self.error("invalid use of 'void' expression", left_span, ctx);
+            return Type::Error;
+        } else if lhs == Type::Void {
+            self.error("invalid use of 'void' expression", right_span, ctx);
             return Type::Error;
         }
 
@@ -358,10 +381,10 @@ impl TypeChecker {
                     ctx.conversions.insert(right_id, Conversion::IntToDouble);
                     return Type::Double;
                 }
-                (Type::Bool | Type::Error, _) => {
+                (Type::Bool | Type::Error | Type::Void, _) => {
                     return Type::Error;
                 }
-                (_, Type::Bool | Type::Error) => {
+                (_, Type::Bool | Type::Error | Type::Void) => {
                     return Type::Error;
                 }
             },

@@ -71,13 +71,12 @@ impl<'a> FunctionResolver<'a> {
 }
 
 pub struct FunctionAnalyzer {
-    function_names: HashMap<Vec<u8>, FunctionId>,
+
 }
 
 impl FunctionAnalyzer {
     pub fn new() -> Self {
         Self {
-            function_names: HashMap::new(),
         }
     }
 
@@ -87,5 +86,8 @@ impl FunctionAnalyzer {
         }
     }
 
-    fn analyze_function(&mut self, function: &AstFunction, ctx: &mut AnalysisCtx) {}
+    fn analyze_function(&mut self, function: &AstFunction, ctx: &mut AnalysisCtx) {
+        let return_type = function.return_type;
+
+    }
 }
