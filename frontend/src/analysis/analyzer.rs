@@ -1,3 +1,4 @@
+use crate::analysis::function::{FunctionId, Function};
 use crate::diagnostics::{Diagnostic};
 use crate::parse::ast::{
     NodeId, Program
@@ -43,8 +44,6 @@ impl<'diag> SemanticAnalyzer<'diag> {
 }
 
 
-
-
 pub struct AnalysisCtx {
     pub scopes: Vec<Scope>,
     pub types: HashMap<NodeId, Type>,
@@ -52,6 +51,9 @@ pub struct AnalysisCtx {
     pub var_types: HashMap<VarId, Type>,
 
     pub conversions: HashMap<NodeId, Conversion>,
+
+    pub functions: HashMap<NodeId, FunctionId>,
+    pub signatures: HashMap<FunctionId, Function>,
 
     converted_types: HashMap<NodeId, Type>,
 }
@@ -65,6 +67,8 @@ impl AnalysisCtx {
             var_types: HashMap::new(),
             conversions: HashMap::new(),
             converted_types: HashMap::new(),
+            functions: HashMap::new(),
+            signatures: HashMap::new(),
         }
     }
 }

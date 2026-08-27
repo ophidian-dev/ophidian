@@ -271,13 +271,13 @@ impl Stmt {
 
 #[derive(Debug, PartialEq)]
 pub struct Function {
-    id: NodeId,
-    span: Span,
-    name: Vec<u8>,
-    params: Vec<Param>,
-    return_type: Option<Type>,
+    pub id: NodeId,
+    pub span: Span,
+    pub name: Vec<u8>,
+    pub params: Vec<Param>,
+    pub return_type: Option<Type>,
     // has to be a block
-    body: Stmt,
+    pub body: Stmt,
 }
 
 impl Function {
