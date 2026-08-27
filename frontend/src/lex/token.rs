@@ -86,6 +86,9 @@ pub enum TokenKind {
     // the type 'double' a.k.a. f64
     Double,
 
+    // the 'void' type 
+    Void,
+
     // assignment operator
     // i.e. '='
     Equal,

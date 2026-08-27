@@ -68,6 +68,7 @@ impl<'src> Lexer<'src> {
             b"double" => TokenKind::Double,
             b"fn" => TokenKind::Fn,
             b"return" => TokenKind::Return,
+            b"void" => TokenKind::Void,
             _ => TokenKind::Identifier,
         }
     }
