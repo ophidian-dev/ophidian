@@ -20,7 +20,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 program.functions.push(function.unwrap());
             } else {
                 // just parse a normal statment for now
-                program.add(self.parse_statement());
+                program.decls.push(self.parse_statement());
             }
         }
 

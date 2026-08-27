@@ -316,19 +316,18 @@ impl Param {
 
 #[derive(Debug, PartialEq)]
 pub struct Program {
-    pub body: Vec<Stmt>,
+    // statements at the global level
+    // sema later decides whether some statements are not permitted
+    pub decls: Vec<Stmt>,
+
     pub functions: Vec<Function>,
 }
 
 impl Program {
     pub fn new() -> Self {
         Self {
-            body: Vec::new(),
+            decls: Vec::new(),
             functions: Vec::new(),
         }
-    }
-
-    pub fn add(&mut self, stmt: Stmt) {
-        self.body.push(stmt);
     }
 }

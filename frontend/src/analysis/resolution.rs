@@ -55,7 +55,7 @@ impl<'diag> Resolver<'diag> {
     pub fn resolve(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
         self.enter_scope(ctx);
 
-        for stmt in &program.body {
+        for stmt in &program.decls {
             self.resolve_stmt(stmt, ctx);
         }
 

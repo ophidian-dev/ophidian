@@ -43,7 +43,7 @@ impl<'diag> TypeChecker<'diag> {
     }
 
     pub fn check(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
-        for stmt in &program.body {
+        for stmt in &program.decls {
             self.check_stmt(stmt, ctx);
         }
     }

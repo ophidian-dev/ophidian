@@ -14,7 +14,7 @@ fn test_parser_parse_arithmetic_expression() {
 
     let program = parser.parse();
 
-    let expr = match &program.body.get(0).unwrap().kind {
+    let expr = match &program.decls.get(0).unwrap().kind {
         StmtKind::ExprStmt(e) => e,
         _ => panic!(),
     };
@@ -70,7 +70,7 @@ fn test_parser_parse_print_stmt() {
         program,
         Program {
             functions: vec![],
-            body: vec![Stmt {
+            decls: vec![Stmt {
                 id: NodeId(5),
                 kind: StmtKind::Print(Box::new(Expr {
                     id: NodeId(4),

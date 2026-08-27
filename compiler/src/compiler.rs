@@ -69,7 +69,7 @@ impl Compiler {
 
         let mut chunk = Chunk::new();
 
-        for stmt in &program.body {
+        for stmt in &program.decls {
             self.compile_stmt(stmt, &mut chunk, &metadata);
         }
 
