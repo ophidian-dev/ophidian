@@ -1,8 +1,10 @@
-use crate::lex::token::TokenKind;
-use crate::diagnostics::{Diagnostic, Severity};
-use crate::parse::ast::{Program, Stmt, StmtKind, Expr, ExprKind, ForInit, LitKind, UnaryOpKind, BinOpKind, NodeId};
-use crate::span::Span;
 use crate::analysis::analyzer::AnalysisCtx;
+use crate::diagnostics::{Diagnostic, Severity};
+use crate::lex::token::TokenKind;
+use crate::parse::ast::{
+    BinOpKind, Expr, ExprKind, ForInit, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind,
+};
+use crate::span::Span;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
@@ -37,7 +39,7 @@ pub struct TypeChecker;
 
 impl TypeChecker {
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 
     pub fn check(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
@@ -112,7 +114,11 @@ impl TypeChecker {
                 let cond_ty = self.check_expr(cond, ctx);
 
                 if cond_ty != Type::Bool && cond_ty != Type::Error {
-                    self.error("if statement condition must have type 'bool'", cond.span, ctx);
+                    self.error(
+                        "if statement condition must have type 'bool'",
+                        cond.span,
+                        ctx,
+                    );
                     return;
                 }
 
@@ -126,7 +132,11 @@ impl TypeChecker {
                 let cond_ty = self.check_expr(cond, ctx);
 
                 if cond_ty != Type::Bool && cond_ty != Type::Error {
-                    self.error("while statement condition must have type 'bool'", cond.span, ctx);
+                    self.error(
+                        "while statement condition must have type 'bool'",
+                        cond.span,
+                        ctx,
+                    );
                     return;
                 }
 
@@ -186,7 +196,7 @@ impl TypeChecker {
                     self.error(
                         format!("invalid operands for binary operation: '{}'", op.node),
                         expr.span,
-                        ctx
+                        ctx,
                     );
                 }
 
@@ -223,7 +233,7 @@ impl TypeChecker {
                             self.error(
                                 format!("cannot apply operator '{}' on non l-value", op.node),
                                 expr.span,
-                                ctx
+                                ctx,
                             );
                             return Type::Error;
                         }

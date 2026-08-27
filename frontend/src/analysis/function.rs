@@ -1,9 +1,17 @@
-use crate::diagnostics::Diagnostic;
+use std::collections::{HashMap, HashSet};
+
 use crate::analysis::analyzer::AnalysisCtx;
-use crate::parse::ast::{Program, Stmt, Expr};
+use crate::analysis::types::Type;
+use crate::diagnostics::{Diagnostic, Severity};
+use crate::parse::ast::{Function as AstFunction, Param};
+use crate::span::Span;
 
 #[derive(Debug, Clone, Copy)]
 pub struct FunctionId(pub usize);
+
+impl FunctionId {
+    pub const ERROR: Self = Self(usize::MAX);
+}
 
 impl std::ops::AddAssign<usize> for FunctionId {
     fn add_assign(&mut self, rhs: usize) {
@@ -12,27 +20,72 @@ impl std::ops::AddAssign<usize> for FunctionId {
 }
 
 pub struct Function {
-    
+    return_type: Type,
+    params: Vec<Param>,
 }
 
-pub struct FunctionResolver<'diag> {
-    diags: &'diag mut Vec<Diagnostic>,
+impl Function {
+    pub fn new(return_type: Type, params: Vec<Param>) -> Self {
+        Self {
+            return_type,
+            params,
+        }
+    }
+}
+
+pub struct FunctionResolver<'a> {
     curr_func_id: FunctionId,
+    func_names: HashSet<&'a [u8]>,
 }
 
-impl<'diag> FunctionResolver<'diag> {
-    pub fn new(diags: &'diag mut Vec<Diagnostic>) -> Self {
-        Self { diags, curr_func_id: FunctionId(0)}
+impl<'a> FunctionResolver<'a> {
+    pub fn new() -> Self {
+        Self {
+            curr_func_id: FunctionId(0),
+            func_names: HashSet::new(),
+        }
     }
 
-    pub fn resolve_functions(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
-        self.collect_decls(program, ctx);
-    }
-
-    fn collect_decls(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
-        for function in &program.functions {
+    pub fn collect_functions(&mut self, functions: &'a [AstFunction], ctx: &mut AnalysisCtx) {
+        for function in functions {
+            if !self.func_names.insert(&function.name) {
+                self.error(
+                    format!(
+                        "redefinition of identifier: '{}'",
+                        std::str::from_utf8(&function.name).expect("invalid utf8")
+                    ),
+                    function.span,
+                    ctx,
+                );
+                return;
+            }
             ctx.functions.insert(function.id, self.curr_func_id);
             self.curr_func_id += 1;
         }
     }
+
+    fn error<T: Into<String>>(&self, msg: T, span: Span, ctx: &mut AnalysisCtx) {
+        ctx.diagnostics
+            .push(Diagnostic::new(msg.into(), span, Severity::Error));
+    }
+}
+
+pub struct FunctionAnalyzer {
+    function_names: HashMap<Vec<u8>, FunctionId>,
+}
+
+impl FunctionAnalyzer {
+    pub fn new() -> Self {
+        Self {
+            function_names: HashMap::new(),
+        }
+    }
+
+    pub fn analyze(&mut self, functions: &[AstFunction], ctx: &mut AnalysisCtx) {
+        for function in functions {
+            self.analyze_function(function, ctx);
+        }
+    }
+
+    fn analyze_function(&mut self, function: &AstFunction, ctx: &mut AnalysisCtx) {}
 }

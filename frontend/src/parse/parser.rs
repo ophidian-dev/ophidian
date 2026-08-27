@@ -1,4 +1,4 @@
-use crate::analysis::type_check::Type;
+use crate::analysis::types::Type;
 use crate::lex::token::{TokenKind, TokenStream};
 use crate::parse::Parser;
 use crate::parse::ast::{

@@ -1,6 +1,6 @@
-use crate::diagnostics::{Severity, Diagnostic};
-use crate::parse::ast::{Program, Stmt, StmtKind, Expr, ExprKind, ForInit};
 use crate::analysis::analyzer::AnalysisCtx;
+use crate::diagnostics::{Diagnostic, Severity};
+use crate::parse::ast::{Expr, ExprKind, ForInit, Program, Stmt, StmtKind};
 use crate::span::Span;
 use std::collections::HashMap;
 
@@ -34,8 +34,6 @@ impl std::ops::AddAssign<usize> for VarId {
         self.0 += rhs
     }
 }
-
-
 
 pub struct Resolver {
     curr_var_id: VarId,
@@ -239,7 +237,7 @@ impl Resolver {
                             std::str::from_utf8(name).unwrap()
                         ),
                         expr.span,
-                        ctx
+                        ctx,
                     );
                 }
             },
@@ -262,7 +260,7 @@ impl Resolver {
                     std::str::from_utf8(name).unwrap()
                 ),
                 span,
-                ctx 
+                ctx,
             );
             return VarId::ERROR;
         }

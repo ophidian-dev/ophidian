@@ -1,7 +1,7 @@
 pub mod analyzer;
 pub mod function;
 pub mod resolution;
-pub mod type_check;
+pub mod types;
 
 use crate::diagnostics::Diagnostic;
 

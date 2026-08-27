@@ -1,13 +1,10 @@
-use crate::analysis::function::{FunctionId, Function};
-use crate::diagnostics::{Diagnostic};
-use crate::parse::ast::{
-    NodeId, Program
-};
-use crate::analysis::type_check::{Type, Conversion, TypeChecker};
 use crate::analysis::SemanticAnalyzer;
-use crate::analysis::resolution::{Resolver, VarId, Scope};
+use crate::analysis::function::{Function, FunctionAnalyzer, FunctionId, FunctionResolver};
+use crate::analysis::resolution::{Resolver, Scope, VarId};
+use crate::analysis::types::{Conversion, Type, TypeChecker};
+use crate::diagnostics::Diagnostic;
+use crate::parse::ast::{NodeId, Program};
 use std::collections::HashMap;
-
 
 impl<'diag> SemanticAnalyzer<'diag> {
     pub fn new(diagnostics: &'diag mut Vec<Diagnostic>) -> Self {
@@ -17,32 +14,42 @@ impl<'diag> SemanticAnalyzer<'diag> {
     pub fn analyze(&mut self, program: &Program) -> Result<AnalysisResult, ()> {
         let mut ctx = AnalysisCtx::new(self.diagnostics);
 
-        let mut resolver = Resolver::new();
-        resolver.resolve(program, &mut ctx);
+        let mut function_resolver = FunctionResolver::new();
 
-        if !ctx.diagnostics.is_empty() {
-            return Err(());
+        for _decl in &program.decls {
+            todo!()
         }
 
-        let mut typechecker = TypeChecker::new();
-        typechecker.check(program, &mut ctx);
+        function_resolver.collect_functions(&program.functions, &mut ctx);
 
-        for (id, value) in &ctx.types {
-            if let Some(conversion_type) = ctx.conversions.get(id) {
-                match conversion_type {
-                    Conversion::IntToDouble => {
-                        ctx.converted_types.insert(*id, Type::Double);
-                    }
-                }
-            } else {
-                ctx.converted_types.insert(*id, *value);
-            }
-        }
+        let mut function_analyzer = FunctionAnalyzer::new();
+        function_analyzer.analyze(&program.functions, &mut ctx);
+
+        // let mut resolver = Resolver::new();
+        // resolver.resolve(program, &mut ctx);
+
+        // if !ctx.diagnostics.is_empty() {
+        //     return Err(());
+        // }
+
+        // let mut typechecker = TypeChecker::new();
+        // typechecker.check(program, &mut ctx);
+
+        // for (id, value) in &ctx.types {
+        //     if let Some(conversion_type) = ctx.conversions.get(id) {
+        //         match conversion_type {
+        //             Conversion::IntToDouble => {
+        //                 ctx.converted_types.insert(*id, Type::Double);
+        //             }
+        //         }
+        //     } else {
+        //         ctx.converted_types.insert(*id, *value);
+        //     }
+        // }
 
         Ok(AnalysisResult::from(ctx))
     }
 }
-
 
 pub struct AnalysisCtx<'diag> {
     pub scopes: Vec<Scope>,
