@@ -117,7 +117,7 @@ impl Resolver {
         ctx.variables.insert(stmt.id, varid);
     }
 
-    fn resolve_block(&mut self, body: &[Stmt], ctx: &mut AnalysisCtx) {
+    pub(super) fn resolve_block(&mut self, body: &[Stmt], ctx: &mut AnalysisCtx) {
         self.enter_scope(ctx);
 
         for s in body {
@@ -252,7 +252,7 @@ impl Resolver {
         }
     }
 
-    fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx, span: Span) -> VarId {
+    pub(super) fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx, span: Span) -> VarId {
         if ctx.scopes.last().unwrap().vars.contains_key(name) {
             self.error(
                 format!(
@@ -282,11 +282,11 @@ impl Resolver {
             .find_map(|s| s.vars.get(name).copied())
     }
 
-    fn enter_scope(&self, ctx: &mut AnalysisCtx) {
+    pub(super) fn enter_scope(&self, ctx: &mut AnalysisCtx) {
         ctx.scopes.push(Scope::new());
     }
 
-    fn exit_scope(&self, ctx: &mut AnalysisCtx) {
+    pub(super) fn exit_scope(&self, ctx: &mut AnalysisCtx) {
         ctx.scopes.pop();
     }
 }

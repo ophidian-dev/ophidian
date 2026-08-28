@@ -23,7 +23,7 @@ impl std::ops::AddAssign<usize> for NodeId {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum LitKind {
     Int(u128),
     Float(f64),
@@ -123,7 +123,7 @@ pub type BinOp = Spanned<BinOpKind>;
 pub type UnaryOp = Spanned<UnaryOpKind>;
 
 // all the different exprs in the language
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ExprKind {
     // a literal
     // e.g. '1'
@@ -165,7 +165,7 @@ pub enum ExprKind {
 }
 
 // an expression
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Expr {
     pub id: NodeId,
     pub kind: ExprKind,
@@ -178,14 +178,14 @@ impl Expr {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ForInit {
     Expr(Expr),
     // Stmt::StmtKind for this field is guarenteed to have StmtKind::VarDecl
     Decl(Stmt),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum StmtKind {
     // because right now this language does not have functions,
     // we have a built in print statement that is still called like a
@@ -256,7 +256,7 @@ pub enum StmtKind {
     Error,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Stmt {
     pub id: NodeId,
     pub kind: StmtKind,
@@ -266,6 +266,24 @@ pub struct Stmt {
 impl Stmt {
     pub const fn new(id: NodeId, kind: StmtKind, span: Span) -> Self {
         Self { id, kind, span }
+    }
+}
+
+pub struct Block {
+    pub stmts: Vec<Stmt>,
+}
+
+impl TryFrom<Stmt> for Block {
+    type Error = ();
+    fn try_from(value: Stmt) -> Result<Self, Self::Error> {
+        match value.kind {
+            StmtKind::Block(body) => {
+                Ok(Block { stmts: body })
+            }
+            _ => {
+                Err(())
+            }
+        }
     }
 }
 
@@ -302,10 +320,10 @@ impl Function {
 
 #[derive(Debug, PartialEq)]
 pub struct Param {
-    span: Span,
-    id: NodeId,
-    name: Vec<u8>,
-    ty: Type,
+    pub span: Span,
+    pub id: NodeId,
+    pub name: Vec<u8>,
+    pub ty: Type,
 }
 
 impl Param {

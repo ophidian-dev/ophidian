@@ -1,9 +1,10 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use crate::analysis::analyzer::AnalysisCtx;
-use crate::analysis::types::Type;
+use crate::analysis::types::{Type, TypeChecker};
+use crate::analysis::resolution::Resolver;
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::parse::ast::{Function as AstFunction, Param};
+use crate::parse::ast::{Block, Function as AstFunction, Param};
 use crate::span::Span;
 
 #[derive(Debug, Clone, Copy)]
@@ -87,7 +88,33 @@ impl FunctionAnalyzer {
     }
 
     fn analyze_function(&mut self, function: &AstFunction, ctx: &mut AnalysisCtx) {
-        let return_type = function.return_type;
+        let return_type = match function.return_type {
+            Some(ty) => {
+                ty
+            }
+            None => {
+                Type::Void
+            }
+        };
+
+        let funcid = *ctx.functions.get(&function.id).unwrap();
+        
+        let mut resolver = Resolver::new();
+        for param in &function.params {
+            let id = resolver.declare_var(&param.name, ctx, param.span);
+            ctx.variables.insert(param.id, id);
+        }
+
+        let block: Block = function.body.clone().try_into().expect("shouldnt happen");
+
+        resolver.resolve_block(&block.stmts, ctx);
+
+        if !ctx.diagnostics.is_empty() {
+            return;
+        }
+
+        let mut typechecker = TypeChecker::new();
+        typechecker.check_stmts(&block.stmts, ctx);
 
     }
 }

@@ -1,7 +1,7 @@
 use crate::analysis::SemanticAnalyzer;
 use crate::analysis::function::{Function, FunctionAnalyzer, FunctionId, FunctionResolver};
-use crate::analysis::resolution::{Resolver, Scope, VarId};
-use crate::analysis::types::{Conversion, Type, TypeChecker};
+use crate::analysis::resolution::{Scope, VarId};
+use crate::analysis::types::{Conversion, Type};
 use crate::diagnostics::Diagnostic;
 use crate::parse::ast::{NodeId, Program};
 use std::collections::HashMap;

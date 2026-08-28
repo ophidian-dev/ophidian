@@ -27,6 +27,7 @@ impl From<TokenKind> for Type {
             TokenKind::Int => Self::Int,
             TokenKind::Double => Self::Double,
             TokenKind::Bool => Self::Bool,
+            TokenKind::Void => Self::Void,
             _ => Self::Error,
         }
     }
@@ -46,6 +47,12 @@ impl TypeChecker {
 
     pub fn check(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
         for stmt in &program.decls {
+            self.check_stmt(stmt, ctx);
+        }
+    }
+
+    pub fn check_stmts(&mut self, stmts: &[Stmt], ctx: &mut AnalysisCtx) {
+        for stmt in stmts {
             self.check_stmt(stmt, ctx);
         }
     }
