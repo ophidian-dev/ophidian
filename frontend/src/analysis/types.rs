@@ -281,7 +281,11 @@ impl TypeChecker {
                 if !self.is_callable(callee) {}
                 let funcid = *ctx.functions.get(&expr.id).unwrap();
                 let function = ctx.signatures.get(&funcid).unwrap().clone();
-                for i in 1..args.len() {
+                if args.len() != function.params.len() {
+                    self.error("incorrect number of arguments", expr.span, ctx);
+                    return Type::Error;
+                }
+                for i in 0..args.len() {
                     let ty = self.check_expr(&args[i], ctx);
                     let expected = function.params[i].ty;
                     if ty != expected {
@@ -389,7 +393,7 @@ impl TypeChecker {
         if lhs == Type::Void {
             self.error("invalid use of 'void' expression", left_span, ctx);
             return Type::Error;
-        } else if lhs == Type::Void {
+        } else if rhs == Type::Void {
             self.error("invalid use of 'void' expression", right_span, ctx);
             return Type::Error;
         }
