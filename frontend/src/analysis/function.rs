@@ -1,13 +1,13 @@
 use std::collections::HashSet;
 
 use crate::analysis::analyzer::AnalysisCtx;
-use crate::analysis::types::{Type, TypeChecker};
 use crate::analysis::resolution::Resolver;
+use crate::analysis::types::{Type, TypeChecker};
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parse::ast::{Block, Function as AstFunction, Param};
 use crate::span::Span;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FunctionId(pub usize);
 
 impl FunctionId {
@@ -20,9 +20,10 @@ impl std::ops::AddAssign<usize> for FunctionId {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Function {
-    return_type: Type,
-    params: Vec<Param>,
+    pub return_type: Type,
+    pub params: Vec<Param>,
 }
 
 impl Function {
@@ -60,7 +61,16 @@ impl<'a> FunctionResolver<'a> {
                 );
                 return;
             }
-            ctx.functions.insert(function.id, self.curr_func_id);
+
+            let id = self.curr_func_id;
+            ctx.functions.insert(function.id, id);
+            ctx.signatures.insert(
+                id,
+                Function::new(
+                    function.return_type.unwrap_or(Type::Void),
+                    function.params.clone(),
+                ),
+            );
             self.curr_func_id += 1;
         }
     }
@@ -71,14 +81,11 @@ impl<'a> FunctionResolver<'a> {
     }
 }
 
-pub struct FunctionAnalyzer {
-
-}
+pub struct FunctionAnalyzer {}
 
 impl FunctionAnalyzer {
     pub fn new() -> Self {
-        Self {
-        }
+        Self {}
     }
 
     pub fn analyze(&mut self, functions: &[AstFunction], ctx: &mut AnalysisCtx) {
@@ -89,16 +96,12 @@ impl FunctionAnalyzer {
 
     fn analyze_function(&mut self, function: &AstFunction, ctx: &mut AnalysisCtx) {
         let return_type = match function.return_type {
-            Some(ty) => {
-                ty
-            }
-            None => {
-                Type::Void
-            }
+            Some(ty) => ty,
+            None => Type::Void,
         };
 
         let funcid = *ctx.functions.get(&function.id).unwrap();
-        
+
         let mut resolver = Resolver::new();
         for param in &function.params {
             let id = resolver.declare_var(&param.name, ctx, param.span);
@@ -115,6 +118,5 @@ impl FunctionAnalyzer {
 
         let mut typechecker = TypeChecker::new();
         typechecker.check_stmts(&block.stmts, ctx);
-
     }
 }

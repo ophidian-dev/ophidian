@@ -203,8 +203,9 @@ impl TypeChecker {
                 let left_type = self.check_expr(left, ctx);
                 let right_type = self.check_expr(right, ctx);
 
-                let res =
-                    self.binary_result_type(op.node, left_type, right_type, left.id, right.id, left.span, right.span, ctx);
+                let res = self.binary_result_type(
+                    op.node, left_type, right_type, left.id, right.id, left.span, right.span, ctx,
+                );
                 if res == Type::Error {
                     self.error(
                         format!("invalid operands for binary operation: '{}'", op.node),
@@ -277,7 +278,18 @@ impl TypeChecker {
                 *ctx.var_types.get(varid).unwrap()
             }
             ExprKind::Call(callee, args) => {
-                todo!()
+                if !self.is_callable(callee) {}
+                let funcid = *ctx.functions.get(&expr.id).unwrap();
+                let function = ctx.signatures.get(&funcid).unwrap().clone();
+                for i in 1..args.len() {
+                    let ty = self.check_expr(&args[i], ctx);
+                    let expected = function.params[i].ty;
+                    if ty != expected {
+                        self.error("mismatched types", args[i].span, ctx);
+                        return Type::Error;
+                    }
+                }
+                function.return_type
             }
             ExprKind::Error => {
                 unreachable!()
@@ -287,6 +299,10 @@ impl TypeChecker {
         ctx.types.insert(expr.id, ty);
 
         ty
+    }
+
+    fn is_callable(&self, node: &Expr) -> bool {
+        todo!()
     }
 
     fn is_lvalue(&self, node: &Expr) -> bool {
@@ -315,7 +331,13 @@ impl TypeChecker {
         }
     }
 
-    fn unary_result_type(&mut self, op: UnaryOpKind, rhs: Type, span: &Span, ctx: &mut AnalysisCtx) -> Type {
+    fn unary_result_type(
+        &mut self,
+        op: UnaryOpKind,
+        rhs: Type,
+        span: &Span,
+        ctx: &mut AnalysisCtx,
+    ) -> Type {
         if rhs == Type::Error {
             return Type::Error;
         }
@@ -345,7 +367,7 @@ impl TypeChecker {
             (UnaryOpKind::PreDecrement, Type::Double) => Type::Double,
             (UnaryOpKind::PreIncrement, Type::Double) => Type::Double,
             (_, Type::Error) => unreachable!(),
-            (_, Type::Void) => unreachable!()
+            (_, Type::Void) => unreachable!(),
         }
     }
 

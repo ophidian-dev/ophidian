@@ -277,12 +277,8 @@ impl TryFrom<Stmt> for Block {
     type Error = ();
     fn try_from(value: Stmt) -> Result<Self, Self::Error> {
         match value.kind {
-            StmtKind::Block(body) => {
-                Ok(Block { stmts: body })
-            }
-            _ => {
-                Err(())
-            }
+            StmtKind::Block(body) => Ok(Block { stmts: body }),
+            _ => Err(()),
         }
     }
 }
@@ -318,7 +314,7 @@ impl Function {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Param {
     pub span: Span,
     pub id: NodeId,

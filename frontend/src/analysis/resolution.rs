@@ -248,6 +248,12 @@ impl Resolver {
             ExprKind::UnaryOp(.., right) => {
                 self.resolve_expr(right, ctx);
             }
+            ExprKind::Call(callee, args) => {
+                self.resolve_expr(callee, ctx);
+                for arg in args {
+                    self.resolve_expr(arg, ctx);
+                }
+            }
             _ => return,
         }
     }
