@@ -97,13 +97,14 @@ impl FunctionAnalyzer {
     fn analyze_function(&mut self, function: &AstFunction, ctx: &mut AnalysisCtx) {
 
         let mut resolver = Resolver::new();
+
+        resolver.enter_scope(ctx);
         for param in &function.params {
-            resolver.enter_scope(ctx);
             let id = resolver.declare_var(&param.name, ctx, param.span);
             ctx.variables.insert(param.id, id);
             ctx.var_types.insert(id, param.ty);
-            resolver.exit_scope(ctx);
         }
+        resolver.exit_scope(ctx);
 
         let block: Block = function.body.clone().try_into().expect("shouldnt happen");
 
