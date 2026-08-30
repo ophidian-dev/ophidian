@@ -181,30 +181,76 @@ impl Expr {
 #[derive(Debug, PartialEq, Clone)]
 pub enum ForInit {
     Expr(Expr),
-    // Stmt::StmtKind for this field is guarenteed to have StmtKind::VarDecl
-    Decl(Stmt),
+    Decl(VarDecl),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Print {
+    pub expr: Box<Expr>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ExprStmt {
+    pub expr: Box<Expr>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct VarDecl {
+    pub name: Vec<u8>,
+    pub type_annotation: Option<Type>,
+    pub init: Option<Expr>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct If {
+    pub condition: Box<Expr>,
+    pub body: Box<Stmt>,
+    pub else_body: Option<Box<Stmt>>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct While {
+    pub condition: Box<Expr>,
+    pub body: Box<Stmt>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct For {
+    pub init: Option<Box<ForInit>>,
+    pub condition: Option<Expr>,
+    pub increment: Option<Expr>,
+    pub body: Box<Stmt>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Return {
+    pub expr: Option<Expr>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Block {
+    pub body: Vec<Stmt>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum StmtKind {
-    // because right now this language does not have functions,
     // we have a built in print statement that is still called like a
     // function i.e. `print(expression);` requiring the parentheses
-    Print(Box<Expr>),
+    Print(Print),
 
     // expression statement
-    ExprStmt(Box<Expr>),
+    ExprStmt(ExprStmt),
 
     // a variable declaration
     //
     // Vec<u8> is the name of the identifier being declared
     // Option<Type> is optional type annotation
     // Option<Expr> is an optional init expression to initialise the variable
-    VarDecl(Vec<u8>, Option<Type>, Option<Expr>),
+    VarDecl(VarDecl),
 
     // a block (scope)
     // opened with a '{' and closed with '}'
-    Block(Vec<Stmt>),
+    Block(Block),
 
     // an if statement
     // Box<Expr> represents the condition for the if body to execute
@@ -216,12 +262,12 @@ pub enum StmtKind {
     // Option<Box<Stmt>> represents an optional else body
     // for else if statements simply store another if statement in the else clause
     // so it is recursive
-    If(Box<Expr>, Box<Stmt>, Option<Box<Stmt>>),
+    If(If),
 
     // a while loop
     // Box<Expr> represents the condition for the while loop
     // Box<Stmt> is the body of the loop
-    While(Box<Expr>, Box<Stmt>),
+    While(While),
 
     // a break statement
     Break,
@@ -242,11 +288,11 @@ pub enum StmtKind {
     // for (let i = 0; i < 10; i++) {
     //                            <-- body
     // }
-    For(Option<Box<ForInit>>, Option<Expr>, Option<Expr>, Box<Stmt>),
+    For(For),
 
     // a return statement
     // Option<Expr> represnts an optional return value
-    Return(Option<Expr>),
+    Return(Return),
 
     // an error node to represent a recoverable error this node exists
     // so that the parser can recover from a parsing function. Before the
@@ -269,20 +315,6 @@ impl Stmt {
     }
 }
 
-pub struct Block {
-    pub stmts: Vec<Stmt>,
-}
-
-impl TryFrom<Stmt> for Block {
-    type Error = ();
-    fn try_from(value: Stmt) -> Result<Self, Self::Error> {
-        match value.kind {
-            StmtKind::Block(body) => Ok(Block { stmts: body }),
-            _ => Err(()),
-        }
-    }
-}
-
 #[derive(Debug, PartialEq)]
 pub struct Function {
     pub id: NodeId,
@@ -290,8 +322,7 @@ pub struct Function {
     pub name: Vec<u8>,
     pub params: Vec<Param>,
     pub return_type: Option<Type>,
-    // has to be a block
-    pub body: Stmt,
+    pub body: Block,
 }
 
 impl Function {
@@ -300,7 +331,7 @@ impl Function {
         name: Vec<u8>,
         params: Vec<Param>,
         return_type: Option<Type>,
-        body: Stmt,
+        body: Block,
         span: Span,
     ) -> Self {
         Self {
@@ -329,19 +360,30 @@ impl Param {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Program {
-    // statements at the global level
-    // sema later decides whether some statements are not permitted
-    pub decls: Vec<Stmt>,
+pub struct GlobalVarDecl {
+    pub id: NodeId,
+    pub span: Span,
+    pub name: Vec<u8>,
+    pub type_annotation: Type,
+    pub init: Option<Expr>,
+}
 
-    pub functions: Vec<Function>,
+
+#[derive(Debug, PartialEq)]
+pub enum Item {
+    GlobalVarDecl(GlobalVarDecl),
+    Function(Function),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Program {
+    pub items: Vec<Item>,
 }
 
 impl Program {
     pub fn new() -> Self {
         Self {
-            decls: Vec::new(),
-            functions: Vec::new(),
+            items: Vec::new(),
         }
     }
 }

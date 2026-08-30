@@ -3,7 +3,7 @@ resolver = "3"
 members = [
     "cli",
     "compiler",
-    "frontend", 
+    "frontend", "macros", 
     "op", 
     "runtime",
 ]
@@ -16,3 +16,6 @@ compiler = { path = "compiler" }
 runtime = { path = "runtime" }
 cli = { path = "cli" }
 num_enum = "0.7.6"
+proc-macro2 = "1.0.107"
+quote = "1.0.47"
+syn = { version = "3.0.4", features = ["full"] }
