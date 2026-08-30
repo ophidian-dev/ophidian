@@ -95,7 +95,6 @@ impl FunctionAnalyzer {
     }
 
     fn analyze_function(&mut self, function: &AstFunction, ctx: &mut AnalysisCtx) {
-
         let mut resolver = Resolver::new();
 
         resolver.enter_scope(ctx);

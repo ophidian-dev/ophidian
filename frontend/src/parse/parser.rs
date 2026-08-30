@@ -2,8 +2,8 @@ use crate::analysis::types::Type;
 use crate::lex::token::{TokenKind, TokenStream};
 use crate::parse::Parser;
 use crate::parse::ast::{
-    BinOpKind, Expr, ExprKind, ForInit, Function, LitKind, Param, Program, Stmt, StmtKind,
-    UnaryOpKind,
+    BinOpKind, Block, Expr, ExprKind, ExprStmt, For, ForInit, Function, GlobalVarDecl, If, Item,
+    LitKind, Param, Print, Program, Stmt, StmtKind, UnaryOpKind, VarDecl, While,
 };
 use crate::span::{Span, Spanned};
 
@@ -13,14 +13,30 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
         while self.peek().kind != TokenKind::Eof {
             if self.peek().kind == TokenKind::Fn {
-                let function = self.parse_fn();
-                if function.is_err() {
-                    continue;
-                }
-                program.functions.push(function.unwrap());
+                let function = match self.parse_fn() {
+                    Ok(function) => function,
+                    Err(_) => {
+                        continue;
+                    }
+                };
+
+                program.items.push(Item::Function(function));
             } else {
-                // just parse a normal statment for now
-                program.decls.push(self.parse_statement());
+                match self.peek().kind {
+                    TokenKind::Let => {
+                        let decl = match self.parse_global_var_decl() {
+                            Ok(decl) => decl,
+                            Err(_) => {
+                                continue;
+                            }
+                        };
+                        program.items.push(Item::GlobalVarDecl(decl));
+                    }
+                    _ => {
+                        self.error("statement not allowed at file scope", self.peek().span);
+                        continue;
+                    }
+                }
             }
         }
 
@@ -45,6 +61,74 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 self.error("unexpected token", span);
                 self.sync();
                 return Stmt::new(self.next_node_id(), StmtKind::Error, span);
+            }
+        }
+    }
+
+    fn parse_global_var_decl(&mut self) -> Result<GlobalVarDecl, ()> {
+        let start_span = self.advance().span;
+
+        if self.peek().kind != TokenKind::Identifier {
+            self.error("expected identifier", self.peek().span);
+            return Err(());
+        }
+
+        let identifier = Span::retrieve_slice(self.source, &self.peek().span).to_owned();
+
+        self.advance();
+
+        if self.peek().kind != TokenKind::Colon {
+            self.error("expected type annotation", self.peek().span);
+            return Err(());
+        }
+
+        self.advance();
+
+        let var_type = {
+            let ty: Type = self.peek().kind.into();
+            if ty == Type::Error {
+                let end_span = self.advance().span;
+                self.error("expected type name", end_span);
+                return Err(());
+            }
+            self.advance();
+            ty
+        };
+
+        match self.peek().kind {
+            TokenKind::Equal => {
+                self.advance();
+                let init = self.parse_expression();
+                if self.peek().kind != TokenKind::Semicolon {
+                    let end_span = self.advance().span;
+                    self.error("expected ';'", end_span);
+                    return Err(());
+                }
+
+                let end_span = self.advance().span;
+
+                return Ok(GlobalVarDecl::new(
+                    self.next_node_id(),
+                    start_span.join(end_span),
+                    identifier,
+                    var_type,
+                    Some(init),
+                ));
+            }
+            TokenKind::Semicolon => {
+                let end_span = self.advance().span;
+
+                return Ok(GlobalVarDecl::new(
+                    self.next_node_id(),
+                    start_span.join(end_span),
+                    identifier,
+                    var_type,
+                    None,
+                ));
+            }
+            _ => {
+                self.error("expected ';'", self.peek().span);
+                return Err(());
             }
         }
     }
@@ -112,11 +196,11 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
         return Ok(Function::new(
             self.next_node_id(),
+            start_span.join(end_span),
             ident,
             params,
             ret_type,
-            body,
-            start_span.join(end_span),
+            body.try_into().expect("unreachable"),
         ));
     }
 
@@ -181,7 +265,9 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
         let init = if self.peek().kind == TokenKind::Let {
             // parse_statement guarenteed to parse a var decl because of TokenKind::Let
-            Some(Box::new(ForInit::Decl(self.parse_statement())))
+            Some(Box::new(ForInit::Decl(
+                self.parse_statement().try_into().expect("unreacheable"),
+            )))
         } else if self.peek().kind == TokenKind::Semicolon {
             self.advance();
             None
@@ -227,7 +313,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
         return Stmt::new(
             self.next_node_id(),
-            StmtKind::For(init, cond, incre, Box::new(body)),
+            StmtKind::For(For::new(init, cond, incre, Box::new(body))),
             start_span.join(end_span),
         );
     }
@@ -281,7 +367,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
         return Stmt::new(
             self.next_node_id(),
-            StmtKind::While(Box::new(cond), Box::new(body)),
+            StmtKind::While(While::new(Box::new(cond), Box::new(body))),
             start_span.join(end_span),
         );
     }
@@ -317,7 +403,11 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 let end_span = if_stmt.span;
                 return Stmt::new(
                     self.next_node_id(),
-                    StmtKind::If(Box::new(cond), Box::new(body), Some(Box::new(if_stmt))),
+                    StmtKind::If(If::new(
+                        Box::new(cond),
+                        Box::new(body),
+                        Some(Box::new(if_stmt)),
+                    )),
                     start_span.join(end_span),
                 );
             }
@@ -325,14 +415,18 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             let end_span = else_body.span;
             return Stmt::new(
                 self.next_node_id(),
-                StmtKind::If(Box::new(cond), Box::new(body), Some(Box::new(else_body))),
+                StmtKind::If(If::new(
+                    Box::new(cond),
+                    Box::new(body),
+                    Some(Box::new(else_body)),
+                )),
                 start_span.join(end_span),
             );
         } else {
             let end_span = body.span;
             return Stmt::new(
                 self.next_node_id(),
-                StmtKind::If(Box::new(cond), Box::new(body), None),
+                StmtKind::If(If::new(Box::new(cond), Box::new(body), None)),
                 start_span.join(end_span),
             );
         }
@@ -359,7 +453,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
         Stmt::new(
             self.next_node_id(),
-            StmtKind::Block(stmts),
+            StmtKind::Block(Block::new(stmts)),
             start_span.join(end_token.span),
         )
     }
@@ -407,7 +501,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
                         return Stmt::new(
                             self.next_node_id(),
-                            StmtKind::VarDecl(identifier, Some(var_type), Some(init)),
+                            StmtKind::VarDecl(VarDecl::new(identifier, Some(var_type), Some(init))),
                             start_span.join(end_span),
                         );
                     }
@@ -416,7 +510,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
                         return Stmt::new(
                             self.next_node_id(),
-                            StmtKind::VarDecl(identifier, Some(var_type), None),
+                            StmtKind::VarDecl(VarDecl::new(identifier, Some(var_type), None)),
                             start_span.join(end_span),
                         );
                     }
@@ -452,7 +546,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
                 return Stmt::new(
                     self.next_node_id(),
-                    StmtKind::VarDecl(identifier, None, Some(init)),
+                    StmtKind::VarDecl(VarDecl::new(identifier, None, Some(init))),
                     start_span.join(end_span),
                 );
             }
@@ -480,7 +574,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
         let span = expr.span.join(self.advance().span);
         Stmt::new(
             self.next_node_id(),
-            StmtKind::ExprStmt(Box::new(expr)),
+            StmtKind::ExprStmt(ExprStmt::new(Box::new(expr))),
             span,
         )
     }
@@ -517,7 +611,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
         Stmt::new(
             self.next_node_id(),
-            StmtKind::Print(Box::new(expr)),
+            StmtKind::Print(Print::new(Box::new(expr))),
             self.advance().span.join(span),
         )
     }

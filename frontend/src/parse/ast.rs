@@ -1,6 +1,7 @@
 use crate::analysis::types::Type;
 use crate::lex::token::{Token, TokenKind};
 use crate::span::{Span, Spanned};
+use macros::Constructor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NodeId(pub usize);
@@ -184,37 +185,48 @@ pub enum ForInit {
     Decl(VarDecl),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Constructor)]
 pub struct Print {
     pub expr: Box<Expr>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Constructor)]
 pub struct ExprStmt {
     pub expr: Box<Expr>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Constructor)]
 pub struct VarDecl {
     pub name: Vec<u8>,
     pub type_annotation: Option<Type>,
     pub init: Option<Expr>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+impl TryFrom<Stmt> for VarDecl {
+    type Error = ();
+
+    fn try_from(value: Stmt) -> Result<Self, Self::Error> {
+        match value.kind {
+            StmtKind::VarDecl(decl) => Ok(decl),
+            _ => Err(()),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Constructor)]
 pub struct If {
     pub condition: Box<Expr>,
     pub body: Box<Stmt>,
     pub else_body: Option<Box<Stmt>>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Constructor)]
 pub struct While {
     pub condition: Box<Expr>,
     pub body: Box<Stmt>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Constructor)]
 pub struct For {
     pub init: Option<Box<ForInit>>,
     pub condition: Option<Expr>,
@@ -227,9 +239,20 @@ pub struct Return {
     pub expr: Option<Expr>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Constructor)]
 pub struct Block {
     pub body: Vec<Stmt>,
+}
+
+impl TryFrom<Stmt> for Block {
+    type Error = ();
+
+    fn try_from(value: Stmt) -> Result<Self, Self::Error> {
+        match value.kind {
+            StmtKind::Block(b) => Ok(b),
+            _ => Err(()),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -315,7 +338,7 @@ impl Stmt {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Constructor)]
 pub struct Function {
     pub id: NodeId,
     pub span: Span,
@@ -323,26 +346,6 @@ pub struct Function {
     pub params: Vec<Param>,
     pub return_type: Option<Type>,
     pub body: Block,
-}
-
-impl Function {
-    pub fn new(
-        id: NodeId,
-        name: Vec<u8>,
-        params: Vec<Param>,
-        return_type: Option<Type>,
-        body: Block,
-        span: Span,
-    ) -> Self {
-        Self {
-            id,
-            span,
-            name,
-            params,
-            return_type,
-            body,
-        }
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -359,7 +362,7 @@ impl Param {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Constructor)]
 pub struct GlobalVarDecl {
     pub id: NodeId,
     pub span: Span,
@@ -367,7 +370,6 @@ pub struct GlobalVarDecl {
     pub type_annotation: Type,
     pub init: Option<Expr>,
 }
-
 
 #[derive(Debug, PartialEq)]
 pub enum Item {
@@ -382,8 +384,6 @@ pub struct Program {
 
 impl Program {
     pub fn new() -> Self {
-        Self {
-            items: Vec::new(),
-        }
+        Self { items: Vec::new() }
     }
 }

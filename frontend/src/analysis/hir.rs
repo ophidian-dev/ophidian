@@ -1,6 +1,6 @@
 use crate::analysis::function::FunctionId;
-use crate::analysis::types::Type;
 use crate::analysis::resolution::VarId;
+use crate::analysis::types::Type;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct HirId(pub usize);
@@ -71,7 +71,7 @@ pub struct For {
 #[derive(Debug, PartialEq, Clone)]
 pub enum ForInit {
     Expr(Expr),
-    Decl(VarDecl)
+    Decl(VarDecl),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -140,7 +140,7 @@ pub enum BinaryOpKind {
 #[derive(Debug, PartialEq, Clone)]
 pub struct UnaryOp {
     pub kind: UnaryOpKind,
-    pub operand: Box<Expr>,    
+    pub operand: Box<Expr>,
 }
 
 #[derive(Debug, PartialEq, Clone)]

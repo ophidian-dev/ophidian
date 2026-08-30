@@ -126,6 +126,7 @@ name = "frontend"
 version = "0.1.0"
 dependencies = [
  "frontend",
+ "macros",
  "owo-colors",
 ]
 

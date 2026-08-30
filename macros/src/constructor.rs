@@ -1,8 +1,8 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 
-use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident};
 use quote::quote;
+use syn::{Data, DeriveInput, Fields, Ident, parse_macro_input};
 
 pub fn expand(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -10,13 +10,12 @@ pub fn expand(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     let data = match &input.data {
-        Data::Struct(data) => {
-            data
-        }
+        Data::Struct(data) => data,
         _ => {
             return quote! {
                 compile_error!("Constructor can only be derived on structs");
-            }.into()
+            }
+            .into();
         }
     };
 
@@ -28,11 +27,7 @@ pub fn expand(input: TokenStream) -> TokenStream {
                 .map(|field| field.ident.as_ref().unwrap())
                 .collect();
 
-            let field_types: Vec<_> = fields
-                .named
-                .iter()
-                .map(|field| &field.ty)
-                .collect();
+            let field_types: Vec<_> = fields.named.iter().map(|field| &field.ty).collect();
 
             quote! {
                 impl #name {
@@ -64,18 +59,16 @@ pub fn expand(input: TokenStream) -> TokenStream {
                         )
                     }
                 }
-            }.into()
-        }
-        Fields::Unit => {
-            quote! {
-                impl #name {
-                    pub fn new() -> Self {
-                        Self
-                    }
-                }
             }
             .into()
         }
+        Fields::Unit => quote! {
+            impl #name {
+                pub fn new() -> Self {
+                    Self
+                }
+            }
+        }
+        .into(),
     }
 }
-
