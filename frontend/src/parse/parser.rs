@@ -100,8 +100,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
                 self.advance();
                 let init = self.parse_expression();
                 if self.peek().kind != TokenKind::Semicolon {
-                    let end_span = self.advance().span;
-                    self.error("expected ';'", end_span);
+                    self.error("expected ';'", self.peek().span);
                     return Err(());
                 }
 
