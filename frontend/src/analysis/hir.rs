@@ -1,10 +1,8 @@
 use macros::Constructor;
 
-use crate::analysis::ids::{FunctionId, GlobalVarId, LocalVarId};
+use crate::analysis::ids::{FunctionId, GlobalVarId, LocalVarId, HirId};
 use crate::analysis::types::Type;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct HirId(pub usize);
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program {

@@ -39,3 +39,6 @@ impl std::ops::AddAssign<usize> for FunctionId {
         self.0 += rhs;
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct HirId(pub usize);
