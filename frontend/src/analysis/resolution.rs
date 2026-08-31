@@ -1,3 +1,5 @@
+use macros::Constructor;
+
 use crate::analysis::analyzer::AnalysisCtx;
 use crate::analysis::ids::{GlobalVarId, LocalVarId};
 use crate::analysis::types::Type;
@@ -18,7 +20,7 @@ impl Scope {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Constructor)]
 pub struct GlobalVarDecl {
     pub id: GlobalVarId,
     pub type_annotation: Type,

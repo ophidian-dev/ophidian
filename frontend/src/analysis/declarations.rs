@@ -102,6 +102,12 @@ impl<'a> Collecter<'a> {
         }
 
         let decl_id = self.alloc_globalvar_id();
+        ctx.global_vars.insert(vardecl.id, decl_id);
 
+        let type_annotation = vardecl.type_annotation;
+        let init = vardecl.init.clone();
+
+        let globalvardecl = GlobalVarDecl::new(decl_id, type_annotation, init);
+        ctx.globalvar_data.insert(decl_id, globalvardecl);
     }
 }
