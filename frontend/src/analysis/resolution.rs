@@ -4,7 +4,7 @@ use crate::analysis::AnalysisCtx;
 use crate::analysis::ids::{GlobalVarId, LocalVarId};
 use crate::analysis::types::Type;
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::parse::ast::{Expr, ExprKind, ForInit, Program, Stmt, StmtKind};
+use crate::parse::ast::{Expr, ExprKind, ForInit, Block, Stmt, StmtKind};
 use crate::span::Span;
 use std::collections::HashMap;
 

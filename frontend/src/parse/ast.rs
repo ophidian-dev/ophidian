@@ -182,7 +182,7 @@ impl Expr {
 #[derive(Debug, PartialEq, Clone)]
 pub enum ForInit {
     Expr(Expr),
-    Decl(VarDecl),
+    Decl(Spanned<VarDecl>),
 }
 
 #[derive(Debug, PartialEq, Clone, Constructor)]
@@ -345,7 +345,7 @@ pub struct Function {
     pub name: Vec<u8>,
     pub params: Vec<Param>,
     pub return_type: Option<Type>,
-    pub body: Block,
+    pub body: Spanned<Block>,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]

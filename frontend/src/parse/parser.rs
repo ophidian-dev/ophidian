@@ -199,7 +199,7 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
             ident,
             params,
             ret_type,
-            body.try_into().expect("unreachable"),
+            Spanned::new(body.try_into().expect("unreachable"), end_span),
         ));
     }
 
@@ -264,8 +264,10 @@ impl<'src, 'diag, T: TokenStream> Parser<'src, 'diag, T> {
 
         let init = if self.peek().kind == TokenKind::Let {
             // parse_statement guarenteed to parse a var decl because of TokenKind::Let
+            let stmt = self.parse_statement();
+            let span = stmt.span;
             Some(Box::new(ForInit::Decl(
-                self.parse_statement().try_into().expect("unreacheable"),
+                Spanned::new(stmt.try_into().expect("unreacheable"), span),
             )))
         } else if self.peek().kind == TokenKind::Semicolon {
             self.advance();

@@ -1,4 +1,3 @@
-pub mod analyzer;
 pub mod declarations;
 pub mod function;
 pub mod hir;
