@@ -1,5 +1,6 @@
-use crate::analysis::function::FunctionId;
-use crate::analysis::resolution::VarId;
+use macros::Constructor;
+
+use crate::analysis::ids::{FunctionId, GlobalVarId, LocalVarId};
 use crate::analysis::types::Type;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -7,20 +8,35 @@ pub struct HirId(pub usize);
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program {
-    pub functions: Vec<Function>,
+    pub items: Vec<Item>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub enum Item {
+    Function(Function),
+    GlobalVarDecl(GlobalVarDecl),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct GlobalVarDecl {
+    pub id: HirId,
+    pub var_id: GlobalVarId,
+    pub type_annotation: Type,
+    pub init: Option<Expr>,
+}
+
+#[derive(Debug, PartialEq, Clone, Constructor)]
 pub struct Function {
-    pub id: FunctionId,
+    pub id: HirId,
+    pub fn_id: FunctionId,
     pub return_type: Type,
     pub params: Vec<Param>,
     pub body: Block,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Constructor)]
 pub struct Param {
-    pub id: VarId,
+    pub id: LocalVarId,
     pub ty: Type,
 }
 
@@ -41,7 +57,7 @@ pub struct ExprStmt {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct VarDecl {
-    pub id: VarId,
+    pub id: LocalVarId,
     pub ty: Type,
     // use of a variable without an init expression is undefined behaviour
     pub init: Option<Expr>,
@@ -156,7 +172,7 @@ pub enum UnaryOpKind {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
-    pub id: VarId,
+    pub id: LocalVarId,
 }
 
 #[derive(Debug, PartialEq, Clone)]

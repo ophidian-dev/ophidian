@@ -1,6 +1,8 @@
 use crate::analysis::SemanticAnalyzer;
-use crate::analysis::function::{Function, FunctionAnalyzer, FunctionId, FunctionResolver};
-use crate::analysis::resolution::{Scope, VarId};
+use crate::analysis::declarations::Collecter;
+use crate::analysis::function::{Function};
+use crate::analysis::ids::{FunctionId, GlobalVarId, LocalVarId};
+use crate::analysis::resolution::{Scope, GlobalVarDecl};
 use crate::analysis::types::{Conversion, Type};
 use crate::diagnostics::Diagnostic;
 use crate::parse::ast::{NodeId, Program};
@@ -14,16 +16,11 @@ impl<'diag> SemanticAnalyzer<'diag> {
     pub fn analyze(&mut self, program: &Program) -> Result<AnalysisResult, ()> {
         let mut ctx = AnalysisCtx::new(self.diagnostics);
 
-        let mut function_resolver = FunctionResolver::new();
+        let mut collecter = Collecter::new();
+        collecter.collect(program, &mut ctx);
 
-        for _decl in &program.decls {
-            todo!()
-        }
-
-        function_resolver.collect_functions(&program.functions, &mut ctx);
-
-        let mut function_analyzer = FunctionAnalyzer::new();
-        function_analyzer.analyze(&program.functions, &mut ctx);
+        // let mut function_analyzer = FunctionAnalyzer::new();
+        // function_analyzer.analyze(&program.functions, &mut ctx);
 
         // let mut resolver = Resolver::new();
         // resolver.resolve(program, &mut ctx);
@@ -54,8 +51,8 @@ impl<'diag> SemanticAnalyzer<'diag> {
 pub struct AnalysisCtx<'diag> {
     pub scopes: Vec<Scope>,
     pub types: HashMap<NodeId, Type>,
-    pub variables: HashMap<NodeId, VarId>,
-    pub var_types: HashMap<VarId, Type>,
+    pub variables: HashMap<NodeId, LocalVarId>,
+    pub var_types: HashMap<LocalVarId, Type>,
 
     pub conversions: HashMap<NodeId, Conversion>,
 
@@ -64,7 +61,29 @@ pub struct AnalysisCtx<'diag> {
 
     pub diagnostics: &'diag mut Vec<Diagnostic>,
 
+    // what the var id the function got up to
+    pub fn_varids: HashMap<FunctionId, LocalVarId>,
+
+    pub global_vars: HashMap<NodeId, GlobalVarId>,
+    pub globalvar_data: HashMap<GlobalVarId, GlobalVarDecl>,
+
     converted_types: HashMap<NodeId, Type>,
+
+    // current var id
+    // local to a function
+    varid: LocalVarId,
+}
+
+impl<'diag> AnalysisCtx<'diag> {
+    pub fn alloc_varid(&mut self) -> LocalVarId {
+        let id = self.varid;
+        self.varid += 1;
+        id
+    }
+
+    pub fn varid_set(&mut self, i: usize) {
+        self.varid = LocalVarId(i);
+    }
 }
 
 impl<'diag> AnalysisCtx<'diag> {
@@ -78,14 +97,18 @@ impl<'diag> AnalysisCtx<'diag> {
             converted_types: HashMap::new(),
             functions: HashMap::new(),
             signatures: HashMap::new(),
+            fn_varids: HashMap::new(),
+            global_vars: HashMap::new(),
+            globalvar_data: HashMap::new(),
             diagnostics,
+            varid: LocalVarId(0),
         }
     }
 }
 
 pub struct AnalysisResult {
-    pub variables: HashMap<NodeId, VarId>,
-    pub var_types: HashMap<VarId, Type>,
+    pub variables: HashMap<NodeId, LocalVarId>,
+    pub var_types: HashMap<LocalVarId, Type>,
 
     pub conversions: HashMap<NodeId, Conversion>,
 

@@ -1,11 +1,13 @@
 use crate::analysis::analyzer::AnalysisCtx;
+use crate::analysis::ids::{GlobalVarId, LocalVarId};
+use crate::analysis::types::Type;
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parse::ast::{Expr, ExprKind, ForInit, Program, Stmt, StmtKind};
 use crate::span::Span;
 use std::collections::HashMap;
 
 pub struct Scope {
-    vars: HashMap<Vec<u8>, VarId>,
+    vars: HashMap<Vec<u8>, LocalVarId>,
 }
 
 impl Scope {
@@ -16,27 +18,15 @@ impl Scope {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct VarId(pub usize);
-
-impl VarId {
-    pub const ERROR: Self = Self(usize::MAX);
-}
-
-impl From<usize> for VarId {
-    fn from(value: usize) -> Self {
-        VarId(value)
-    }
-}
-
-impl std::ops::AddAssign<usize> for VarId {
-    fn add_assign(&mut self, rhs: usize) {
-        self.0 += rhs
-    }
+#[derive(Debug, PartialEq)]
+pub struct GlobalVarDecl {
+    pub id: GlobalVarId,
+    pub type_annotation: Type,
+    pub init: Option<Expr>,
 }
 
 pub struct Resolver {
-    curr_var_id: VarId,
+    curr_var_id: LocalVarId,
     loop_depth: usize,
 }
 
@@ -258,7 +248,7 @@ impl Resolver {
         }
     }
 
-    pub(super) fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx, span: Span) -> VarId {
+    pub(super) fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx, span: Span) -> LocalVarId {
         if ctx.scopes.last().unwrap().vars.contains_key(name) {
             self.error(
                 format!(
@@ -268,7 +258,7 @@ impl Resolver {
                 span,
                 ctx,
             );
-            return VarId::ERROR;
+            return LocalVarId::ERROR;
         }
 
         let id = self.curr_var_id;
@@ -281,7 +271,7 @@ impl Resolver {
         id
     }
 
-    fn lookup_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx) -> Option<VarId> {
+    fn lookup_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx) -> Option<LocalVarId> {
         ctx.scopes
             .iter()
             .rev()
