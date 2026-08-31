@@ -171,8 +171,9 @@ pub enum UnaryOpKind {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Variable {
-    pub id: LocalVarId,
+pub enum Variable {
+    Local(LocalVarId),
+    Global(GlobalVarId),
 }
 
 #[derive(Debug, PartialEq, Clone)]
