@@ -1,4 +1,4 @@
-use crate::analysis::analyzer::AnalysisCtx;
+use crate::analysis::AnalysisCtx;
 use crate::analysis::function::{Function, Param};
 use crate::analysis::types::Type;
 use crate::analysis::ids::{FunctionId, GlobalVarId};

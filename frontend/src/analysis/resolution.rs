@@ -1,6 +1,6 @@
 use macros::Constructor;
 
-use crate::analysis::analyzer::AnalysisCtx;
+use crate::analysis::AnalysisCtx;
 use crate::analysis::ids::{GlobalVarId, LocalVarId};
 use crate::analysis::types::Type;
 use crate::diagnostics::{Diagnostic, Severity};
@@ -35,7 +35,7 @@ pub struct Resolver {
 impl Resolver {
     pub fn new() -> Self {
         Self {
-            curr_var_id: VarId::from(0),
+            curr_var_id: LocalVarId::from(0),
             loop_depth: 0,
         }
     }
