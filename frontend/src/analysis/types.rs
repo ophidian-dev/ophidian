@@ -53,12 +53,6 @@ impl TypeChecker {
         }
     }
 
-    pub fn check_stmts(&mut self, stmts: &[Stmt], ctx: &mut AnalysisCtx) {
-        for stmt in stmts {
-            self.check_stmt(stmt, ctx);
-        }
-    }
-
     pub fn check_fn(&mut self, stmts: &[Stmt], return_type: Type, ctx: &mut AnalysisCtx) {
         self.is_checking_fn = true;
         self.fn_ret_type = Some(return_type);

@@ -55,7 +55,7 @@ impl FunctionAnalyzer {
         }
 
         let mut typechecker = TypeChecker::new();
-        typechecker.check_stmts(&function.body.node.body, ctx);
+        typechecker.check_fn(&function.body.node.body, function.return_type.unwrap_or(Type::Void), ctx);
 
     }
 }
