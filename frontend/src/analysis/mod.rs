@@ -74,9 +74,6 @@ pub struct AnalysisCtx<'diag> {
 
     pub diagnostics: &'diag mut Vec<Diagnostic>,
 
-    // what the var id the function got up to
-    pub fn_varids: HashMap<FunctionId, LocalVarId>,
-
     pub global_vars: HashMap<NodeId, GlobalVarId>,
     pub globalvar_data: HashMap<GlobalVarId, GlobalVarDecl>,
 
@@ -110,7 +107,6 @@ impl<'diag> AnalysisCtx<'diag> {
             converted_types: HashMap::new(),
             functions: HashMap::new(),
             signatures: HashMap::new(),
-            fn_varids: HashMap::new(),
             global_vars: HashMap::new(),
             globalvar_data: HashMap::new(),
             diagnostics,

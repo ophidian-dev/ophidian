@@ -74,8 +74,10 @@ impl Resolver {
             StmtKind::Continue => {
                 self.resolve_continue(stmt, ctx);
             }
-            StmtKind::Return(expr) => {
-                todo!()
+            StmtKind::Return(ret) => {
+                if let Some(expr) = &ret.expr {
+                    self.resolve_expr(&expr, ctx);
+                }
             }
             StmtKind::Error => {
                 unreachable!()

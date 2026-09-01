@@ -38,14 +38,31 @@ pub enum Conversion {
     IntToDouble,
 }
 
-pub struct TypeChecker;
+pub struct TypeChecker {
+
+    // true if the typechecker is currently type checking a function
+    is_checking_fn: bool,
+    fn_ret_type: Option<Type>,
+}
 
 impl TypeChecker {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            is_checking_fn: false,
+            fn_ret_type: None,
+        }
     }
 
     pub fn check_stmts(&mut self, stmts: &[Stmt], ctx: &mut AnalysisCtx) {
+        for stmt in stmts {
+            self.check_stmt(stmt, ctx);
+        }
+    }
+
+    pub fn check_fn(&mut self, stmts: &[Stmt], return_type: Type, ctx: &mut AnalysisCtx) {
+        self.is_checking_fn = true;
+        self.fn_ret_type = Some(return_type);
+
         for stmt in stmts {
             self.check_stmt(stmt, ctx);
         }
@@ -182,8 +199,19 @@ impl TypeChecker {
 
                 self.check_stmt(&f.body, ctx);
             }
-            StmtKind::Return(expr) => {
-                todo!()
+            StmtKind::Return(ret) => {
+                if self.is_checking_fn {
+                    let ty = if let Some(expr) = &ret.expr {
+                        self.check_expr(&expr, ctx)
+                    } else {
+                        Type::Void
+                    };
+
+                    if ty != self.fn_ret_type.unwrap() {
+                        self.error("mismatched return types", stmt.span, ctx);
+                        return;
+                    }
+                }
             }
             StmtKind::Error => {
                 unreachable!()
