@@ -1,8 +1,10 @@
 use macros::Constructor;
 
-use crate::analysis::resolution::Resolver;
 use crate::analysis::types::{Type, TypeChecker};
+use crate::analysis::resolution::Resolver;
 use crate::analysis::ids::LocalVarId;
+use crate::analysis::AnalysisCtx;
+use crate::parse::ast::{Function as AstFunction, Item, Program};
 
 #[derive(Debug, PartialEq, Eq, Clone, Constructor)]
 pub struct Function {
@@ -13,42 +15,47 @@ pub struct Function {
 #[derive(Debug, PartialEq, Eq, Clone, Constructor)]
 pub struct Param {
     id: LocalVarId,
-    ty: Type,
+    pub ty: Type,
 }
 
 pub struct FunctionAnalyzer {}
 
-// impl FunctionAnalyzer {
-//     pub fn new() -> Self {
-//         Self {}
-//     }
+impl FunctionAnalyzer {
+    pub fn new() -> Self {
+        Self {}
+    }
 
-//     pub fn analyze(&mut self, functions: &[AstFunction], ctx: &mut AnalysisCtx) {
-//         for function in functions {
-//             self.analyze_function(function, ctx);
-//         }
-//     }
+    pub fn analyze(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
+        for item in &program.items {
+            match item {
+                Item::Function(f) => {
+                    self.analyze_function(f, ctx);
+                }
+                Item::GlobalVarDecl(_) => {
+                    continue;
+                }
+            }
+        }
+    }
 
-//     fn analyze_function(&mut self, function: &AstFunction, ctx: &mut AnalysisCtx) {
-//         let mut resolver = Resolver::new();
+    fn analyze_function(&mut self, function: &AstFunction, ctx: &mut AnalysisCtx) {
+        let mut resolver = Resolver::new();
 
-//         resolver.enter_scope(ctx);
-//         for param in &function.params {
-//             let id = resolver.declare_var(&param.name, ctx, param.span);
-//             ctx.variables.insert(param.id, id);
-//             ctx.var_types.insert(id, param.ty);
-//         }
-//         resolver.exit_scope(ctx);
+        resolver.enter_scope(ctx);
+        for param in &function.params {
+            let id = *ctx.variables.get(&param.id).unwrap();
+            resolver.declare_existing_var(&param.name, id, ctx, param.span);
+        }
+        resolver.resolve_block(&function.body.node.body, ctx);
+        resolver.exit_scope(ctx);
 
-//         let block: Block = function.body.clone().try_into().expect("shouldnt happen");
+        if !ctx.diagnostics.is_empty() {
+            // exit if name resolution produced any errors
+            return;
+        }
 
-//         resolver.resolve_block(&block.stmts, ctx);
+        let mut typechecker = TypeChecker::new();
+        typechecker.check_stmts(&function.body.node.body, ctx);
 
-//         if !ctx.diagnostics.is_empty() {
-//             return;
-//         }
-
-//         let mut typechecker = TypeChecker::new();
-//         typechecker.check_stmts(&block.stmts, ctx);
-//     }
-// }
+    }
+}

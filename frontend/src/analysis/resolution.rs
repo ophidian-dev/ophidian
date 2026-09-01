@@ -4,7 +4,7 @@ use crate::analysis::AnalysisCtx;
 use crate::analysis::ids::{GlobalVarId, LocalVarId};
 use crate::analysis::types::Type;
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::parse::ast::{Expr, ExprKind, ForInit, Block, Stmt, StmtKind};
+use crate::parse::ast::{Expr, ExprKind, ForInit, Stmt, StmtKind};
 use crate::span::Span;
 use std::collections::HashMap;
 
@@ -40,16 +40,6 @@ impl Resolver {
         }
     }
 
-    pub fn resolve(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
-        self.enter_scope(ctx);
-
-        for stmt in &program.decls {
-            self.resolve_stmt(stmt, ctx);
-        }
-
-        self.exit_scope(ctx);
-    }
-
     fn error<T: Into<String>>(&mut self, message: T, span: Span, ctx: &mut AnalysisCtx) {
         ctx.diagnostics
             .push(Diagnostic::new(message.into(), span, Severity::Error));
@@ -57,26 +47,26 @@ impl Resolver {
 
     fn resolve_stmt(&mut self, stmt: &Stmt, ctx: &mut AnalysisCtx) {
         match &stmt.kind {
-            StmtKind::VarDecl(name, .., init) => {
-                self.resolve_vardecl(stmt, name, init, ctx);
+            StmtKind::VarDecl(decl) => {
+                self.resolve_vardecl(stmt, &decl.name, &decl.init, ctx);
             }
-            StmtKind::Block(body) => {
-                self.resolve_block(body, ctx);
+            StmtKind::Block(b) => {
+                self.resolve_block(&b.body, ctx);
             }
-            StmtKind::ExprStmt(expr) => {
-                self.resolve_exprstmt(expr, ctx);
+            StmtKind::ExprStmt(e) => {
+                self.resolve_exprstmt(&e.expr, ctx);
             }
-            StmtKind::Print(expr) => {
-                self.resolve_print(expr, ctx);
+            StmtKind::Print(p) => {
+                self.resolve_print(&p.expr, ctx);
             }
-            StmtKind::If(cond, body, else_body) => {
-                self.resolve_if(cond, body, else_body, ctx);
+            StmtKind::If(i) => {
+                self.resolve_if(&i.condition, &i.body, &i.else_body, ctx);
             }
-            StmtKind::While(cond, body) => {
-                self.resolve_while(cond, body, ctx);
+            StmtKind::While(w) => {
+                self.resolve_while(&w.condition, &w.body, ctx);
             }
-            StmtKind::For(init, cond, incre, body) => {
-                self.resolve_for(init, cond, incre, body, ctx);
+            StmtKind::For(f) => {
+                self.resolve_for(&f.init, &f.condition, &f.increment, &f.body, ctx);
             }
             StmtKind::Break => {
                 self.resolve_break(stmt, ctx);
@@ -109,7 +99,7 @@ impl Resolver {
         ctx.variables.insert(stmt.id, varid);
     }
 
-    pub(super) fn resolve_block(&mut self, body: &[Stmt], ctx: &mut AnalysisCtx) {
+    pub fn resolve_block(&mut self, body: &[Stmt], ctx: &mut AnalysisCtx) {
         self.enter_scope(ctx);
 
         for s in body {
@@ -165,7 +155,7 @@ impl Resolver {
                     self.resolve_expr(&expr, ctx);
                 }
                 ForInit::Decl(decl) => {
-                    self.resolve_stmt(&decl, ctx);
+                    self.resolve_vardecl(&body, &decl.node.name, &decl.node.init, ctx);
                 }
             },
             None => {
@@ -250,7 +240,23 @@ impl Resolver {
         }
     }
 
-    pub(super) fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx, span: Span) -> LocalVarId {
+    pub(super) fn declare_existing_var(&mut self, name: &[u8], id: LocalVarId, ctx: &mut AnalysisCtx, span: Span) {
+        if ctx.scopes.last().unwrap().vars.contains_key(name) {
+            self.error(
+                format!(
+                    "redeclaration of identifer '{}'",
+                    std::str::from_utf8(name).unwrap()
+                ),
+                span,
+                ctx,
+            );
+            return;
+        }
+
+        ctx.scopes.last_mut().unwrap().vars.insert(name.to_vec(), id);
+    }
+
+    fn declare_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx, span: Span) -> LocalVarId {
         if ctx.scopes.last().unwrap().vars.contains_key(name) {
             self.error(
                 format!(

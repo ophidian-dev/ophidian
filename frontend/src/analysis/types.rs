@@ -1,8 +1,8 @@
-use crate::analysis::analyzer::AnalysisCtx;
+use crate::analysis::AnalysisCtx;
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::lex::token::TokenKind;
 use crate::parse::ast::{
-    BinOpKind, Expr, ExprKind, ForInit, LitKind, NodeId, Program, Stmt, StmtKind, UnaryOpKind,
+    BinOpKind, Expr, ExprKind, ForInit, LitKind, NodeId, Stmt, StmtKind, UnaryOpKind,
 };
 use crate::span::Span;
 
@@ -45,12 +45,6 @@ impl TypeChecker {
         Self {}
     }
 
-    pub fn check(&mut self, program: &Program, ctx: &mut AnalysisCtx) {
-        for stmt in &program.decls {
-            self.check_stmt(stmt, ctx);
-        }
-    }
-
     pub fn check_stmts(&mut self, stmts: &[Stmt], ctx: &mut AnalysisCtx) {
         for stmt in stmts {
             self.check_stmt(stmt, ctx);
@@ -64,16 +58,16 @@ impl TypeChecker {
 
     fn check_stmt(&mut self, stmt: &Stmt, ctx: &mut AnalysisCtx) {
         match &stmt.kind {
-            StmtKind::Block(body) => {
-                for stmt in body {
-                    self.check_stmt(stmt, ctx);
+            StmtKind::Block(block) => {
+                for stmt in &block.body {
+                    self.check_stmt(&stmt, ctx);
                 }
             }
-            StmtKind::ExprStmt(expr) => {
-                self.check_expr(expr, ctx);
+            StmtKind::ExprStmt(e) => {
+                self.check_expr(&e.expr, ctx);
             }
-            StmtKind::Print(expr) => {
-                let expr_type = self.check_expr(expr, ctx);
+            StmtKind::Print(p) => {
+                let expr_type = self.check_expr(&p.expr, ctx);
 
                 // builtin checking for the types that print supports
                 // because print is not a function yet
@@ -82,37 +76,37 @@ impl TypeChecker {
                         return;
                     }
                     Type::Void => {
-                        self.error("invalid use of 'void' expression", expr.span, ctx);
+                        self.error("invalid use of 'void' expression", p.expr.span, ctx);
                         return;
                     }
                     Type::Int | Type::Bool | Type::Double => {}
                 }
             }
-            StmtKind::VarDecl(.., type_annotation, initializer) => {
-                match type_annotation {
+            StmtKind::VarDecl(decl) => {
+                match decl.type_annotation {
                     Some(annotation) => {
                         // unwrap because name resolution has already checked
                         let varid = *ctx.variables.get(&stmt.id).unwrap();
 
-                        match initializer {
+                        match &decl.init {
                             Some(init) => {
-                                let initializer_type = self.check_expr(init, ctx);
+                                let initializer_type = self.check_expr(&init, ctx);
 
-                                if !self.can_assign(initializer_type, *annotation, init, ctx) {
+                                if !self.can_assign(initializer_type, annotation, &init, ctx) {
                                     self.error("mismatched types", stmt.span, ctx);
                                     return;
                                 }
 
-                                ctx.var_types.insert(varid, *annotation);
+                                ctx.var_types.insert(varid, annotation);
                             }
                             None => {
-                                ctx.var_types.insert(varid, *annotation);
+                                ctx.var_types.insert(varid, annotation);
                             }
                         }
                     }
-                    None => match initializer {
+                    None => match &decl.init {
                         Some(init) => {
-                            let initializer_type = self.check_expr(init, ctx);
+                            let initializer_type = self.check_expr(&init, ctx);
 
                             let varid = *ctx.variables.get(&stmt.id).unwrap();
                             ctx.var_types.insert(varid, initializer_type);
@@ -123,37 +117,37 @@ impl TypeChecker {
                     },
                 }
             }
-            StmtKind::If(cond, body, else_body) => {
-                let cond_ty = self.check_expr(cond, ctx);
+            StmtKind::If(i) => {
+                let cond_ty = self.check_expr(&i.condition, ctx);
 
                 if cond_ty != Type::Bool && cond_ty != Type::Error {
                     self.error(
                         "if statement condition must have type 'bool'",
-                        cond.span,
+                        i.condition.span,
                         ctx,
                     );
                     return;
                 }
 
-                self.check_stmt(body, ctx);
+                self.check_stmt(&i.body, ctx);
 
-                if let Some(e) = else_body {
-                    self.check_stmt(e, ctx);
+                if let Some(e) = &i.else_body {
+                    self.check_stmt(&e, ctx);
                 }
             }
-            StmtKind::While(cond, body) => {
-                let cond_ty = self.check_expr(cond, ctx);
+            StmtKind::While(w) => {
+                let cond_ty = self.check_expr(&w.condition, ctx);
 
                 if cond_ty != Type::Bool && cond_ty != Type::Error {
                     self.error(
                         "while statement condition must have type 'bool'",
-                        cond.span,
+                        w.condition.span,
                         ctx,
                     );
                     return;
                 }
 
-                self.check_stmt(body, ctx);
+                self.check_stmt(&w.body, ctx);
             }
             StmtKind::Break => {
                 // nothing to type check
@@ -161,11 +155,11 @@ impl TypeChecker {
             StmtKind::Continue => {
                 // nothing to type check
             }
-            StmtKind::For(init, cond, incre, body) => {
-                if let Some(init) = init {
+            StmtKind::For(f) => {
+                if let Some(init) = &f.init {
                     match &**init {
-                        ForInit::Decl(decl) => {
-                            self.check_stmt(decl, ctx);
+                        ForInit::Decl(_decl) => {
+                            self.check_stmt(stmt, ctx);
                         }
                         ForInit::Expr(expr) => {
                             self.check_expr(expr, ctx);
@@ -173,8 +167,8 @@ impl TypeChecker {
                     }
                 }
 
-                if let Some(cond) = cond {
-                    let ty = self.check_expr(cond, ctx);
+                if let Some(cond) = &f.condition {
+                    let ty = self.check_expr(&cond, ctx);
 
                     if ty != Type::Bool && ty != Type::Error {
                         self.error("for loop condition must have type 'bool'", cond.span, ctx);
@@ -182,11 +176,11 @@ impl TypeChecker {
                     }
                 }
 
-                if let Some(incre) = incre {
-                    self.check_expr(incre, ctx);
+                if let Some(incre) = &f.increment {
+                    self.check_expr(&incre, ctx);
                 }
 
-                self.check_stmt(body, ctx);
+                self.check_stmt(&f.body, ctx);
             }
             StmtKind::Return(expr) => {
                 todo!()
