@@ -102,6 +102,7 @@ impl<'a> Collecter<'a> {
         }
 
         let decl_id = self.alloc_globalvar_id();
+        ctx.global_scope.globals.insert(vardecl.name.clone(), decl_id);
         ctx.global_vars.insert(vardecl.id, decl_id);
 
         let type_annotation = vardecl.type_annotation;

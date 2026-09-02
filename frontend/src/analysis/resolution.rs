@@ -13,7 +13,7 @@ pub struct Scope {
 }
 
 pub struct GlobalScope {
-    globals: HashMap<Vec<u8>, GlobalVarId>,
+    pub globals: HashMap<Vec<u8>, GlobalVarId>,
 }
 
 impl GlobalScope {
