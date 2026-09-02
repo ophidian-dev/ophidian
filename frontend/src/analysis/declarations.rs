@@ -1,7 +1,7 @@
 use crate::analysis::AnalysisCtx;
 use crate::analysis::function::{Function, Param};
 use crate::analysis::types::Type;
-use crate::analysis::ids::{FunctionId, GlobalVarId};
+use crate::analysis::ids::{FunctionId, GlobalVarId, VariableId};
 use crate::analysis::resolution::GlobalVarDecl;
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parse::ast;
@@ -78,8 +78,8 @@ impl<'a> Collecter<'a> {
             .map(|param| {
                 let id = ctx.alloc_varid();
                 let ty = param.ty;
-                ctx.variables.insert(param.id, id);
-                ctx.var_types.insert(id, ty);
+                ctx.variables.insert(param.id, VariableId::Local(id));
+                ctx.var_types.insert(VariableId::Local(id), ty);
                 Param::new(id, ty)
             })
             .collect();

@@ -1,15 +1,25 @@
 use macros::Constructor;
 
 use crate::analysis::AnalysisCtx;
-use crate::analysis::ids::{GlobalVarId, LocalVarId};
+use crate::analysis::ids::{GlobalVarId, LocalVarId, VariableId};
 use crate::analysis::types::Type;
 use crate::diagnostics::{Diagnostic, Severity};
-use crate::parse::ast::{Expr, ExprKind, ForInit, Stmt, StmtKind};
+use crate::parse::ast::{Expr, ExprKind, ForInit, Stmt, StmtKind, NodeId};
 use crate::span::Span;
 use std::collections::HashMap;
 
 pub struct Scope {
     vars: HashMap<Vec<u8>, LocalVarId>,
+}
+
+pub struct GlobalScope {
+    globals: HashMap<Vec<u8>, GlobalVarId>,
+}
+
+impl GlobalScope {
+    pub fn new() -> Self {
+        Self { globals: HashMap::new() }
+    }
 }
 
 impl Scope {
@@ -98,7 +108,7 @@ impl Resolver {
 
         let varid = self.declare_var(name, ctx, stmt.span);
 
-        ctx.variables.insert(stmt.id, varid);
+        ctx.variables.insert(stmt.id, VariableId::Local(varid));
     }
 
     pub fn resolve_block(&mut self, body: &[Stmt], ctx: &mut AnalysisCtx) {
@@ -210,9 +220,16 @@ impl Resolver {
                 self.resolve_expr(expr, ctx);
                 self.resolve_expr(target, ctx);
             }
-            ExprKind::Variable(name) => match self.lookup_var(name, ctx) {
+            ExprKind::Variable(name) => match self.lookup_var(name, expr.id, ctx) {
                 Some(id) => {
-                    ctx.variables.insert(expr.id, id);
+                    match id {
+                        VariableId::Global(_id) => {
+                            // nothing is necessary here?
+                        }
+                        VariableId::Local(id) => {
+                            ctx.variables.insert(expr.id, VariableId::Local(id));
+                        }
+                    }
                 }
                 None => {
                     self.error(
@@ -281,11 +298,29 @@ impl Resolver {
         id
     }
 
-    fn lookup_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx) -> Option<LocalVarId> {
-        ctx.scopes
+    fn lookup_var(&mut self, name: &[u8], id: NodeId, ctx: &mut AnalysisCtx) -> Option<VariableId> {
+        let local = ctx.scopes
             .iter()
             .rev()
-            .find_map(|s| s.vars.get(name).copied())
+            .find_map(|s| s.vars.get(name).copied());
+
+        match local {
+            Some(local) => {
+                return Some(VariableId::Local(local));
+            }
+            None => {
+                let id = ctx.global_scope.globals.get(name).copied();
+                    
+                match id {
+                    Some(id) => {
+                        return Some(VariableId::Global(id));
+                    }
+                    None => {
+                        return None;
+                    }
+                }
+            }
+        }
     }
 
     pub(super) fn enter_scope(&self, ctx: &mut AnalysisCtx) {

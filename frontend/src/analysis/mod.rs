@@ -9,11 +9,11 @@ pub mod globals;
 
 use crate::analysis::declarations::Collecter;
 use crate::analysis::function::{Function};
-use crate::analysis::ids::{FunctionId, GlobalVarId, LocalVarId};
-use crate::analysis::resolution::{Scope, GlobalVarDecl};
+use crate::analysis::ids::{FunctionId, GlobalVarId, LocalVarId, VariableId};
+use crate::analysis::resolution::{GlobalScope, GlobalVarDecl, Scope};
 use crate::analysis::types::{Conversion, Type};
 use crate::diagnostics::Diagnostic;
-use crate::parse::ast::{NodeId, Program};
+use crate::parse::ast::{self, NodeId};
 use std::collections::HashMap;
 
 pub struct SemanticAnalyzer<'diag> {
@@ -26,7 +26,7 @@ impl<'diag> SemanticAnalyzer<'diag> {
         Self { diagnostics }
     }
 
-    pub fn analyze(&mut self, program: &Program) -> Result<AnalysisResult, ()> {
+    pub fn analyze(&mut self, program: &ast::Program) -> Result<hir::Program, ()> {
         let mut ctx = AnalysisCtx::new(self.diagnostics);
 
         let mut collecter = Collecter::new();
@@ -56,16 +56,17 @@ impl<'diag> SemanticAnalyzer<'diag> {
         //         ctx.converted_types.insert(*id, *value);
         //     }
         // }
+        todo!()
 
-        Ok(AnalysisResult::from(ctx))
     }
 }
 
 pub struct AnalysisCtx<'diag> {
     pub scopes: Vec<Scope>,
+    pub global_scope: GlobalScope,
     pub types: HashMap<NodeId, Type>,
-    pub variables: HashMap<NodeId, LocalVarId>,
-    pub var_types: HashMap<LocalVarId, Type>,
+    pub variables: HashMap<NodeId, VariableId>,
+    pub var_types: HashMap<VariableId, Type>,
 
     pub conversions: HashMap<NodeId, Conversion>,
 
@@ -109,28 +110,9 @@ impl<'diag> AnalysisCtx<'diag> {
             signatures: HashMap::new(),
             global_vars: HashMap::new(),
             globalvar_data: HashMap::new(),
+            global_scope: GlobalScope::new(),
             diagnostics,
             varid: LocalVarId(0),
-        }
-    }
-}
-
-pub struct AnalysisResult {
-    pub variables: HashMap<NodeId, LocalVarId>,
-    pub var_types: HashMap<LocalVarId, Type>,
-
-    pub conversions: HashMap<NodeId, Conversion>,
-
-    pub converted_types: HashMap<NodeId, Type>,
-}
-
-impl From<AnalysisCtx<'_>> for AnalysisResult {
-    fn from(value: AnalysisCtx) -> Self {
-        Self {
-            variables: value.variables,
-            var_types: value.var_types,
-            conversions: value.conversions,
-            converted_types: value.converted_types,
         }
     }
 }

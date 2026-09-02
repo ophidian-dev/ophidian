@@ -42,3 +42,9 @@ impl std::ops::AddAssign<usize> for FunctionId {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct HirId(pub usize);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VariableId {
+    Local(LocalVarId),
+    Global(GlobalVarId),
+}
