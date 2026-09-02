@@ -84,6 +84,8 @@ impl<'a> Collecter<'a> {
             })
             .collect();
 
+        ctx.function_scope.insert(function.name.clone(), fn_id);
+
         let function = Function::new(return_type, params);
         ctx.signatures.insert(fn_id, function);
 

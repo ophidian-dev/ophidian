@@ -220,7 +220,7 @@ impl Resolver {
                 self.resolve_expr(expr, ctx);
                 self.resolve_expr(target, ctx);
             }
-            ExprKind::Variable(name) => match self.lookup_var(name, expr.id, ctx) {
+            ExprKind::Variable(name) => match self.lookup_var(name, ctx) {
                 Some(id) => {
                     match id {
                         VariableId::Global(_id) => {
@@ -254,6 +254,18 @@ impl Resolver {
                 for arg in args {
                     self.resolve_expr(arg, ctx);
                 }
+
+                let ident = match &callee.kind {
+                    ExprKind::Variable(ident) => {
+                        ident
+                    }
+                    _ => {
+                        panic!("functions are not yet first class objects")
+                    }
+                };
+
+                let id = ctx.function_scope.get(ident).unwrap();
+                ctx.calls.insert(expr.id, *id);
             }
             _ => return,
         }
@@ -298,7 +310,7 @@ impl Resolver {
         id
     }
 
-    fn lookup_var(&mut self, name: &[u8], id: NodeId, ctx: &mut AnalysisCtx) -> Option<VariableId> {
+    fn lookup_var(&mut self, name: &[u8], ctx: &mut AnalysisCtx) -> Option<VariableId> {
         let local = ctx.scopes
             .iter()
             .rev()

@@ -295,7 +295,7 @@ impl TypeChecker {
             }
             ExprKind::Call(callee, args) => {
                 if !self.is_callable(callee) {}
-                let funcid = *ctx.functions.get(&expr.id).unwrap();
+                let funcid = *ctx.calls.get(&expr.id).unwrap();
                 let function = ctx.signatures.get(&funcid).unwrap().clone();
                 if args.len() != function.params.len() {
                     self.error("incorrect number of arguments", expr.span, ctx);
@@ -304,7 +304,7 @@ impl TypeChecker {
                 for i in 0..args.len() {
                     let ty = self.check_expr(&args[i], ctx);
                     let expected = function.params[i].ty;
-                    if ty != expected {
+                    if !self.can_assign(ty, expected, expr, ctx) {
                         self.error("mismatched types", args[i].span, ctx);
                         return Type::Error;
                     }
@@ -322,6 +322,8 @@ impl TypeChecker {
     }
 
     fn is_callable(&self, node: &Expr) -> bool {
+        // so functions dont yet exist as first class objects therefore 
+        // there is no function type so this function cannot be implemented yet
         todo!()
     }
 

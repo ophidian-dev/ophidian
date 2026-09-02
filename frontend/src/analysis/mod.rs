@@ -8,7 +8,7 @@ pub mod globals;
 
 
 use crate::analysis::declarations::Collecter;
-use crate::analysis::function::{Function};
+use crate::analysis::function::{Function, FunctionAnalyzer};
 use crate::analysis::ids::{FunctionId, GlobalVarId, LocalVarId, VariableId};
 use crate::analysis::resolution::{GlobalScope, GlobalVarDecl, Scope};
 use crate::analysis::types::{Conversion, Type};
@@ -32,30 +32,20 @@ impl<'diag> SemanticAnalyzer<'diag> {
         let mut collecter = Collecter::new();
         collecter.collect(program, &mut ctx);
 
-        // let mut function_analyzer = FunctionAnalyzer::new();
-        // function_analyzer.analyze(&program.functions, &mut ctx);
+        let mut function_analyzer = FunctionAnalyzer::new();
+        function_analyzer.analyze(&program, &mut ctx);
 
-        // let mut resolver = Resolver::new();
-        // resolver.resolve(program, &mut ctx);
-
-        // if !ctx.diagnostics.is_empty() {
-        //     return Err(());
-        // }
-
-        // let mut typechecker = TypeChecker::new();
-        // typechecker.check(program, &mut ctx);
-
-        // for (id, value) in &ctx.types {
-        //     if let Some(conversion_type) = ctx.conversions.get(id) {
-        //         match conversion_type {
-        //             Conversion::IntToDouble => {
-        //                 ctx.converted_types.insert(*id, Type::Double);
-        //             }
-        //         }
-        //     } else {
-        //         ctx.converted_types.insert(*id, *value);
-        //     }
-        // }
+        for (id, value) in &ctx.types {
+            if let Some(conversion_type) = ctx.conversions.get(id) {
+                match conversion_type {
+                    Conversion::IntToDouble => {
+                        ctx.converted_types.insert(*id, Type::Double);
+                    }
+                }
+            } else {
+                ctx.converted_types.insert(*id, *value);
+            }
+        }
         todo!()
 
     }
@@ -70,15 +60,19 @@ pub struct AnalysisCtx<'diag> {
 
     pub conversions: HashMap<NodeId, Conversion>,
 
+    pub calls: HashMap<NodeId, FunctionId>,
+
     pub functions: HashMap<NodeId, FunctionId>,
     pub signatures: HashMap<FunctionId, Function>,
+
+    pub function_scope: HashMap<Vec<u8>, FunctionId>,
 
     pub diagnostics: &'diag mut Vec<Diagnostic>,
 
     pub global_vars: HashMap<NodeId, GlobalVarId>,
     pub globalvar_data: HashMap<GlobalVarId, GlobalVarDecl>,
 
-    converted_types: HashMap<NodeId, Type>,
+    pub converted_types: HashMap<NodeId, Type>,
 
     // current var id
     // local to a function
@@ -111,6 +105,8 @@ impl<'diag> AnalysisCtx<'diag> {
             global_vars: HashMap::new(),
             globalvar_data: HashMap::new(),
             global_scope: GlobalScope::new(),
+            calls: HashMap::new(),
+            function_scope: HashMap::new(),
             diagnostics,
             varid: LocalVarId(0),
         }
